@@ -1,0 +1,106 @@
+{
+  "schema": "qt-independent-component-assets/1.0",
+  "revision": "1.5.1",
+  "brand_spec": "环球青藤_HTML视觉规范_v1.5.1.md",
+  "source_skill_runtime_required": false,
+  "synthetic_notice": "Media include original illustrative SVGs, browser screenshots of this package and AI-generated scenes/cutouts. They are not external software evidence, real identities, product offers or business outcomes.",
+  "assets": [
+    {
+      "file": "icons/arrow-down.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "f4d69aece8df6afc2ad6cf74e4396cbcd82fb5b6c9e8f7fa6dfcd2f6a238ec62",
+      "bytes": 217,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/arrow-right.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "d269ea9f468656a0fc9490af32abd73f33ee08f586c0854648aa4bcad637cb45",
+      "bytes": 217,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/book.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "db197129a1f47f3240027f3ae9aedde004b0ddb455d3d3dc8d3f2d9d457c30cf",
+      "bytes": 289,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/chart.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "8ff76cf053a6d687f1097aa011e2bc0105bb27b6a7278934ea93998013f8059f",
+      "bytes": 227,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/check.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "0deb7c4783b998e8fc6884a94c67ccda1d4247befeac3d302ccf933202bab43e",
+      "bytes": 210,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/clock.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "58d205cd3de569546bc619d39f159d94ba644acf9b79664af6e1a3754772aafd",
+      "bytes": 238,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/info.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "9e3c23098551adf6765f3e25a3b8d06079126bfd412d226a8af961f2623250c3",
+      "bytes": 242,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/layers.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "8d0850689c1e0180e041a231e39e92548425501402c7449c49517d5d67044508",
+      "bytes": 239,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/zoom.svg",
+      "role": "utility-icon",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "548820d7b0b099f9104d0d597ed96e8b1640ba522d72f52c2d4433525d25e3b1",
+      "bytes": 251,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "media/document-demo.svg",
+      "role": "synthetic-layout-media",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "538f39f0d8ca7bc67a4914804bbc519c7f74acea030e9fdf6895645794bb3d39",
+      "bytes": 1362,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "media/workspace-demo.svg",
+      "role": "synthetic-layout-media",
+      "origin": "original SVG authored within this package, 2026-10-24",
+      "sha256": "9c7b3e117e3d3e4ffcb14b04bbd06cb85f592a5fa1f6eca0d6f1963bb047cf08",
+      "bytes": 2074,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "media/person-wide-demo.svg",
+      "role": "synthetic-person-composition-fixture",
+      "origin": "Original SVG authored in this independent package, 2026-10-25; geometric pose/transparent-margin fixture, not real person or photo edit.",
+      "sha256": "d22534b2956a109e69716a559e1cfa1185c885aa55fb9a81eeb80b0a4c7d39fb",
+      "bytes": 699,
+      "runtime_dependencies": []
+    }
+  ],
+  "scope": "Only listed shipped assets retained; filenames are original provenance names, see provenance.json mapping."
+}

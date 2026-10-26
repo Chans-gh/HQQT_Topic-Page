@@ -1,0 +1,26 @@
+{
+  "package": "huanqiu-qingteng-html-visual-v1",
+  "created_at": "2026-10-24T15:24:46+08:00",
+  "brand_policy": "Use original logos. Inline SVG utilities do not establish a business icon system.",
+  "assets": [
+    {
+      "file": "global-qingteng-logo-color.png",
+      "bytes": 219040,
+      "sha256": "c1e9cf92d9301af23bcb05da898718e8de037aa759c482d58a13080d852e2eb6",
+      "source_branch": "package/huanqiu-qingteng-ai-content-v1",
+      "source_commit": "25144dd6b989ad67011767ad78114bd040d9ef31",
+      "source_path": "package/环球青藤logo 彩色.png",
+      "handling": "byte-for-byte manual asset reuse; no legacy workflow inherited"
+    },
+    {
+      "file": "global-qingteng-logo-white.png",
+      "bytes": 102990,
+      "sha256": "93ba29bee48069ac2883070d6fe5f45f266180ab4b3066b40bca0f37eef2eedc",
+      "source_branch": "package/huanqiu-qingteng-ai-content-v1",
+      "source_commit": "25144dd6b989ad67011767ad78114bd040d9ef31",
+      "source_path": "package/环球青藤logo 反白.png",
+      "handling": "byte-for-byte manual asset reuse; no legacy workflow inherited"
+    }
+  ],
+  "scope": "Only listed shipped assets retained; filenames are original provenance names, see provenance.json mapping."
+}

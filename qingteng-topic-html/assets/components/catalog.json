@@ -1,0 +1,251 @@
+{
+  "version": "1.0.0",
+  "notice": "Patterns are editable semantic fragments, not a runtime renderer or fixed business structure. New combinations allowed within visual rules.",
+  "components": [
+    {
+      "type": "C01",
+      "name": "同级信息",
+      "relationship": "并列；无先后",
+      "required": [
+        "标题",
+        "说明"
+      ],
+      "optional": [
+        "图标",
+        "要点",
+        "操作"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "卡片逐个向下",
+      "snippet": "patterns.html#C01",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C02",
+      "name": "观点与依据",
+      "relationship": "论证",
+      "required": [
+        "主张",
+        "依据"
+      ],
+      "optional": [
+        "边界",
+        "出处"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "主张在前、依据紧随",
+      "snippet": "patterns.html#C02",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C03",
+      "name": "组成拆解",
+      "relationship": "组成；不添加步骤箭头",
+      "required": [
+        "整体",
+        "组成",
+        "作用"
+      ],
+      "optional": [
+        "组合说明"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "整体后逐项组成",
+      "snippet": "patterns.html#C03",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C04",
+      "name": "同维度比较",
+      "relationship": "比较",
+      "required": [
+        "维度",
+        "对象名",
+        "对象值"
+      ],
+      "optional": [
+        "选择依据"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "每维度内逐对象展示",
+      "snippet": "patterns.html#C04",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C05",
+      "name": "问题诊断",
+      "relationship": "观察→判断→处理",
+      "required": [
+        "现象",
+        "判断",
+        "处理"
+      ],
+      "optional": [
+        "例子",
+        "材料"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "保留三段对应",
+      "snippet": "patterns.html#C05",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C06",
+      "name": "指标与解读",
+      "relationship": "量化",
+      "required": [
+        "名称",
+        "数值",
+        "单位",
+        "口径",
+        "解释"
+      ],
+      "optional": [
+        "下一步"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "每项指标及口径保持完整",
+      "snippet": "patterns.html#C06",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C07",
+      "name": "有序步骤",
+      "relationship": "顺序",
+      "required": [
+        "动作",
+        "顺序",
+        "完成条件"
+      ],
+      "optional": [
+        "截图",
+        "视频"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "动作→媒体→完成条件",
+      "snippet": "patterns.html#C07",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C08",
+      "name": "时间线",
+      "relationship": "时间演进",
+      "required": [
+        "真实日期/阶段",
+        "事件",
+        "产物"
+      ],
+      "optional": [
+        "状态"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "日期在事件之前",
+      "snippet": "patterns.html#C08",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C09",
+      "name": "材料与解释",
+      "relationship": "证据与解读",
+      "required": [
+        "原材料",
+        "图注/出处",
+        "解释"
+      ],
+      "optional": [
+        "编号批注"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "材料在前、解读紧随",
+      "snippet": "patterns.html#C09",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C10",
+      "name": "引用与核对",
+      "relationship": "记录",
+      "required": [
+        "对象",
+        "用途/核对项",
+        "来源/状态"
+      ],
+      "optional": [
+        "结论"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "每条重复字段名",
+      "snippet": "patterns.html#C10",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C11",
+      "name": "双轴判断",
+      "relationship": "固定四象限",
+      "required": [
+        "两个轴及取值",
+        "四象限条件",
+        "行动"
+      ],
+      "optional": [
+        "象限内事项"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10；另验0/1/12；C11固定四象限，变量事项放象限内",
+      "h5_order": "每格重复双轴条件",
+      "snippet": "patterns.html#C11",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    },
+    {
+      "type": "C12",
+      "name": "关系模块",
+      "relationship": "顺序/条件分支/并列汇合/依赖/循环/前后变化",
+      "required": [
+        "关系标签",
+        "节点",
+        "实际边/条件"
+      ],
+      "optional": [
+        "汇合产物"
+      ],
+      "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "h5_order": "移动端保留明确关系文字",
+      "snippet": "patterns.html#C12",
+      "styles": "topic.css",
+      "interactions": "topic.js",
+      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+    }
+  ]
+}

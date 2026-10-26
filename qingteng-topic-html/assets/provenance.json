@@ -1,0 +1,150 @@
+{
+  "skill": "qingteng-topic-html",
+  "version": "1.0.0",
+  "relation_type": "VARIANT",
+  "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
+  "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
+  "spec": "package/环球青藤专题页Skill开发_SPEC.md (SPEC V1.0)",
+  "assets": [
+    {
+      "file": "assets/templates/public-shell.html",
+      "source_path": "package/templates/公共页眉页脚模板.html",
+      "sha256": "be7c2b876fecc1e76e3658aecee0b84c3d936700e5867ef239f4a641fe1cf474",
+      "handling": "byte-for-byte",
+      "nature": "V1.5.1 locked public five-block shell; embedded original official logos"
+    },
+    {
+      "file": "assets/brand/global-qingteng-logo-color.png",
+      "source_path": "package/brand-assets/global-qingteng-logo-color.png",
+      "sha256": "c1e9cf92d9301af23bcb05da898718e8de037aa759c482d58a13080d852e2eb6",
+      "handling": "byte-for-byte",
+      "nature": "official logo; upstream source/commit/fingerprint retained in brand-origin.json"
+    },
+    {
+      "file": "assets/brand/global-qingteng-logo-white.png",
+      "source_path": "package/brand-assets/global-qingteng-logo-white.png",
+      "sha256": "93ba29bee48069ac2883070d6fe5f45f266180ab4b3066b40bca0f37eef2eedc",
+      "handling": "byte-for-byte",
+      "nature": "official logo; upstream source/commit/fingerprint retained in brand-origin.json"
+    },
+    {
+      "file": "assets/icons/arrow-down.svg",
+      "source_path": "package/component-assets/icons/arrow-down.svg",
+      "sha256": "f4d69aece8df6afc2ad6cf74e4396cbcd82fb5b6c9e8f7fa6dfcd2f6a238ec62",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/chart.svg",
+      "source_path": "package/component-assets/icons/chart.svg",
+      "sha256": "8ff76cf053a6d687f1097aa011e2bc0105bb27b6a7278934ea93998013f8059f",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/arrow-right.svg",
+      "source_path": "package/component-assets/icons/arrow-right.svg",
+      "sha256": "d269ea9f468656a0fc9490af32abd73f33ee08f586c0854648aa4bcad637cb45",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/zoom.svg",
+      "source_path": "package/component-assets/icons/zoom.svg",
+      "sha256": "548820d7b0b099f9104d0d597ed96e8b1640ba522d72f52c2d4433525d25e3b1",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/layers.svg",
+      "source_path": "package/component-assets/icons/layers.svg",
+      "sha256": "8d0850689c1e0180e041a231e39e92548425501402c7449c49517d5d67044508",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/book.svg",
+      "source_path": "package/component-assets/icons/book.svg",
+      "sha256": "db197129a1f47f3240027f3ae9aedde004b0ddb455d3d3dc8d3f2d9d457c30cf",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/check.svg",
+      "source_path": "package/component-assets/icons/check.svg",
+      "sha256": "0deb7c4783b998e8fc6884a94c67ccda1d4247befeac3d302ccf933202bab43e",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/info.svg",
+      "source_path": "package/component-assets/icons/info.svg",
+      "sha256": "9e3c23098551adf6765f3e25a3b8d06079126bfd412d226a8af961f2623250c3",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/icons/clock.svg",
+      "source_path": "package/component-assets/icons/clock.svg",
+      "sha256": "58d205cd3de569546bc619d39f159d94ba644acf9b79664af6e1a3754772aafd",
+      "handling": "byte-for-byte",
+      "nature": "original currentColor utility SVG; 24x24, stroke 2"
+    },
+    {
+      "file": "assets/examples/workspace-demo.svg",
+      "source_path": "package/component-assets/media/workspace-demo.svg",
+      "sha256": "9c7b3e117e3d3e4ffcb14b04bbd06cb85f592a5fa1f6eca0d6f1963bb047cf08",
+      "handling": "byte-for-byte",
+      "nature": "synthetic composition example, NOT business evidence or real person"
+    },
+    {
+      "file": "assets/examples/document-demo.svg",
+      "source_path": "package/component-assets/media/document-demo.svg",
+      "sha256": "538f39f0d8ca7bc67a4914804bbc519c7f74acea030e9fdf6895645794bb3d39",
+      "handling": "byte-for-byte",
+      "nature": "synthetic composition example, NOT business evidence or real person"
+    },
+    {
+      "file": "assets/examples/person-wide-demo.svg",
+      "source_path": "package/component-assets/media/person-wide-demo.svg",
+      "sha256": "d22534b2956a109e69716a559e1cfa1185c885aa55fb9a81eeb80b0a4c7d39fb",
+      "handling": "byte-for-byte",
+      "nature": "synthetic composition example, NOT business evidence or real person"
+    }
+  ],
+  "excluded": "Full sample pages, AI design originals, large synthetic PNGs and stress-test screenshots excluded. No legacy skill dependency.",
+  "rule_migrations": [
+    {
+      "source_path": "package/专题页内容整理与初稿审阅流程.md",
+      "source_sha256": "f26fa6f02fac8fd002e33c6098ad1a42fd161a0e869d1e46f97641c682d1d0a1",
+      "destination": "references/workflow.md",
+      "handling": "移植业务规则；替换历史开发状态与样张导航"
+    },
+    {
+      "source_path": "package/环球青藤_HTML视觉规范_v1.5.1.md",
+      "source_sha256": "18ca512822edc083993eff9e118abefbbbd7f6541e9042c38276e683a196636d",
+      "destination": "references/visual-spec.md",
+      "handling": "保留固定token/关系/容量/媒体；移除历史研究依赖及不随包演示导航，章节对应保留"
+    },
+    {
+      "source_path": "package/samples/组件与长页面样张.html",
+      "source_sha256": "96db99da7371ea5bfe1a3266fd42094ba68492aa7d207291be0871007e9db902",
+      "destination": "assets/components/",
+      "handling": "根据独立C01–C12、媒体与容量关系有意识重写精简片段/CSS/JS，不携带演示正文、实验UI或完整资源表"
+    },
+    {
+      "source_path": "package/samples/初稿审阅流程样张.html",
+      "source_sha256": "23e334f07505bb91c3c0d5f18d9e73f759016025059f4c58a5878f69f24d6e76",
+      "destination": "scripts/compose_html.py",
+      "handling": "根据审阅索引/批注/占位契约实现记录驱动展示，不复制示例业务正文"
+    }
+  ],
+  "public_blocks_sha256": {
+    "HEADER": "a2564d68ce5190aff244b57fc6af37b25d95afb62df25775ae02fc197f304710",
+    "FOOTER": "978e5e5e1c987dee6fc67ca08f255a45e9760f11c0c44cdedc4e5b9a4150ef64",
+    "STYLE": "fbb968fcb91c3835d47360a43fc2a25aca521850c152ae9b035a466006b4e53d",
+    "SCRIPT": "5f1f986cb69d245baca97c8623224700c543a5c395330659e88f5c74a7eee938",
+    "DIALOG": "fa59886c211db53ae844d1a371b6506ac89078cb546317b196e56597b4373828"
+  },
+  "historical_research_boundary": "The locked foundation previously recorded html-content-layout as concluded structural research only. This Skill does not read/call/write/sync it and has no runtime dependency."
+}

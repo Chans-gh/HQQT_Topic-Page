@@ -1,0 +1,4 @@
+interface:
+  display_name: "环球青藤专题页"
+  short_description: "按环球青藤规范整理内容清单，确认后制作与精修独立 Web/H5 专题页"
+  default_prompt: "使用 $qingteng-topic-html 整理这些材料，先提交拟呈现内容清单。"

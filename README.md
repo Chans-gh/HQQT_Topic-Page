@@ -1,6 +1,6 @@
 # HQQT Topic Page · 环球青藤专题页 Skill
 
-`qingteng-topic-html` V1.0.1：先整理并确认内容清单，再制作、审阅和精修环球青藤 Web/H5 专题 HTML。独立使用，不依赖作者的本机目录、旧项目或其他 Skill。
+`qingteng-topic-html` V1.1.0：先整理并确认内容清单，再制作、审阅和精修环球青藤 Web/H5 专题 HTML。独立使用，不依赖作者的本机目录、旧项目或其他Skill；正文单文件，官方青藤页头的搜索/账户等服务允许联网。
 
 ## 1. 获取源码
 
@@ -83,7 +83,7 @@ python3 scripts/doctor.py --browser
 python3 scripts/smoke_test.py --browser
 ```
 
-这里的npm依赖和浏览器下载只在你明确执行命令时发生。`doctor.py`和`smoke_test.py`不会自动安装依赖或调用生图。Playwright版本与锁文件随包提供；可复用现成运行时，配置方法见[环境说明](qingteng-topic-html/references/setup.md)。[Playwright安装文档](https://playwright.dev/docs/library)
+这里的npm依赖和浏览器下载只在你明确执行命令时发生。`doctor.py`和`smoke_test.py`不会自动安装依赖或调用生图。smoke --browser默认联网验收官方页头；普通smoke和doctor不访问业务服务。Playwright版本与锁文件随包提供；可复用现成运行时，配置方法见[环境说明](qingteng-topic-html/references/setup.md)。[Playwright安装文档](https://playwright.dev/docs/library)
 
 Linux如提示缺系统库，按[Playwright浏览器依赖说明](https://playwright.dev/docs/browsers#install-system-dependencies)由有权限的人安装系统依赖；本Skill不自动执行sudo或改系统设置。
 
@@ -142,6 +142,6 @@ push只使用已有`GH_TOKEN`/`GITHUB_TOKEN`、已登录`gh`或Git凭据助手�
 
 ## 6. 验收范围
 
-首版已完成F01–F12流程与修订/省略扩展、十视口数量与容量矩阵、局部浏览以及三种不同完整页的Chromium离线验收。V1.0.1增加安装路径、显式UTF-8、依赖锁、环境自检、最小用例与维护者同步；本轮实际隔离验收结果记录在源项目PROJECT_OFF。
+首版已完成F01–F12流程与修订/省略扩展、十视口数量与容量矩阵、局部浏览以及三种不同完整页的Chromium离线验收。V1.0.1补齐安装/依赖/自检与同步；V1.1.0采用官方青藤页头固定适配版：1200px容器上限、Web/H5统一60px、官方导航/搜索/账户，与页脚原型入口分开。原始来源及适配说明见[qingteng-topic-html/assets/header/sources.json](qingteng-topic-html/assets/header/sources.json)；当前实现与验证记录在源项目PROJECT_OFF。
 
 自检的合成页面与确认记录只验证安装和工具，不替代业务事实/授权核对，也不调用真实生图。Safari、iOS、Android实机和Windows实机未验收；浏览器模拟不能冒充实机结论。未安装或发布到任何Skill市场；此仓库仍为私有分发。

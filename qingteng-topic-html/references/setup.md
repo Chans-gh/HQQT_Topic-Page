@@ -9,7 +9,7 @@ python3 scripts/doctor.py
 python3 scripts/smoke_test.py
 ```
 
-Python3.9+只用标准库；Windows可用`py -3`替代`python3`。基础doctor为只读；smoke仅在临时目录生成合成记录/页面并自动清理，或用`--out`保存到Skill外的新/空目录。两者不会安装依赖、联网查证、生成图片或伪造真实授权。
+Python3.9+只用标准库；Windows可用`py -3`替代`python3`。基础doctor为只读；smoke仅在临时目录生成合成记录/页面并自动清理，或用`--out`保存到Skill外的新/空目录。两者不会安装依赖、生成图片或伪造真实授权；smoke --browser会按官方页头依赖联网，普通smoke与doctor不访问业务服务。
 
 浏览器验收使用Node20+。首次由用户明确选择配置后执行：
 
@@ -25,3 +25,5 @@ npm ci使用随包锁定的Playwright；Chromium是单独下载的浏览器。�
 已有宿主运行时可用环境变量`QT_PLAYWRIGHT_MODULE`指向实际存在的Playwright入口，`QT_CHROMIUM_EXECUTABLE`指向现成Chromium可执行文件；Windows PowerShell用`$env:变量名`配置，POSIX shell用`export 变量名`。不在Skill中硬编码作者路径。doctor的browser模式实际启动并退出浏览器，报告所用来源。
 
 GitHub更新不会自动刷新已安装目录。作者在源项目提交并定向同步，使用者重新获取/备份后更新自己的Skill。首次使用显式调用`$qingteng-topic-html`；如未发现新增Skill，按[官方说明](https://learn.chatgpt.com/docs/build-skills)重新启动Codex。不要将临时业务生成物或依赖缓存提交为Skill源文件。
+
+V1.1.0页头为官方源码适配版：固定jQuery与样式随HTML内嵌，搜索/账户/品牌资源可联网。离线时正文可读、官网入口保留，在线搜索/认证不可伪称通过。

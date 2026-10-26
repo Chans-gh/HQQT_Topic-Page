@@ -21,7 +21,7 @@ python3 "$SKILL/scripts/compose_html.py" --record "$TASK/record.json" --body "$T
 python3 "$SKILL/scripts/check_html.py" "$TASK/draft.html" --mode draft --record "$TASK/record.json" --report "$TASK/static-report.json"
 ```
 
-mode=refine 输出仍可审阅的精修中页面；mode=final 要求DELIVERY阶段、准确初稿确认、全部相关事实/素材到位。最终不附加策划/索引/确认状态；作者片段有审阅UI或未解决关键项则拒绝。默认全部内嵌、独立单文件，不生成外部资源包。用户明确要求视频/素材包时由执行者按真实资源制作相对路径交付，重新核对依赖及大小；当前严格单文件检查器会拒绝非内嵌运行资源，不能把这类报告当作素材包通过证据。
+mode=refine 输出仍可审阅的精修中页面；mode=final 要求DELIVERY阶段、准确初稿确认、全部相关事实/素材到位。最终不附加策划/索引/确认状态；作者片段有审阅UI或未解决关键项则拒绝。默认正文与固定代码内嵌单文件，不生成外部资源包；锁定官方页头允许联网。用户明确要求视频/素材包时由执行者按真实资源制作相对路径交付，重新核对依赖及大小；检查器仅在逐字一致的公共块内豁免官方依赖，正文仍拒绝非内嵌运行资源，不能把这类报告当作素材包通过证据。
 
 脚本拒绝写入Skill目录或覆盖body/record；失败先返回错误，不输出半成品，不自动修改记录。原始输入只读。脚本不证明语义、商业数据真实性或授权真实性，不自动转阶段。
 
@@ -39,4 +39,9 @@ python3 "$SKILL/scripts/compose_html.py" --record "$TASK/record.json" --mode ref
 node "$SKILL/scripts/check_browser.mjs" "$TASK/draft.html" "$TASK/browser-report"
 ```
 
-如Playwright不在默认模块路径，设置`QT_PLAYWRIGHT_MODULE`为宿主可用的Playwright入口文件；如需使用现成Chromium，可设置`QT_CHROMIUM_EXECUTABLE`。只采用实际存在的运行时，不依赖特定本机路径。报告区分pass/fail/not-run，输出十视口几何与桌面/H5全页截图。浏览器脚本做确定性互动和离线检查，关系/事实/密度/人物安全区仍须目视。仅Chromium通过不能说Safari/iOS/Android实机通过。
+如Playwright不在默认模块路径，设置`QT_PLAYWRIGHT_MODULE`为宿主可用的Playwright入口文件；如需使用现成Chromium，可设置`QT_CHROMIUM_EXECUTABLE`。只采用实际存在的运行时，不依赖特定本机路径。报告区分pass/fail/not-run，输出十视口几何与桌面/H5全页截图。浏览器脚本默认联网，按官方域名范围核对页头/页脚互动与正文布局；--offline仅验收降级，不声称真实搜索或登录通过，关系/事实/密度/人物安全区仍须目视。仅Chromium通过不能说Safari/iOS/Android实机通过。
+
+
+## 页头组件维护
+
+仅在明确修改Skill源时，编辑assets/header/中的HTML/CSS/JS；随后运行`python3 scripts/build_shell.py`与`python3 scripts/build_shell.py --check`。模板保留页脚与五公共块，生成区不手改。build_shell自动更新相关资产与公共块指纹；新增资产仍需登记provenance。页头采用官方源码适配版，1200px上限/60px高度；联网状态与真实登录限制见visual-spec第13节。

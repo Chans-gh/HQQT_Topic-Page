@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synthetic first-run test, outside the Skill; zero network and image generation."""
+"""Synthetic first-run test outside the Skill; browser mode checks official online services."""
 import argparse
 import copy
 import json
@@ -54,9 +54,9 @@ def run_case(out, browser=False):
     if browser:
         node = shutil.which('node')
         if not node:
-            checks.append({'id':'offline-browser','status':'fail','detail':'Node.js >=20 required; run doctor.py --browser'})
+            checks.append({'id':'official-header-browser','status':'fail','detail':'Node.js >=20 required; run doctor.py --browser'})
         else:
-            execute('offline-browser', [node,str(ROOT/'scripts/check_browser.mjs'),str(standalone/'专题页.html'),str(out/'browser')])
+            execute('official-header-browser', [node,str(ROOT/'scripts/check_browser.mjs'),str(standalone/'专题页.html'),str(out/'browser')])
     return {'status':'fail' if any(c['status']=='fail' for c in checks) else 'pass', 'checks':checks,
             'browser_requested':browser,'image_generation_calls':0,
             'limits':['Synthetic approval is not business consent','Not a real-device or semantic workflow certification']}

@@ -1,0 +1,41 @@
+{
+  "version": "1.1.0",
+  "retrieved": "2026-10-26",
+  "sources": [
+    {
+      "url": "https://static.hqwx.com/hq2018/public/css/gui2/0.0.2/edu.ui2.css",
+      "file": "edu.ui2.css",
+      "bytes": 157806,
+      "sha256": "0c6a82c52469f40175d93125a4bb01ca525aa0bcfa956f178bef96ce3e95ebfe"
+    },
+    {
+      "url": "https://static.hqwx.com/gedu_plugin/jquery/jquery-1.11.3.min.js",
+      "file": "jquery-1.11.3.min.js",
+      "bytes": 95957,
+      "sha256": "ecb916133a9376911f10bc5c659952eb0031e457f5df367cde560edbfba38fb8"
+    },
+    {
+      "url": "https://static.hqwx.com/hq2018/public/js/gui2/eui.globalheader.js",
+      "file": "eui.globalheader.js",
+      "bytes": 393316,
+      "sha256": "ac24bd197b0b4cadd09efb2e9222e77282109e7dc3136b923a82a236030df2ea"
+    },
+    {
+      "url": "https://static.hqwx.com/hqqt/css/common.css",
+      "sha256": "cf5fd545f4b39b73ee158fbe5de0283cbb8c0152ec0ef655225f0842f8351edd",
+      "bytes": 35048
+    },
+    {
+      "url": "https://static.hqwx.com/hqqt/images/logo-02.svg",
+      "sha256": "6b3ae038476dcb1647e5b2998085b54119c9fa35f0ede422aef2d493debb6cd3",
+      "bytes": 20255
+    }
+  ],
+  "handling": {
+    "jquery": "byte-for-byte with original license",
+    "css": "header subset scoped to #qt-official-header; explicit HTTPS, 1200px/60px and responsive overrides",
+    "javascript": "hqqt branch adapted; fixed markup, scoped/idempotent initialization, no document.write or page-wide sidebars/tracking",
+    "account": "official userInfo JSONP only when same-site passport cookie exists; anonymous/error retain official account link",
+    "mobile": "project adaptation of official desktop header; not a claim of official mobile source parity"
+  }
+}

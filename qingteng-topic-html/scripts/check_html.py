@@ -38,15 +38,19 @@ def inspect(html,mode='draft',record=None):
     if sum(t=='h1' for t,_ in page.nodes)!=1:errors.append('exactly one h1 required')
     if not any(t=='meta' and a.get('name')=='viewport' and 'width=device-width' in a.get('content','') and 'initial-scale=1' in a.get('content','') for t,a in page.nodes):errors.append('viewport missing')
     seen_targets={a.get('data-qt-target') for _,a in page.nodes if 'data-qt-target' in a}
-    if seen_targets != TARGETS-{'search'}:errors.append('public prototype target set changed')
+    if seen_targets != TARGETS-{'search','login'}:errors.append('footer prototype target set changed')
+    if ids.count('qt-official-header')!=1:errors.append('exactly one official Qingteng header required')
+    # Only the byte-locked public blocks may use the official online services.
+    # A modified shared block already fails above; authored body resources remain restricted.
+    subject=html
+    try:
+        for value in blocks(html).values():subject=subject.replace(value,'')
+    except ValueError:pass
+    subject_nodes=Page(subject).nodes
     for tag,a in page.nodes:
         for k,v in a.items():
             if k.startswith('on'):errors.append('inline event handler forbidden')
-            if k in {'src','poster','srcset'} and v and not v.startswith('data:image/'):
-                errors.append(f'non-embedded runtime resource: {tag}.{k}')
             if k in {'href','src','poster'} and v and re.match(r'\s*(?:javascript|vbscript):',v,re.I):errors.append('executable URL forbidden')
-        if tag in {'iframe','object','embed','base'}:errors.append(f'unsupported runtime tag: {tag}')
-        if tag=='link':errors.append('external stylesheet/link runtime dependency')
         if tag=='a' and a.get('href','').startswith('#'):
             dest=a['href'][1:].split('?',1)[0]
             if dest not in ids and dest not in TARGETS:errors.append('unresolved anchor: '+dest)
@@ -54,16 +58,23 @@ def inspect(html,mode='draft',record=None):
         if tag=='video' and ('autoplay' in a or 'controls' not in a):errors.append('video needs real controls and no autoplay')
         if mode=='final' and (any(k in a for k in ('data-review-only','data-review-index','data-qt-review-toggle','data-fact-state','data-experiment')) or 'qt-t-placeholder' in a.get('class','').split()):
             errors.append('final contains review/placeholder UI')
-    # Remove exact shared styles before looking for body overrides.
-    try:subject=html.replace(blocks(html)['STYLE'],'')
-    except ValueError:subject=html
+    for tag,a in subject_nodes:
+        if tag in {'iframe','object','embed','base'}:errors.append(f'unsupported subject runtime tag: {tag}')
+        if tag=='link':errors.append('external subject stylesheet/link runtime dependency')
+        for k,v in a.items():
+            if k in {'src','poster','srcset'} and v and not v.startswith('data:image/'):
+                errors.append(f'non-embedded subject runtime resource: {tag}.{k}')
+            if k=='style' and v and re.search(r'url\(\s*[\'"]?(?:https?:|//|file:)|@import',v,re.I):
+                errors.append('external subject inline CSS dependency')
+            if tag!='a' and k in {'href','xlink:href'} and v and not v.startswith(('#','data:image/')):
+                errors.append('external subject SVG/resource reference')
     styles='\n'.join(re.findall(r'<style[^>]*>(.*?)</style>',subject,re.S))
-    if re.search(r'\.qt-(?:site-header|site-footer|placeholder-dialog)\b',styles):errors.append('subject CSS overrides public structure')
+    if re.search(r'\.qt-(?:site-header|site-footer|placeholder-dialog)\b|qt-official-header|\.hqqt-new-head|\.header-fix',styles):errors.append('subject CSS overrides public structure')
     if re.search(r'@import|url\(\s*[\'"]?(?:https?:|//|file:)',styles,re.I):errors.append('external CSS dependency')
     if re.search(r'overflow-x\s*:\s*hidden|(?:html|body)\s*\{[^}]*overflow\s*:\s*hidden',styles,re.I):errors.append('overflow hiding masks layout')
     if re.search(r'(?:/Users/|file:///|[A-Z]:\\\\)',html):errors.append('local absolute path leaked')
     if 'html-content-layout' in html:errors.append('legacy dependency/reference leaked into page')
-    if re.search(r'(?:fetch\s*\(|XMLHttpRequest|WebSocket\s*\(|https?://[^\s"<>]+\.js)', '\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',html,re.S))):errors.append('unexpected network runtime')
+    if re.search(r'(?:fetch\s*\(|XMLHttpRequest|WebSocket\s*\(|https?://[^\s"<>]+\.js)', '\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',subject,re.S))):errors.append('unexpected subject network runtime')
     if mode=='final':
         public=''.join(blocks(html).values()) if not errors else ''
         subject=html.replace(public,'') if public else html

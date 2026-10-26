@@ -1,10 +1,13 @@
 #!/usr/bin/env node
-/** Actual Chromium checks. Does not install browsers, mutate inputs or call services. */
+/** Actual Chromium checks. Allows scoped official services; never installs dependencies. */
 import fs from 'node:fs/promises';
+import {installNetworkPolicy,checkOfficialHeader,safeUrl} from './browser_header.mjs';
 import path from 'node:path';
 import {pathToFileURL,fileURLToPath} from 'node:url';
-const [input,outArg]=process.argv.slice(2);
-if(!input||!outArg){console.error('Usage: node check_browser.mjs HTML OUTPUT_DIR');process.exit(2);}
+const [input,outArg,flag]=process.argv.slice(2);
+const offline=flag==='--offline';
+if(flag&&!offline){console.error('Unknown option: '+flag);process.exit(2);}
+if(!input||!outArg){console.error('Usage: node check_browser.mjs HTML OUTPUT_DIR [--offline]');process.exit(2);}
 const out=path.resolve(outArg),skill=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const resolvedOut=await fs.realpath(out).catch(()=>out);
 if(resolvedOut===skill||resolvedOut.startsWith(skill+path.sep)||resolvedOut===path.dirname(path.resolve(input))&&path.basename(input)==='report.json'){console.error('Output must be outside Skill and must not overwrite inputs');process.exit(2);}
@@ -17,10 +20,12 @@ try{
  const loaded=await import(module?pathToFileURL(path.resolve(module)).href:'playwright');
  const {chromium}=loaded.chromium?loaded:loaded.default;
  browser=await chromium.launch({headless:true,...(process.env.QT_CHROMIUM_EXECUTABLE?{executablePath:process.env.QT_CHROMIUM_EXECUTABLE}:{})});
- const context=await browser.newContext({offline:true,reducedMotion:'reduce'});
+ const context=await browser.newContext({reducedMotion:'reduce'});
+ const networkAudit=await installNetworkPolicy(context,offline);
  const page=await context.newPage(),errors=[],network=[];
  page.on('pageerror',e=>errors.push(e.message));
- page.on('request',r=>{if(/^https?:/.test(r.url()))network.push(r.url());});
+ page.on('response',r=>{if(/^https?:/.test(r.url()))networkAudit.responses.push({url:safeUrl(r.url()),status:r.status()});});
+ page.on('request',r=>{if(/^https?:/.test(r.url()))network.push(safeUrl(r.url()));});
  const url=pathToFileURL(path.resolve(input)).href;
  await page.goto(url);await page.evaluate(()=>document.fonts.ready);
  const widths=[1440,1024,1001,1000,768,701,700,390,375,320];
@@ -58,12 +63,7 @@ try{
   await page.waitForTimeout(80);
   check('public-'+i,correct==='#'+targets[i]&&await link.evaluate(e=>document.activeElement===e),{target:targets[i],route:correct});
  }
- await page.locator('#qt-header-query').fill('青藤 A&B?');await page.locator('#qt-header-search button').click();
- const search=await page.locator('#qt-dialog-target').textContent();
- check('search-encoding',search==='#search?q='+encodeURIComponent('青藤 A&B?'),search);
- await page.reload();check('search-refresh',await page.locator('#qt-placeholder-dialog').evaluate(e=>e.open),await page.locator('#qt-dialog-query').inputValue());await page.keyboard.press('Escape');
- await page.setViewportSize({width:390,height:950});await page.locator('#qt-header-search button').click();
- check('h5-search',await page.locator('#qt-dialog-search').isVisible()&&await page.locator('#qt-dialog-query').isVisible(),'mobile input accessible');await page.keyboard.press('Escape');
+ await checkOfficialHeader(page,check,report,out,offline);
  const moduleId=await page.locator('[data-module-id]').first().getAttribute('id');
  await page.evaluate(id=>{location.hash=id;},moduleId);await page.waitForTimeout(80);
  await page.locator('a[data-qt-target="consult"]').click();await page.keyboard.press('Escape');await page.waitForTimeout(100);
@@ -92,7 +92,9 @@ try{
   const original=await dialog.locator('.qt-t-original').getAttribute('data-original');await page.keyboard.press('Escape');await page.waitForTimeout(80);
   check('image-original-focus',original==='true'&&await zoom.evaluate(e=>document.activeElement===e),'original size toggle and Escape return focus');
  }
- check('offline-runtime',network.length===0,{network});check('console',errors.length===0,{errors});
+ report.network=networkAudit;
+ check('official-network-scope',!networkAudit.blocked.some(r=>!['xhr','fetch','script','image','ping'].includes(r.kind)),{blocked:networkAudit.blocked});
+ check('console',errors.length===0,{errors});
  report.status=report.checks.some(c=>c.status==='fail')?'fail':'pass';
  await context.close();
 }catch(e){report.status=browser?'fail':'not-run';report.error=String(e);report.checks.push({id:browser?'browser-execution':'browser-runtime',status:browser?'fail':'not-run',evidence:String(e)});}

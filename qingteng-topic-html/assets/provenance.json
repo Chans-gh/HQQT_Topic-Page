@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -8,10 +8,10 @@
   "assets": [
     {
       "file": "assets/templates/public-shell.html",
-      "source_path": "package/templates/公共页眉页脚模板.html",
-      "sha256": "be7c2b876fecc1e76e3658aecee0b84c3d936700e5867ef239f4a641fe1cf474",
-      "handling": "byte-for-byte",
-      "nature": "V1.5.1 locked public five-block shell; embedded original official logos"
+      "source_path": "assets/header/* + locked source package/templates/公共页眉页脚模板.html",
+      "sha256": "59085b7d4194f99bcc8b0aa80d3eaf5304f41a85635a9ebbf37894f374eaa85d",
+      "handling": "generated from locked source + official header adaptation",
+      "nature": "1.1.0 five-block shell; 1200px/60px online official header, footer prototype preserved"
     },
     {
       "file": "assets/brand/global-qingteng-logo-color.png",
@@ -110,6 +110,55 @@
       "sha256": "d22534b2956a109e69716a559e1cfa1185c885aa55fb9a81eeb80b0a4c7d39fb",
       "handling": "byte-for-byte",
       "nature": "synthetic composition example, NOT business evidence or real person"
+    },
+    {
+      "file": "assets/header/header-adapter.css",
+      "source_path": "assets/header/sources.json (URLs and original SHA256)",
+      "sha256": "92a141c79d569a13675c5a1c360da0bbe8e23b472b2f5809b0241959f501e9b2",
+      "handling": "official hqqt branch adapted; project 1200px/60px rules",
+      "nature": "runtime official header asset"
+    },
+    {
+      "file": "assets/header/logo-02.svg",
+      "source_path": "assets/header/sources.json (URLs and original SHA256)",
+      "sha256": "6b3ae038476dcb1647e5b2998085b54119c9fa35f0ede422aef2d493debb6cd3",
+      "handling": "byte-for-byte",
+      "nature": "runtime official header asset"
+    },
+    {
+      "file": "assets/header/official-header.css",
+      "source_path": "assets/header/sources.json (URLs and original SHA256)",
+      "sha256": "655c64f92609ebd9c14e2dab6661281046a0412c35ac941f48731b08ec23d3b9",
+      "handling": "official hqqt branch adapted; project 1200px/60px rules",
+      "nature": "runtime official header asset"
+    },
+    {
+      "file": "assets/header/official-header.html",
+      "source_path": "assets/header/sources.json (URLs and original SHA256)",
+      "sha256": "ced5edfb694fa83b64b37699f4e890e75c04297d750594791a7743e3fb2fbf7f",
+      "handling": "official hqqt branch adapted; project 1200px/60px rules",
+      "nature": "runtime official header asset"
+    },
+    {
+      "file": "assets/header/official-header.js",
+      "source_path": "assets/header/sources.json (URLs and original SHA256)",
+      "sha256": "fd26b6a099572da5489cb4582d45296741093f9c7c44aa0a0b627f7d022eed41",
+      "handling": "official hqqt branch adapted; project 1200px/60px rules",
+      "nature": "runtime official header asset"
+    },
+    {
+      "file": "assets/header/sources.json",
+      "source_path": "assets/header/sources.json (URLs and original SHA256)",
+      "sha256": "542c742e28e0d1eb46e18c30e0c780905994f532b4080a7ab5f49968b767dcd4",
+      "handling": "official hqqt branch adapted; project 1200px/60px rules",
+      "nature": "runtime official header asset"
+    },
+    {
+      "file": "assets/vendor/jquery-1.11.3.min.js",
+      "source_path": "assets/header/sources.json (URLs and original SHA256)",
+      "sha256": "ecb916133a9376911f10bc5c659952eb0031e457f5df367cde560edbfba38fb8",
+      "handling": "byte-for-byte",
+      "nature": "runtime official header asset"
     }
   ],
   "excluded": "Full sample pages, AI design originals, large synthetic PNGs and stress-test screenshots excluded. No legacy skill dependency.",
@@ -140,10 +189,10 @@
     }
   ],
   "public_blocks_sha256": {
-    "HEADER": "a2564d68ce5190aff244b57fc6af37b25d95afb62df25775ae02fc197f304710",
-    "FOOTER": "978e5e5e1c987dee6fc67ca08f255a45e9760f11c0c44cdedc4e5b9a4150ef64",
-    "STYLE": "fbb968fcb91c3835d47360a43fc2a25aca521850c152ae9b035a466006b4e53d",
-    "SCRIPT": "5f1f986cb69d245baca97c8623224700c543a5c395330659e88f5c74a7eee938",
+    "HEADER": "96b9c84098a1d7a0e072afcb633e1c0a786b784f8849659f73cc798141d3571f",
+    "FOOTER": "d1f863dc1c3c8f143cbd6758c4a5bb1f411bac138b8d6a2a2d17b5736cd64119",
+    "STYLE": "dd4f4544f8f5581f45bc46c1597aac21a0f681a8d3f2289455a80d09503074db",
+    "SCRIPT": "71cb42996e147900b86d190b05027c7e324b7f0dc50b4034f6d99ca9bfd44034",
     "DIALOG": "fa59886c211db53ae844d1a371b6506ac89078cb546317b196e56597b4373828"
   },
   "historical_research_boundary": "The locked foundation previously recorded html-content-layout as concluded structural research only. This Skill does not read/call/write/sync it and has no runtime dependency."

@@ -1,4 +1,4 @@
-/* Official eui.globalheader.js hqqt branch adaptation 1.1.0; see sources.json. */
+/* Official eui.globalheader.js hqqt branch adaptation 1.2.0; see sources.json. */
 (() => {
   'use strict';
   const config = Object.freeze({appId:'wwwhqqt',orgId:'94',pOrgId:'93',type:'hqqt',
@@ -74,6 +74,6 @@
       error(){root.dataset.auth='unavailable';root.querySelector('.login-btn-01').title='账户状态暂未取得，可前往官方学习中心继续';}
     });
   }
-  window.QingTengHeader=Object.freeze({init,version:'1.1.0'});
+  window.QingTengHeader=Object.freeze({init,version:'1.2.0'});
   init();
 })();

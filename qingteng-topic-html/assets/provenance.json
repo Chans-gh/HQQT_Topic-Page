@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -9,9 +9,9 @@
     {
       "file": "assets/templates/public-shell.html",
       "source_path": "assets/header/* + locked source package/templates/公共页眉页脚模板.html",
-      "sha256": "59085b7d4194f99bcc8b0aa80d3eaf5304f41a85635a9ebbf37894f374eaa85d",
+      "sha256": "1354216073cda7ceaf7c03f405f174fc9e5ab87d3648a89496574878288f79b7",
       "handling": "generated from locked source + official header adaptation",
-      "nature": "1.1.0 five-block shell; 1200px/60px online official header, footer prototype preserved"
+      "nature": "1.2.0 five-block shell; stable 320px/60px header, 1200px cap, unchanged footer prototypes"
     },
     {
       "file": "assets/brand/global-qingteng-logo-color.png",
@@ -114,7 +114,7 @@
     {
       "file": "assets/header/header-adapter.css",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "92a141c79d569a13675c5a1c360da0bbe8e23b472b2f5809b0241959f501e9b2",
+      "sha256": "359870c5d37c7291615c137c4fd6638b157c0589b0dba2abd2d976d028b7ad08",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -135,21 +135,21 @@
     {
       "file": "assets/header/official-header.html",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "ced5edfb694fa83b64b37699f4e890e75c04297d750594791a7743e3fb2fbf7f",
+      "sha256": "5b62355d8db83c2493d21f67118dd6abcb0bf4cd92406e216e75cd6e4aa3fa0d",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/official-header.js",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "fd26b6a099572da5489cb4582d45296741093f9c7c44aa0a0b627f7d022eed41",
+      "sha256": "d5379baea8564b564cc9a86f4b1153f5ab3c9880fc14c43069884bc0e974a705",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "542c742e28e0d1eb46e18c30e0c780905994f532b4080a7ab5f49968b767dcd4",
+      "sha256": "b35c917c47fe6c0a931cd6ca1e515d7717b2d7df55fd2883ef78ce3a381fddea",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -189,11 +189,16 @@
     }
   ],
   "public_blocks_sha256": {
-    "HEADER": "96b9c84098a1d7a0e072afcb633e1c0a786b784f8849659f73cc798141d3571f",
+    "HEADER": "3cd0d4d2d1623e18ed63de1d7ada66598149e8f520a54b784b7f8caa5935e3fc",
     "FOOTER": "d1f863dc1c3c8f143cbd6758c4a5bb1f411bac138b8d6a2a2d17b5736cd64119",
-    "STYLE": "dd4f4544f8f5581f45bc46c1597aac21a0f681a8d3f2289455a80d09503074db",
-    "SCRIPT": "71cb42996e147900b86d190b05027c7e324b7f0dc50b4034f6d99ca9bfd44034",
+    "STYLE": "863b9406aa0832984da5f6646d468437ee5bdbcde11330d1d55807a237c56cf4",
+    "SCRIPT": "e254a7f3693d3e4a6accfea25e211c1593ae567ff030548cdb85fa33b82d05ac",
     "DIALOG": "fa59886c211db53ae844d1a371b6506ac89078cb546317b196e56597b4373828"
   },
-  "historical_research_boundary": "The locked foundation previously recorded html-content-layout as concluded structural research only. This Skill does not read/call/write/sync it and has no runtime dependency."
+  "historical_research_boundary": "The locked foundation previously recorded html-content-layout as concluded structural research only. This Skill does not read/call/write/sync it and has no runtime dependency.",
+  "upgrade_baseline": {
+    "commit": "0018d7043940e9440cb974b3274bbb8ab7e5215a",
+    "skill_tree": "71e279329eba00d3bb979634eb0945da2a64e0ef",
+    "reason": "real-test editorial, composition, capacity, review and acceptance upgrade"
+  }
 }

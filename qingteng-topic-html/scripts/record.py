@@ -6,14 +6,14 @@ STAGES = {'INTAKE', 'LIST_REVIEW', 'DRAFT', 'DRAFT_REVIEW', 'REFINE', 'DELIVERY'
 
 def objects(record):
     result = {}
-    for kind in ('modules', 'sources', 'media'):
+    for kind in ('modules', 'sources', 'media', 'resources'):
         items = record.get(kind, [])
         if not isinstance(items, list):
             raise ValueError(f'{kind} must be a list')
         found = {}
         for item in items:
             ident = item.get('id', '')
-            pattern = {'modules': r'M\d{2,}', 'sources': r'S[\w-]+', 'media': r'IMG-\d{2,}'}[kind]
+            pattern = {'modules': r'M\d{2,}', 'sources': r'S[\w-]+', 'media': r'IMG-\d{2,}', 'resources': r'RES-\d{2,}'}[kind]
             if not re.fullmatch(pattern, ident) or ident in found:
                 raise ValueError(f'invalid/duplicate {kind} ID: {ident}')
             if not isinstance(item.get('revision'), int) or item['revision'] < 1:
@@ -41,35 +41,84 @@ def approved(record, stage, kind, item):
     return False
 
 
+def source_ready(record, source):
+    adopted = source.get('adoption') == 'adopted' and (
+        approved(record, 'list', 'sources', source) or approved(record, 'draft', 'sources', source))
+    # An attributed input is a claim ABOUT the supplied material, not independent proof of its claims.
+    attributed = (source.get('kind') == 'input' and source.get('citation_mode') == 'attributed-input'
+                  and source.get('reading') == 'checked' and bool(source.get('read_scope'))
+                  and source.get('claim_scope') == 'attributed' and bool(source.get('public_note')))
+    return adopted and (source.get('verification') == 'verified' or attributed)
+
+
+def module_mode(record, item, mode):
+    if mode == 'draft' and record.get('task', {}).get('mixed_scope'):
+        value = item.get('render_mode', 'draft')
+        if value not in {'draft', 'refine'}:
+            raise ValueError('mixed module render_mode must be draft/refine')
+        return value
+    return mode
+
+
+def validate_editorial(item):
+    fields = ('reader_question', 'key_message', 'content_layers', 'deduplication', 'relationship', 'visual_intent')
+    if any(not item.get(k) for k in fields):
+        raise ValueError(f'{item["id"]}: incomplete editorial decisions')
+    layers = item['content_layers']; visual = item['visual_intent']
+    if not isinstance(layers, dict) or not all(layers.get(k) for k in ('primary', 'support', 'evidence', 'conditions')):
+        raise ValueError(f'{item["id"]}: content layers need primary/support/evidence/conditions (use explicit none when absent)')
+    if not isinstance(visual, dict) or not all(visual.get(k) for k in ('focus', 'order', 'web', 'h5')):
+        raise ValueError(f'{item["id"]}: visual focus/order/web/h5 required')
+
+
 def validate_record(record, mode, module_ids):
     if mode not in {'draft', 'refine', 'final'}:
         raise ValueError('mode must be draft/refine/final')
     task = record.get('task', {})
     allowed = {'draft': {'DRAFT', 'DRAFT_REVIEW'}, 'refine': {'REFINE'}, 'final': {'DELIVERY'}}
-    if task.get('stage') not in allowed[mode]:
+    mixed_refine = mode == 'refine' and task.get('mixed_scope') and task.get('stage') in {'DRAFT','DRAFT_REVIEW'}
+    if task.get('stage') not in allowed[mode] and not mixed_refine:
         raise ValueError(f'phase does not allow {mode}: {task.get("stage")}')
     data = objects(record)
     if not module_ids or len(module_ids) != len(set(module_ids)):
         raise ValueError('nonempty unique module scope required')
     for ident in module_ids:
         item = data['modules'].get(ident)
+        if mixed_refine and item and item.get('render_mode') != 'refine':
+            raise ValueError(f'{ident}: generation/refine scope is not declared refined')
         if not item or item.get('removed'):
             raise ValueError(f'unknown/removed module {ident}')
         if not approved(record, 'list', 'modules', item):
             raise ValueError(f'{ident}: missing exact list approval')
-        if mode != 'draft' and not approved(record, 'draft', 'modules', item):
+        effective = module_mode(record, item, mode)
+        if effective != 'draft' and not approved(record, 'draft', 'modules', item):
             raise ValueError(f'{ident}: missing exact draft approval')
+        if task.get('editorial_contract') == 1:
+            validate_editorial(item)
         for sid in item.get('sources', []):
             if sid not in data['sources']:
                 raise ValueError(f'{ident}: unknown source {sid}')
+            if data['sources'][sid].get('kind') not in {'input','web'}:
+                raise ValueError(f'{sid}: source kind must be input/web')
         for mid in item.get('media', []):
             if mid not in data['media'] or data['media'][mid].get('module') != ident:
                 raise ValueError(f'{ident}: invalid media association {mid}')
+        for rid in item.get('resources', []):
+            resource = data['resources'].get(rid)
+            if not resource or resource.get('module') != ident:
+                raise ValueError(f'{ident}: invalid resource association {rid}')
+            if resource.get('status') not in {'pending', 'unavailable', 'omitted'}:
+                raise ValueError(f'{rid}: only honest unavailable/omitted video notices are supported; real video delivery needs a separately audited resource package')
+            if resource.get('status') == 'omitted' and not approved(record, 'omit', 'resources', resource):
+                raise ValueError(f'{rid}: resource omission needs explicit evidence')
+            if mode == 'final' and resource.get('status') != 'omitted':
+                if not (resource.get('status') == 'unavailable' and resource.get('resolution') == 'retain-notice'
+                        and resource.get('public_note') and approved(record, 'retain', 'resources', resource)):
+                    raise ValueError(f'{rid}: unresolved resource prevents final')
         if mode == 'final':
             for sid in item.get('sources', []):
                 source = data['sources'][sid]
-                if (source.get('verification') != 'verified' or source.get('adoption') != 'adopted'
-                        or not (approved(record, 'list', 'sources', source) or approved(record, 'draft', 'sources', source))):
+                if not source_ready(record, source):
                     raise ValueError(f'{sid}: unresolved source prevents final')
             for mid in item.get('media', []):
                 media = data['media'][mid]
@@ -89,6 +138,13 @@ def validate_record(record, mode, module_ids):
                     raise ValueError(f'{mid}: source plan still undecided')
         if mode == 'final' and item.get('issues'):
             raise ValueError(f'{ident}: unresolved facts/review issues')
+    orders = [data['modules'][i].get('order') for i in module_ids]
+    if any(not isinstance(o, int) for o in orders) or orders != sorted(set(orders)):
+        raise ValueError('module DOM order differs from recorded unique order')
+    if task.get('mixed_scope') and mode == 'draft':
+        active = {m['id'] for m in data['modules'].values() if not m.get('removed')}
+        if set(module_ids) != active:
+            raise ValueError('mixed-scope validation requires the complete active page')
     if mode == 'final':
         # A deliberately partial final delivery needs an explicit deliverable scope.
         active = {m['id'] for m in data['modules'].values() if not m.get('removed')}

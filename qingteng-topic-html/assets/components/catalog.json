@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.2.0",
   "notice": "Patterns are editable semantic fragments, not a runtime renderer or fixed business structure. New combinations allowed within visual rules.",
   "components": [
     {
@@ -16,12 +16,12 @@
         "操作"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "卡片逐个向下",
       "snippet": "patterns.html#C01",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C02",
@@ -36,12 +36,12 @@
         "出处"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "主张在前、依据紧随",
       "snippet": "patterns.html#C02",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C03",
@@ -56,12 +56,12 @@
         "组合说明"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "整体后逐项组成",
       "snippet": "patterns.html#C03",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C04",
@@ -76,12 +76,12 @@
         "选择依据"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "每维度内逐对象展示",
       "snippet": "patterns.html#C04",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C05",
@@ -97,12 +97,12 @@
         "材料"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "保留三段对应",
       "snippet": "patterns.html#C05",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C06",
@@ -119,12 +119,12 @@
         "下一步"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "每项指标及口径保持完整",
       "snippet": "patterns.html#C06",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C07",
@@ -140,12 +140,12 @@
         "视频"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "动作→媒体→完成条件",
       "snippet": "patterns.html#C07",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C08",
@@ -160,12 +160,12 @@
         "状态"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "日期在事件之前",
       "snippet": "patterns.html#C08",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C09",
@@ -180,12 +180,12 @@
         "编号批注"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "材料在前、解读紧随",
       "snippet": "patterns.html#C09",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C10",
@@ -200,12 +200,12 @@
         "结论"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "每条重复字段名",
       "snippet": "patterns.html#C10",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C11",
@@ -225,7 +225,7 @@
       "snippet": "patterns.html#C11",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
     },
     {
       "type": "C12",
@@ -240,12 +240,66 @@
         "汇合产物"
       ],
       "media": "按实际用途：截图、插图、人物；无素材时移除可选槽",
-      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按文字和父容器容量收紧/减列",
+      "quantity": "实际2–10，0为空状态，1为单项，12全部保留；按可换行文字和父容器容量减列，组边界保持",
       "h5_order": "移动端保留明确关系文字",
       "snippet": "patterns.html#C12",
       "styles": "topic.css",
       "interactions": "topic.js",
-      "capacity": "纯文字用data-qt-fit=prose；双组合用data-qt-fit=pair/media/person；同级组用data-qt-group；对齐字段关系优先保留"
+      "capacity": "data-qt-group保持组级边界；data-qt-fit默认边界一致，仅显式data-qt-align=compact局部收紧；字体预算和父容器决定换列，媒体只读固有比例"
+    }
+  ],
+  "layout_contract": {
+    "group": "full module boundary, stretch rows, no phantom items",
+    "compact": "only explicit data-qt-align=compact for justified local combination",
+    "capacity": "wrappable font budget + intrinsic media ratio + actual parent; never rendered height feedback",
+    "media": "qt-t-media-group aligns media slots/captions; screenshots contain + original size",
+    "review": "per-section numbered citations; deduplicated end references; review notes centralized"
+  },
+  "expressions": [
+    {
+      "id": "C02",
+      "purpose": "主张与重点证据",
+      "snippet": "patterns.html#C02"
+    },
+    {
+      "id": "C07",
+      "purpose": "生产链、工具辅助与终点成果",
+      "snippet": "patterns.html#C07"
+    },
+    {
+      "id": "C08",
+      "purpose": "成长阶段直接承接成果",
+      "snippet": "patterns.html#C08"
+    },
+    {
+      "id": "C06",
+      "purpose": "主次指标与口径",
+      "snippet": "patterns.html#C06"
+    },
+    {
+      "id": "cover-composition",
+      "purpose": "主题与行动共同构图，H5装饰收小",
+      "snippet": "patterns.html#cover-composition"
+    },
+    {
+      "id": "change-evidence",
+      "purpose": "起点/变化/作品证据相邻",
+      "snippet": "patterns.html#change-evidence"
+    },
+    {
+      "id": "media-ensemble",
+      "purpose": "左右图文、主图细节、双三媒体协调",
+      "snippet": "patterns.html#media-ensemble"
+    },
+    {
+      "id": "outcome-collection",
+      "purpose": "作品与用途，避免重复收获",
+      "snippet": "patterns.html#outcome-collection"
+    },
+    {
+      "id": "C04",
+      "purpose": "真实同维度字段比较",
+      "snippet": "patterns.html#C04"
     }
   ]
 }

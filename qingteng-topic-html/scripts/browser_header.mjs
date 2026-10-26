@@ -25,10 +25,13 @@ export async function checkOfficialHeader(page,check,report,out,offline=false){
   const bounds=await header.evaluate(root=>{
    const box=root.getBoundingClientRect(),inner=root.querySelector('.main-width').getBoundingClientRect();
    const overflow=[...root.querySelectorAll('.header-content a,.header-content button')].filter(e=>e.getClientRects().length).filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>innerWidth+1;}).map(e=>e.className);
+   const controls=[...root.querySelectorAll('.logo a,.header-right .search-block,.header-right .login-btn-01,.header-right .user-info,.qt-menu-button')].filter(e=>e.getClientRects().length);
+   const intersections=[];
+   for(let i=0;i<controls.length;i++)for(let j=i+1;j<controls.length;j++){const a=controls[i].getBoundingClientRect(),b=controls[j].getBoundingClientRect();if(Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1)intersections.push([controls[i].className,controls[j].className]);}
    const learning=root.querySelector('.header-right .learning-center');
-   return {height:box.height,width:inner.width,overflow,mobileLearningHidden:!learning.getClientRects().length};
+   return {height:box.height,width:inner.width,overflow,intersections,mobileLearningHidden:!learning.getClientRects().length};
   });
-  check('header-size-'+width,bounds.height===60&&bounds.width<=1200.1&&!bounds.overflow.length&&(width>700||bounds.mobileLearningHidden),bounds);
+  check('header-size-'+width,bounds.height===60&&bounds.width<=1200.1&&!bounds.overflow.length&&!bounds.intersections.length&&(width>700||bounds.mobileLearningHidden),bounds);
  }
  await page.setViewportSize({width:390,height:950});
  const menu=header.locator('.qt-menu-button');await menu.click();

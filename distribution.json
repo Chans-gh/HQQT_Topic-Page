@@ -4,5 +4,17 @@
   "branch": "main",
   "authoring_branch": "package/huanqiu-qingteng-topic-html-skill-v1-2026-10-25",
   "skill_directory": "qingteng-topic-html",
-  "allowed_roots": ["README.md", ".gitignore", "distribution.json", "maintenance/", "qingteng-topic-html/"]
+  "allowed_roots": [
+    "README.md",
+    ".gitignore",
+    "distribution.json",
+    "maintenance/github_sync.py",
+    "maintenance/upgrade_regression.py",
+    "maintenance/upgrade_browser.mjs",
+    "qingteng-topic-html/"
+  ],
+  "local_only_paths": [
+    "maintenance/topic-html-review-upgrade-spec-v1.0.md",
+    "maintenance/topic-html-upgrade-acceptance-v1.2.0.md"
+  ]
 }

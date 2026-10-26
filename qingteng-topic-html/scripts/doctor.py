@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def diagnose(browser=False):
-    checks = []
+    checks = []; skill_version = None
     def add(name, passed, detail, required=True):
         checks.append({'id': name, 'status': 'pass' if passed else ('fail' if required else 'optional-missing'), 'detail': detail})
     add('python', sys.version_info >= (3, 9), '.'.join(map(str, sys.version_info[:3])))
@@ -30,6 +30,9 @@ def diagnose(browser=False):
         text = (ROOT/'SKILL.md').read_text(encoding='utf-8')
         add('entry', text.startswith('---\nname: qingteng-topic-html\n') and 'description:' in text, 'Skill metadata')
         manifest = json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))
+        skill_version=manifest['version']
+        versions=[json.loads((ROOT/name).read_text(encoding='utf-8'))['version'] for name in ('package.json','package-lock.json','assets/components/catalog.json','assets/header/sources.json')]
+        add('version-consistency',all(v==skill_version for v in versions),{'skill':skill_version,'runtime_versions':versions})
         invalid = [a['file'] for a in manifest['assets'] if hashlib.sha256((ROOT/a['file']).read_bytes()).hexdigest() != a['sha256']]
         for svg in (ROOT/'assets').rglob('*.svg'):
             ET.parse(svg)
@@ -72,7 +75,7 @@ finally { if(engine)await engine.close(); }
             except (ValueError, IndexError):
                 result = {'error': p.stderr[-1000:] or 'Probe did not return JSON'}
             add('chromium-launch', p.returncode == 0, result)
-    return {'status': 'fail' if any(c['status']=='fail' for c in checks) else 'pass',
+    return {'skill_version':skill_version,'status': 'fail' if any(c['status']=='fail' for c in checks) else 'pass',
             'mode': 'browser' if browser else 'core', 'checks': checks,
             'note': 'Core checks do not require Node. Browser mode actually launches Chromium. No installation or image generation.'}
 

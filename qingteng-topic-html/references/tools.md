@@ -10,9 +10,13 @@ Python 3.9+标准库，无API/密钥。浏览器脚本需要Node.js20+、随包�
 
 每个非omitted素材只放一个空槽`<div data-media-id="IMG-01"></div>`；组合器按记录生成占位或内嵌授权文件。输入图要求reuse审批记录；新生成图在draft中拒绝，在refine/final必须有draft方案和generate范围。素材文件相对路径以记录文件所在目录解析，输出不泄露路径。截图自动具备放大/原尺寸/关闭焦点；人物使用独立矩形槽。不要用占位图冒充到位素材。
 
-来源由`module.sources`生成支持引用与独立查证/采用状态；不要在body手写data-source-id或重复审批状态。审阅数据由记录生成，不提供批准按钮。要调整清单或文案，先根据真实反馈维护受影响记录版本，再组合。
+来源由`module.sources`生成节内短编号和页尾去重来源组，未决状态保留，已采用来源不在每模块重复铺长行；不要在body手写data-source-id或重复审批状态。审阅数据由记录生成，不提供批准按钮。要调整清单或文案，先根据真实反馈维护受影响记录版本，再组合。
 
-容量标记：`data-qt-fit=prose`用于可收紧的纯文字组合；`pair`用于观点/依据；`media`用于材料/解读；`person`的最后一个子元素是人物，正文在前。子元素应是与关系匹配的两个组合，三组以上用组或嵌套语义结构。同级组`data-qt-group`根据真实文字与父容器计算宽度和列数；不是固定文本框宽度。局部滚动集合为空时使用`<p data-qt-empty>暂无内容</p>`标记空状态，计数为0；不要用一张空卡充当真实项目。对齐比较/资料字段保留关系，不能为收紧破坏跨项对齐。无媒体时删除对应槽，容量层自动回收空间。
+容量标记：`data-qt-fit=prose/pair/media/person`分别承载文字/观点依据/材料解读/人物组合，默认保持所属边界；确需局部收紧时显式`data-qt-align="compact"`。person最后一个子项为人物，正文在前。三组以上用组或嵌套语义结构。`data-qt-group`按可换行文本的当前字体预算、数量和父容器选择列，组宽保持100%，末行靠前。图片按固有比例参与容量，不读取当前渲染高度形成反馈。空集合使用`<p data-qt-empty>暂无内容</p>`，计数0；不造空卡。移除媒体后回收空列。
+
+`qt-t-media-group qt-t-group`加`data-qt-group`协调双/三媒体；普通同级组的每项均为figure或包含单一figure的卡片时，也会自动启用这一契约。共同媒体槽完整contain，图注等高且可增长，截图自动原图查看。`qt-t-production/qt-t-journey/qt-t-change/qt-t-key/qt-t-outcome/qt-t-evidence/qt-t-scene/qt-t-hero`表达方法见patterns；表达需要实际文案配合，不是给任意长列表加class即可通过。
+
+非图片资源只放空`data-resource-id`槽并在modules.resources/record.resources关联；单文件工具支持真实不可用通知/经明确批准省略或保留通知，不伪造播放器。真实视频包另行审计，不能以本工具pass声称视频通过。混合阶段与输入引用语义见content-record。
 
 ## 组合与静态检查
 
@@ -39,7 +43,7 @@ python3 "$SKILL/scripts/compose_html.py" --record "$TASK/record.json" --mode ref
 node "$SKILL/scripts/check_browser.mjs" "$TASK/draft.html" "$TASK/browser-report"
 ```
 
-如Playwright不在默认模块路径，设置`QT_PLAYWRIGHT_MODULE`为宿主可用的Playwright入口文件；如需使用现成Chromium，可设置`QT_CHROMIUM_EXECUTABLE`。只采用实际存在的运行时，不依赖特定本机路径。报告区分pass/fail/not-run，输出十视口几何与桌面/H5全页截图。浏览器脚本默认联网，按官方域名范围核对页头/页脚互动与正文布局；--offline仅验收降级，不声称真实搜索或登录通过，关系/事实/密度/人物安全区仍须目视。仅Chromium通过不能说Safari/iOS/Android实机通过。
+如Playwright不在默认模块路径，设置`QT_PLAYWRIGHT_MODULE`为宿主可用的Playwright入口文件；如需使用现成Chromium，可设置`QT_CHROMIUM_EXECUTABLE`。只采用实际存在的运行时，不依赖特定本机路径。报告区分pass/fail/not-run和五层结果，绑定HTML/截图SHA；输出十视口往返几何、桌面/H5全页和逐模块截图。组边界/同排底线/媒体槽及图注按2px检查。content/visual默认not-run，需执行者目视另记，不能由自动结果赋pass。浏览器脚本默认联网，按官方域名范围核对页头/页脚互动与正文布局；--offline仅验收降级，不声称真实搜索或登录通过，关系/事实/密度/人物安全区仍须目视。仅Chromium通过不能说Safari/iOS/Android实机通过。
 
 
 ## 页头组件维护

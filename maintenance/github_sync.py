@@ -21,6 +21,26 @@ def git(root, *args, data=None):
     return p.stdout
 
 
+def distribution_tree(root, entries):
+    """Git tree of the deliberate public projection; no working-tree copy."""
+    nodes = {}
+    for item in entries:
+        cursor = nodes
+        parts = item['path'].split('/')
+        for part in parts[:-1]:cursor = cursor.setdefault(part, {})
+        cursor[parts[-1]] = item
+    def build(node):
+        records = []
+        for name, value in node.items():
+            if 'sha' in value and value.get('type') == 'blob':
+                mode, kind, sha = value['mode'], 'blob', value['sha']
+            else:
+                mode, kind, sha = '040000', 'tree', build(value)
+            records.append(f'{mode} {kind} {sha}\t{name}\0'.encode('utf-8'))
+        return git(root, 'mktree', '-z', data=b''.join(records)).decode().strip()
+    return build(nodes)
+
+
 def snapshot(expected_head, ref='HEAD'):
     root = Path(git(PACKAGE,'rev-parse','--show-toplevel').decode('utf-8').strip())
     config = json.loads((PACKAGE/'distribution.json').read_text(encoding='utf-8'))
@@ -45,6 +65,7 @@ def snapshot(expected_head, ref='HEAD'):
         mode, kind, sha = meta.decode().split(' ')
         path = raw_path.decode('utf-8')
         parts = Path(path).parts
+        if path in config.get('local_only_paths', []):continue
         if kind!='blob' or mode not in {'100644','100755'}:
             raise ValueError('Symlink/submodule is not distributable: '+path)
         if not any(path==a or (a.endswith('/') and path.startswith(a)) for a in config['allowed_roots']):
@@ -62,7 +83,8 @@ def snapshot(expected_head, ref='HEAD'):
     if not re.fullmatch(r'[0-9a-f]{40}',expected_head):
         raise ValueError('--expected-head must be the exact last audited remote commit SHA')
     return {'schema':'qingteng-github-export/1','repository':config['repository'],'branch':config['branch'],
-            'expected_head':expected_head,'source_commit':commit,'source_tree':tree,
+            'expected_head':expected_head,'source_commit':commit,'package_tree':tree,'source_tree':distribution_tree(root,entries),
+            'local_only_paths':config.get('local_only_paths',[]),
             'entries':entries,'note':'Git blobs only; no local branch history or governance files exported'}
 
 

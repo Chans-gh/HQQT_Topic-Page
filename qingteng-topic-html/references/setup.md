@@ -26,4 +26,6 @@ npm ci使用随包锁定的Playwright；Chromium是单独下载的浏览器。�
 
 GitHub更新不会自动刷新已安装目录。作者在源项目提交并定向同步，使用者重新获取/备份后更新自己的Skill。首次使用显式调用`$qingteng-topic-html`；如未发现新增Skill，按[官方说明](https://learn.chatgpt.com/docs/build-skills)重新启动Codex。不要将临时业务生成物或依赖缓存提交为Skill源文件。
 
-V1.1.0页头为官方源码适配版：固定jQuery与样式随HTML内嵌，搜索/账户/品牌资源可联网。离线时正文可读、官网入口保留，在线搜索/认证不可伪称通过。
+V1.2.0页头为官方源码适配版：固定jQuery与样式随HTML内嵌，搜索/账户/品牌资源可联网。离线时正文可读、官网入口保留，在线搜索/认证不可伪称通过。
+
+1.2.0升级仍保持Python标准库与锁定Playwright依赖。隔离验证可复制到Skill发现路径之外的新目录后执行npm ci、doctor --browser及smoke；不要直接覆盖真实安装。更换模板需保存旧快照和来源指纹，不迁移不存在的业务批准。

@@ -27,8 +27,8 @@
 #qt-official-header .downLoad-cover{z-index:5}
 #qt-official-header .learning-center a{display:flex;align-items:center;min-height:44px;padding:0 10px;font-size:14px}
 #qt-official-header .learning-center a::before{display:none}
-#qt-official-header .user-box{height:60px;display:flex;align-items:center;min-width:0}
-#qt-official-header .header-right a.login-btn-01{display:flex;align-items:center;justify-content:center;height:44px;width:110px;line-height:1.4;color:#fff;white-space:nowrap;padding:0 12px}
+#qt-official-header .user-box{height:60px;display:flex;align-items:center;min-width:0;flex:none}
+#qt-official-header .header-right a.login-btn-01{display:flex;align-items:center;justify-content:center;height:44px;width:110px;line-height:1.4;color:#fff;white-space:nowrap;padding:0 12px;transition:background-color .4s}
 #qt-official-header .user-info{height:44px;padding:0;max-width:148px;gap:6px}
 #qt-official-header .user-info::before{display:none}
 #qt-official-header .user-info .avator{float:none;flex:none;margin:0}
@@ -62,10 +62,13 @@
  #qt-official-header .main-width{width:calc(100% - 24px)}
  #qt-official-header .logo img{max-width:104px;height:auto;max-height:32px}
  #qt-official-header .header-content{gap:6px}
- #qt-official-header .header-right{gap:4px}
+ #qt-official-header .header-right{gap:4px;flex:none}
  #qt-official-header .header-right .learning-center{display:none}
- #qt-official-header .login-btn-01{width:88px;padding:0 6px;font-size:12px}
- #qt-official-header .user-info{max-width:88px}
+ #qt-official-header .header-right a.login-btn-01{width:88px;flex:none;padding:0 6px;font-size:12px}
+ #qt-official-header .user-info{max-width:88px;width:88px;flex:none}
  #qt-official-header .user-name{max-width:48px;font-size:12px}
  #qt-official-header .user-box .drop-down{position:fixed;top:60px;right:12px;bottom:auto;transform:none;width:min(310px,calc(100vw - 24px))}
 }
+
+/* Keep the bundled official icon visible when the optional remote hover asset fails. */
+#qt-official-header .header-right .search-02:hover{background:url(data:image/png}

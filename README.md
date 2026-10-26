@@ -1,10 +1,10 @@
 # HQQT Topic Page · 环球青藤专题页 Skill
 
-`qingteng-topic-html` V1.1.0：先整理并确认内容清单，再制作、审阅和精修环球青藤 Web/H5 专题 HTML。独立使用，不依赖作者的本机目录、旧项目或其他Skill；正文单文件，官方青藤页头的搜索/账户等服务允许联网。
+`qingteng-topic-html` V1.2.0：先提炼主结论、层级和编排意图并确认内容清单，再制作、审阅和精修环球青藤 Web/H5 专题 HTML。独立使用，不依赖作者的本机目录、旧项目或其他Skill；正文单文件，官方青藤页头的搜索/账户等服务允许联网。
 
 ## 1. 获取源码
 
-本仓库为**私有仓库**。先取得仓库访问权限，并使用有权限的 GitHub 账号登录；无权限时网页/API可能返回404。私有访问限制不会因为安装Skill而自动解除。
+本仓库当前公开，可从GitHub获取运行源。作者的内部复盘规格、验收报告和业务材料保留在本地维护库，不随公开分发。
 
 ```sh
 git clone https://github.com/Chans-gh/HQQT_Topic-Page.git
@@ -17,14 +17,14 @@ cd HQQT_Topic-Page
 
 任选一种方式；不需要两种都做。
 
-**方式A：让 Codex 安装。** 在具有该私有仓库访问权限的 Codex 中输入：
+**方式A：让 Codex 安装。** 在 Codex 中输入：
 
 ```text
 使用 $skill-installer 安装
 https://github.com/Chans-gh/HQQT_Topic-Page/tree/main/qingteng-topic-html
 ```
 
-安装器需要自己的Git/GitHub访问凭据。浏览器能打开仓库，不代表终端或安装器已获得访问权限；出现404/认证失败时先核对登录账号与仓库权限，不把token发到对话里。
+安装器按GitHub实际访问状态下载；出现404或认证失败时核对地址和访问状态，不把token发到对话里。
 
 **方式B：从已获取的源码手动安装。** 在仓库根目录运行：
 
@@ -107,7 +107,7 @@ Linux如提示缺系统库，按[Playwright浏览器依赖说明](https://playwr
 
 ## 5. 作者以后如何从本地 Codex 同步
 
-作者的唯一编辑源仍是本地项目库对应分支的`package/`。已安装Skill是运行副本；若改在安装目录，先比较并人工移植回源目录。GitHub保存该产品的分发快照，不自动双向同步。
+作者的唯一编辑源仍是本地项目库对应分支的`package/`。公开导出明确排除distribution.json中local_only_paths列出的内部复盘与验收报告；业务材料、旧页面和截图始终不进入该产品源。已安装Skill是运行副本；若改在安装目录，先比较并人工移植回源目录。GitHub保存该产品的分发快照，不自动双向同步。
 
 最省事：在原开发对话或本地源项目中直接要求Codex：
 
@@ -136,7 +136,7 @@ prepare仅读Git已提交对象，输出源提交、树指纹和文件清单，*
 python3 package/maintenance/github_sync.py push --expected-head LAST_AUDITED_REMOTE_SHA
 ```
 
-push只使用已有`GH_TOKEN`/`GITHUB_TOKEN`、已登录`gh`或Git凭据助手，不新建或扩大权限。不要把凭据写入仓库。凭据不覆盖此私有仓库时，改用已授权的Codex GitHub连接器。远端基线改变、源工作区未提交或分支不符时停止；不会force push，也不会将治理库其他分支历史推上去。
+push只使用已有`GH_TOKEN`/`GITHUB_TOKEN`、已登录`gh`或Git凭据助手，不新建或扩大权限。不要把凭据写入仓库。凭据不覆盖此仓库时，改用已授权的Codex GitHub连接器。远端基线改变、源工作区未提交或分支不符时停止；不会force push，也不会将治理库其他分支历史推上去。
 
 同步完成后更新本地`PROJECT_OFF.md`中的远端提交SHA。已安装的Skill不会因GitHub提交自动更新；使用者需要重新获取，并在备份/核对旧安装副本后更新安装目录。仅安装文档与维护工具变更、无运行文件变化时，可按实际差异判断是否需要更新。
 
@@ -144,4 +144,31 @@ push只使用已有`GH_TOKEN`/`GITHUB_TOKEN`、已登录`gh`或Git凭据助手�
 
 首版已完成F01–F12流程与修订/省略扩展、十视口数量与容量矩阵、局部浏览以及三种不同完整页的Chromium离线验收。V1.0.1补齐安装/依赖/自检与同步；V1.1.0采用官方青藤页头固定适配版：1200px容器上限、Web/H5统一60px、官方导航/搜索/账户，与页脚原型入口分开。原始来源及适配说明见[qingteng-topic-html/assets/header/sources.json](qingteng-topic-html/assets/header/sources.json)；当前实现与验证记录在源项目PROJECT_OFF。
 
-自检的合成页面与确认记录只验证安装和工具，不替代业务事实/授权核对，也不调用真实生图。Safari、iOS、Android实机和Windows实机未验收；浏览器模拟不能冒充实机结论。未安装或发布到任何Skill市场；此仓库仍为私有分发。
+自检的合成页面与确认记录只验证安装和工具，不替代业务事实/授权核对，也不调用真实生图。Safari、iOS、Android实机和Windows实机未验收；浏览器模拟不能冒充实机结论。未安装或发布到任何Skill市场；该源码仓库当前公开。
+
+## 7. 真实测试复盘与升级规格
+
+2026-10-26真实专题测试暴露了内容提炼、视觉层级、整页编排、容量算法及验收闭环的问题。用户已决定停止沿用D01–D03作为交付候选，要求全面升级后以同项目从零重测。
+
+本地维护库的《真实测试复盘与全面升级 SPEC V1.0》记录用户反馈、已核对原因、待验证假设、升级要求、回归与重测契约。V1.2.0已按它完成开发与合成验收，实际范围见本地升级验收报告；同项目真实从零重测另行启动。它是维护规格，不属于安装Skill的运行文件，也不进入Skill分发ZIP。业务失败页面、真实截图及报告继续保存在原任务目录，不纳入Skill源。
+
+
+## 8. V1.2.0开发验收与更新
+
+本轮将文案提炼与视觉编排落入清单/记录/初稿：生产链、成长成果、前后变化和证据、指标主次、场景图文及媒体组。组级默认保持模块边界，显式compact只用于局部；容量按可换行文字、媒体固有比例和父容器计算，取消渲染高度反馈。共享页头修正320px容量与过渡，保留60px、1200px和原公共入口。
+
+来源采用节内短引用与页尾去重；输入读取、主张核验和采用分开；混合模块范围与公共壳快照有核对；自定义资源占位不能冒充final。工具报告绑定HTML/截图SHA，并将内容/视觉默认not-run，需执行者逐模块实际审查。
+
+维护者可在本地源项目复验（不会调用生图）：
+
+```sh
+python3 package/maintenance/upgrade_regression.py --out /tmp/qingteng-upgrade-check
+# 配好Playwright，或按setup显式配置QT_PLAYWRIGHT_MODULE后：
+node package/maintenance/upgrade_browser.mjs /tmp/qingteng-upgrade-check package/qingteng-topic-html
+```
+
+41项范围/收口回归、数量与交互压力矩阵、三份整页Chromium检查及桌面/H5逐模块目视的真实结果、I/R/T映射与剩余边界见验收报告。合成页和批准只用于开发，不替代真实项目材料与两次业务确认。真实图片服务调用0；真实登录、Safari/iOS/Android/Windows实机和真实视频解码未测试。官方搜索源环境一次未取得输入框；ZIP隔离在线复验已加载1个真实输入框。搜索提交结果和真实账号仍未测，离线/失败/超时回退另有实测。
+
+运行源1.2.0与独立分发已验证；用户可按安装说明更新，旧安装先比对并备份。维护者内部报告与当前安装状态保留在本地维护库。ZIP仅含已提交Skill源，不含maintenance、业务失败样本、测试页、截图或报告。
+
+1.2.0交付源提交`8f4b23c`，Skill tree `f0408ef4f7e5b7621d51a5b8beab687dc6956a5a`；49文件ZIP的CRC/字节核对及隔离npm ci、doctor/smoke、重新组合与浏览器验收已通过，详见验收报告。

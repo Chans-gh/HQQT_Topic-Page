@@ -18,12 +18,20 @@ def run_case(out, browser=False):
     module = {'id':'M01','order':1,'revision':1,'list_version':'C01','draft_revision':1,'draft_version':'D01',
               'title':'首次运行检查','purpose':'验证安装后的工具与素材路径','points':['真实读取本Skill自己的模板'],
               'sources':[],'media':[],'required':True,'issues':[]}
+    module.update(reader_question='安装后能否独立组合与拒绝越权？',key_message='安装文件可独立运行',
+                  content_layers={'primary':'首次运行检查','support':'模板和依赖','evidence':'合成本地自检结果','conditions':'不代表业务验收'},
+                  deduplication='仅一个自检模块，无重复',relationship='核对与完成条件',
+                  visual_intent={'focus':'完成条件','order':'说明→核对','web':'紧凑资料','h5':'正文先读'})
     record = {'task':{'id':'synthetic-install-check','title':'安装验收 · 合成示例','stage':'DRAFT',
-                      'density':'reference','list_version':'C01','draft_version':'D01'},
+                      'density':'reference','editorial_contract':1,'list_version':'C01','draft_version':'D01'},
               'inputs':[],'modules':[module],'sources':[],'media':[],
               'approvals':[{'stage':'list','version':'C01','scope':{'modules':{'M01':1}},
                             'evidence':{'actor':'user','locator':'synthetic fixture, not real business consent','text':'仅授权本地无副作用安装测试'}}]}
     body = '<header data-module-id="M01" class="qt-t-paper qt-t-stack"><h1>安装验收 · 合成示例</h1><p>中文、路径空格与公共模板检查；没有真实业务或图片生成。</p><h2>完成条件</h2><p>页面可独立打开，拒绝越过清单确认。</p></header>'
+    source={'id':'S-INPUT-01','revision':1,'list_version':'C01','draft_version':'D01','kind':'input','title':'合成自检说明',
+            'verification':'unverified','adoption':'adopted','citation_mode':'attributed-input','reading':'checked',
+            'read_scope':'本地合成说明全文','claim_scope':'attributed','public_note':'据合成自检说明；不代表独立业务事实核验。'}
+    record['sources']=[source];module['sources']=['S-INPUT-01'];record['approvals'][0]['scope']['sources']={'S-INPUT-01':1}
     record_path, body_path = out/'record.json', out/'正文片段.html'
     record_path.write_text(json.dumps(record, ensure_ascii=False), encoding='utf-8')
     body_path.write_text(body, encoding='utf-8')
@@ -48,6 +56,11 @@ def run_case(out, browser=False):
     execute('final-compose', command+['--mode','final','--out',str(out/'final.html')])
     execute('final-static', [sys.executable,str(ROOT/'scripts/check_html.py'),str(out/'final.html'),
                              '--record',str(record_path),'--mode','final'])
+    custom=out/'custom-video.html'
+    custom.write_text(body.replace('</header>','<aside class="custom-video-notice">视频待提供，当前不可播放。</aside></header>'),encoding='utf-8')
+    execute('custom-resource-final-denied',[sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(record_path),
+                                           '--body',str(custom),'--mode','final','--out',str(out/'must-not-final.html')],expected=1)
+    checks.append({'id':'resource-denied-output-absent','status':'pass' if not (out/'must-not-final.html').exists() else 'fail'})
     # Only the independent HTML is copied into this otherwise empty folder.
     standalone = out/'empty folder'; standalone.mkdir()
     if (out/'final.html').exists(): shutil.copy2(out/'final.html', standalone/'专题页.html')
@@ -57,7 +70,7 @@ def run_case(out, browser=False):
             checks.append({'id':'official-header-browser','status':'fail','detail':'Node.js >=20 required; run doctor.py --browser'})
         else:
             execute('official-header-browser', [node,str(ROOT/'scripts/check_browser.mjs'),str(standalone/'专题页.html'),str(out/'browser')])
-    return {'status':'fail' if any(c['status']=='fail' for c in checks) else 'pass', 'checks':checks,
+    return {'skill_version':json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))['version'],'status':'fail' if any(c['status']=='fail' for c in checks) else 'pass', 'checks':checks,
             'browser_requested':browser,'image_generation_calls':0,
             'limits':['Synthetic approval is not business consent','Not a real-device or semantic workflow certification']}
 

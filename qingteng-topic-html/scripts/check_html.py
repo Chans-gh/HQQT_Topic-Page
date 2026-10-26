@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Static invariants; semantic truth, consent and visual quality remain human checks."""
-import argparse, json, re, sys
+import argparse, hashlib, json, re, sys
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
@@ -10,9 +10,17 @@ from record import validate_record
 
 class Page(HTMLParser):
     def __init__(self,html):
-        super().__init__(convert_charrefs=True);self.nodes=[];self.feed(html)
-    def handle_starttag(self,tag,attrs):self.nodes.append((tag,dict(attrs)))
-    def handle_startendtag(self,tag,attrs):self.handle_starttag(tag,attrs)
+        super().__init__(convert_charrefs=True);self.nodes=[];self.text=[];self.stack=[];self.feed(html)
+    def handle_starttag(self,tag,attrs):
+        self.nodes.append((tag,dict(attrs)))
+        if tag not in {'img','meta','link','input','br','hr','source','wbr','embed','area','base','col','param','track'}:self.stack.append((tag,dict(attrs)))
+    def handle_endtag(self,tag):
+        for i in range(len(self.stack)-1,-1,-1):
+            if self.stack[i][0]==tag:
+                del self.stack[i:];break
+    def handle_data(self,data):
+        if not any(t in {'script','style'} or 'data-resource-id' in a for t,a in self.stack):self.text.append(data)
+    def handle_startendtag(self,tag,attrs):self.handle_starttag(tag,attrs);self.handle_endtag(tag)
 
 
 def inspect(html,mode='draft',record=None):
@@ -34,6 +42,12 @@ def inspect(html,mode='draft',record=None):
             expected_sources={sid for ident in modules for sid in data['modules'][ident].get('sources',[])}
             actual_sources={a['data-source-id'] for _,a in page.nodes if 'data-source-id' in a}
             if expected_sources!=actual_sources:errors.append('source scope differs from record')
+            expected_resources=[rid for ident in modules for rid in data['modules'][ident].get('resources',[]) if data['resources'][rid].get('status')!='omitted']
+            actual_resources=[a['data-resource-id'] for _,a in page.nodes if 'data-resource-id' in a]
+            if Counter(expected_resources)!=Counter(actual_resources):errors.append('resource scope/count differs from record')
+            if mode=='final':
+                for _,a in page.nodes:
+                    if 'data-resource-id' in a and a.get('data-resource-state')!='retained-unavailable':errors.append('resource DOM state differs from final decision')
         except (ValueError,KeyError,TypeError) as exc:errors.append(str(exc))
     if sum(t=='h1' for t,_ in page.nodes)!=1:errors.append('exactly one h1 required')
     if not any(t=='meta' and a.get('name')=='viewport' and 'width=device-width' in a.get('content','') and 'initial-scale=1' in a.get('content','') for t,a in page.nodes):errors.append('viewport missing')
@@ -56,8 +70,14 @@ def inspect(html,mode='draft',record=None):
             if dest not in ids and dest not in TARGETS:errors.append('unresolved anchor: '+dest)
         if tag=='img' and 'alt' not in a:errors.append('image alt missing')
         if tag=='video' and ('autoplay' in a or 'controls' not in a):errors.append('video needs real controls and no autoplay')
-        if mode=='final' and (any(k in a for k in ('data-review-only','data-review-index','data-qt-review-toggle','data-fact-state','data-experiment')) or 'qt-t-placeholder' in a.get('class','').split()):
+        if mode=='final' and (tag,a) in subject_nodes and (any(k in a for k in ('data-review-only','data-review-index','data-qt-review-toggle','data-fact-state','data-experiment')) or any(re.search(r'placeholder|pending-resource',c,re.I) for c in a.get('class','').split()) or a.get('data-resource-state') in {'pending','unresolved'} or 'data-placeholder' in a):
             errors.append('final contains review/placeholder UI')
+    if mode=='final':
+        if any('data-resource-id' in a for _,a in subject_nodes) and not record:errors.append('final resource decisions require record')
+        text=' '.join(page.text)
+        if re.search(r'(?:视频|资源|素材).{0,12}(?:待提供|待补|占位)|(?:待提供|待补).{0,8}(?:视频|资源|素材)',text):
+            errors.append('unresolved resource text prevents final, regardless of class name')
+        if any(t=='video' for t,_ in subject_nodes):errors.append('real video requires separately audited media-package delivery; not certified by single-file image checker')
     for tag,a in subject_nodes:
         if tag in {'iframe','object','embed','base'}:errors.append(f'unsupported subject runtime tag: {tag}')
         if tag=='link':errors.append('external subject stylesheet/link runtime dependency')
@@ -81,7 +101,8 @@ def inspect(html,mode='draft',record=None):
         # Script may contain selector names; final DOM above is authoritative.
         if 'application/json' in html:warnings.append('check embedded JSON contains no private records')
     warnings.append('Consent authenticity, factual support, content relationships and visual composition need executor review.')
-    return {'status':'fail' if errors else 'pass','mode':mode,'modules':modules,'errors':list(dict.fromkeys(errors)),
+    return {'status':'fail' if errors else 'pass','scope':'static invariants only','html_sha256':hashlib.sha256(html.encode()).hexdigest(),
+            'layers':{k:{'status':'not-run','reason':'requires actual rendered/semantic or independent delivery review'} for k in ('content','visual','layout','function','delivery')},'mode':mode,'modules':modules,'errors':list(dict.fromkeys(errors)),
             'warnings':warnings,'not_run':['browser rendering','real device','semantic/user-evidence review']}
 
 

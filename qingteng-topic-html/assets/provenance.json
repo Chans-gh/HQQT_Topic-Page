@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",

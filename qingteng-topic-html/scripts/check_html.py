@@ -18,7 +18,7 @@ class Page(HTMLParser):
 def inspect(html,mode='draft',record=None):
     errors=[];warnings=[]
     try:
-        if blocks(html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text()):errors.append('shared blocks differ from locked shell')
+        if blocks(html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")):errors.append('shared blocks differ from locked shell')
     except ValueError as exc:errors.append(str(exc))
     page=Page(html);ids=[a['id'] for _,a in page.nodes if a.get('id')]
     duplicates=[i for i,n in Counter(ids).items() if n>1]
@@ -79,8 +79,8 @@ def main():
     p.add_argument('--mode',choices=['draft','refine','final'],default='draft');p.add_argument('--record',type=Path);p.add_argument('--report',type=Path)
     a=p.parse_args()
     if a.report and (a.report.resolve().is_relative_to(ROOT) or a.report.resolve() in {a.html.resolve(), a.record.resolve() if a.record else a.html.resolve()}):p.error('report must be outside skill and must not overwrite inputs')
-    report=inspect(a.html.read_text(),a.mode,json.loads(a.record.read_text()) if a.record else None)
+    report=inspect(a.html.read_text(encoding="utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None)
     text=json.dumps(report,ensure_ascii=False,indent=2)
-    if a.report:a.report.write_text(text+'\n')
+    if a.report:a.report.write_text(text+'\n', encoding="utf-8")
     print(text);return bool(report['errors'])
 if __name__=='__main__':sys.exit(main())

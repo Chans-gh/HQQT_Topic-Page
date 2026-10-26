@@ -1,0 +1,8 @@
+{
+  "schema": "qingteng-distribution/1",
+  "repository": "Chans-gh/HQQT_Topic-Page",
+  "branch": "main",
+  "authoring_branch": "package/huanqiu-qingteng-topic-html-skill-v1-2026-10-25",
+  "skill_directory": "qingteng-topic-html",
+  "allowed_roots": ["README.md", ".gitignore", "distribution.json", "maintenance/", "qingteng-topic-html/"]
+}

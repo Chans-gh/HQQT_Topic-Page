@@ -1,6 +1,8 @@
 # 确定性工具
 
-Python 3.9+标准库，无API/密钥。浏览器脚本需要可用的Node.js与Playwright及已安装Chromium；缺少时报告未执行，不自动安装/下载。所有命令在任务目录运行，`SKILL` 表示当前Skill目录，`TASK`表示用户允许的任务目录；请按宿主路径替换，不照抄为绝对路径。
+Python 3.9+标准库，无API/密钥。浏览器脚本需要Node.js20+、随包锁定的Playwright及已安装Chromium；缺少时报告未执行，不自动安装/下载。所有命令在任务目录运行，`SKILL` 表示当前Skill目录，`TASK`表示用户允许的任务目录；请按宿主路径替换，不照抄为绝对路径。
+
+首次环境准备与doctor/smoke见 [setup.md](setup.md)；缺浏览器依赖时准确记录未执行，不自动下载。
 
 ## 制作主体
 

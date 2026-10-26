@@ -102,11 +102,11 @@ def compose(record, body, mode, task_dir):
         entries=''.join(f'<li><a href="#{escape(i)}">{escape(i)} · {escape(s)} · {escape(t)}</a></li>' for i,s,t in review)
         controls=f'<aside id="qt-review-controls" class="qt-surface qt-text-group"><h2>初稿审阅</h2><p>清单 {escape(record["task"]["list_version"])} → 初稿 {escape(record["task"]["draft_version"])}。开关只控制显示，不提交确认。</p><button type="button" class="qt-btn qt-btn-secondary" data-qt-review-toggle aria-pressed="true">隐藏策划批注与索引</button><div data-review-only data-review-index><p>{len(review)} 项待审阅；正式确认请在对话中指出版本和范围。</p><ul>{entries}</ul></div></aside>'
     content=f'<main class="qt-wrap qt-page qt-t-topic" data-density="{escape(record["task"].get("density","explain"),quote=True)}">{controls}{parsed.root.render()}</main>'
-    shell=(ROOT/'assets/templates/public-shell.html').read_text()
+    shell=(ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")
     expected=blocks(shell)
     result=re.sub(r'<!-- QT_PAGE_CONTENT_START -->.*?<!-- QT_PAGE_CONTENT_END -->',lambda _:f'<!-- QT_PAGE_CONTENT_START -->{content}<!-- QT_PAGE_CONTENT_END -->',shell,flags=re.S)
     result=re.sub(r'<title>.*?</title>',lambda _:f'<title>{escape(record["task"]["title"])}</title>',result,count=1,flags=re.S)
-    css=(ROOT/'assets/components/topic.css').read_text();js=(ROOT/'assets/components/topic.js').read_text()
+    css=(ROOT/'assets/components/topic.css').read_text(encoding="utf-8");js=(ROOT/'assets/components/topic.js').read_text(encoding="utf-8")
     result=result.replace('</head>',f'<style id="qt-topic-style">{css}</style></head>')
     result=result.replace('</body>',f'<script id="qt-topic-script">{js}</script></body>')
     assert blocks(result)==expected
@@ -122,19 +122,19 @@ def main():
     parser.add_argument('--generation-plan',action='store_true',help='Print eligible IDs only; no side effects')
     parser.add_argument('--modules',nargs='+',help='Scope for generation-plan only')
     args=parser.parse_args()
-    record=json.loads(args.record.read_text())
+    record=json.loads(args.record.read_text(encoding="utf-8"))
     if args.generation_plan:
         if args.mode!='refine' or not args.modules:parser.error('plan needs --mode refine --modules')
         print(json.dumps(generation_plan(record,args.modules),ensure_ascii=False,indent=2));return
     if not args.body or not args.out:parser.error('--body and --out required')
     if args.out.resolve().is_relative_to(ROOT):raise ValueError('output must be outside skill')
     if args.out.resolve() in {args.body.resolve(),args.record.resolve()}:raise ValueError('output cannot overwrite inputs')
-    result=compose(record,args.body.read_text(),args.mode,args.record.resolve().parent)
+    result=compose(record,args.body.read_text(encoding="utf-8"),args.mode,args.record.resolve().parent)
     # Validate BEFORE any output write, preventing partial artifacts on failure.
     from check_html import inspect
     report=inspect(result,args.mode,record)
     if report['errors']:raise ValueError('; '.join(report['errors']))
-    args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(result)
+    args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(result, encoding="utf-8")
     print(json.dumps({'output':str(args.out),'mode':args.mode,'modules':report['modules'],'image_generation_calls':0},ensure_ascii=False))
 
 if __name__=='__main__':

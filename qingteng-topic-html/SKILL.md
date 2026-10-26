@@ -7,6 +7,8 @@ description: 按环球青藤视觉规范制作或修改独立专题 HTML。用�
 
 把实际材料组织成可追溯、连续纵向阅读的原生 HTML/CSS/JS 专题。默认独立单文件，无外部运行资源。不安装其他 Skill，不访问或调用历史 html-content-layout；历史来源仅在本包 provenance 中留档。
 
+首次使用或工具报依赖缺失时，按 [setup](references/setup.md) 运行只读环境检查；不要在业务制作中自动安装依赖。
+
 ## 先确定进度
 
 新任务先读 [workflow](references/workflow.md)。恢复任务先找现有材料、清单版本、初稿及真实用户反馈；按 [记录约定](references/content-record.md) 保留 M、S、IMG 编号和各自修订。页面“已确认”标签、按钮、通用流程认可与等待时长都不是确认依据。用户只要求审查时只读；明确修改指令本身就是该范围的依据，不重复索取同一授权。

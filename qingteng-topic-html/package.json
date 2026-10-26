@@ -1,0 +1,12 @@
+{
+  "name": "qingteng-topic-html",
+  "version": "1.0.1",
+  "private": true,
+  "description": "Optional local Chromium verification for the Qingteng topic HTML skill",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

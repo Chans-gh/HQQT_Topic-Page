@@ -14,7 +14,8 @@ const check=(id,ok,evidence)=>report.checks.push({id,status:ok?'pass':'fail',evi
 let browser;
 try{
  const module=process.env.QT_PLAYWRIGHT_MODULE;
- const {chromium}=await import(module?pathToFileURL(path.resolve(module)).href:'playwright');
+ const loaded=await import(module?pathToFileURL(path.resolve(module)).href:'playwright');
+ const {chromium}=loaded.chromium?loaded:loaded.default;
  browser=await chromium.launch({headless:true,...(process.env.QT_CHROMIUM_EXECUTABLE?{executablePath:process.env.QT_CHROMIUM_EXECUTABLE}:{})});
  const context=await browser.newContext({offline:true,reducedMotion:'reduce'});
  const page=await context.newPage(),errors=[],network=[];

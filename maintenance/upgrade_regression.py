@@ -64,7 +64,7 @@ def main():
     test('mixed-generation-plan-approved-module-only',lambda:generation_plan(mix,['M01'])['eligible']==['IMG-01'])
     test('mixed-generation-unrefined-module-denied',lambda:generation_plan(mix,['M02']),True)
     snapshot=out/'synthetic-prior-snapshot.html';snapshot.write_text(render(record()),encoding='utf-8')
-    migration=record();migration['task']['shell_migration']={'from':'synthetic-prior','to':'1.2.0','snapshot':str(snapshot),'snapshot_sha256':hashlib.sha256(snapshot.read_bytes()).hexdigest(),'checks':['public blocks','body styles','business scopes unchanged']}
+    migration=record();migration['task']['shell_migration']={'from':'synthetic-prior','to':json.loads((skill/'assets/provenance.json').read_text())['version'],'snapshot':str(snapshot),'snapshot_sha256':hashlib.sha256(snapshot.read_bytes()).hexdigest(),'checks':['public blocks','body styles','business scopes unchanged']}
     test('T11-shell-migration-preserves-approval',lambda:render(migration))
     migration['task']['shell_migration']['snapshot_sha256']='0'*64;test('T11-shell-snapshot-tamper-denied',lambda:render(migration),True)
     unresolved=copy.deepcopy(final);unresolved['modules'][0]['issues']=['关键统计未核对'];test('final-unresolved-fact-denied',lambda:render(unresolved,mode='final'),True)
@@ -76,10 +76,48 @@ def main():
     rr['resources'][0].update(status='unavailable',resolution='retain-notice');test('T10-notice-without-decision-denied',lambda:render(rr,rb,'final'),True);approve(rr,'retain','resources',rr['resources']);test('T10-explicit-unavailable-notice-final',lambda:render(rr,rb,'final'));test('resource-DOM-omission-denied',lambda:render(rr,body(),'final'),True)
     test('editorial-missing-decisions-denied',lambda:render({**record(),'task':{**record()['task'],'editorial_contract':1}}),True)
     test('editorial-complete-decisions-accepted',lambda:render(record(editorial=True)))
-    # Project-specific decision fixtures: these numbers are NOT a universal Skill policy.
-    jobs=[{'name':'内容制作','min_k':6,'matching':True,'experience':'需1年','education':'大专','location':None},{'name':'内容助理','min_k':5.9,'matching':True},{'name':'销售主管','min_k':20,'matching':False}]
-    selected=[j for j in jobs if j['min_k']>=6 and j['matching']];test('T16-project-salary-match-boundary',lambda:len(selected)==1 and selected[0]['experience']=='需1年' and selected[0]['location'] is None)
-    (out/'project-constraints.json').write_text(json.dumps({'jobs':jobs,'selected':selected,'kos':'建议工作流，不是业务既有事实','video_read_scope':'仅文件名，未读音画','is_business_retest':False},ensure_ascii=False,indent=2))
+    # Publication behavior and artifact-bound review gates, independent of topic wording.
+    from html_support import image_data
+    probe=copy.deepcopy(final);probe['sources'][0].update(internal_note='INTERNAL_READING_SCOPE_SENTINEL',supports='INTERNAL_SUPPORTS_SENTINEL')
+    probe['sources'][0].pop('public_note',None)
+    test('source-internal-note-final-compatible',lambda:render(probe,mode='final'))
+    public=render(probe,mode='final');review_html=render({**probe,'task':{**probe['task'],'stage':'DRAFT_REVIEW'}},mode='draft')
+    test('source-notes-never-leak-to-final',lambda:all(v not in public for v in ['INTERNAL_READING_SCOPE_SENTINEL','INTERNAL_SUPPORTS_SENTINEL','内部来源核对']))
+    test('source-notes-kept-for-review',lambda:all(v in review_html for v in ['INTERNAL_READING_SCOPE_SENTINEL','INTERNAL_SUPPORTS_SENTINEL','data-review-only']))
+    test('legacy-public-note-also-internal',lambda:source['public_note'] not in render(final,mode='final'))
+    test('explicit-reader-attribution-accepted',lambda:'https://example.invalid/source' in render(final,body().replace('必要说明与条件。','操作前核对备份是否完整。<a href="https://example.invalid/source">查看设备操作说明</a>'),'final'))
+    test('audit-UI-in-authored-final-rejected',lambda:render(final,body().replace('</section>','<aside class="qt-t-sources">内部说明</aside></section>'),'final'),True)
+    asset=copy.deepcopy(final);asset['media']=[{**media,'plan':'input','status':'available','local_path':str(skill/'assets/examples/document-demo.svg'),'purpose':'INTERNAL_MEDIA_PURPOSE_SENTINEL','alt':'记录表的字段排列'}];asset['modules'][0]['media']=['IMG-01'];approve(asset,'reuse','media',asset['media'])
+    asset_body=body().replace('</section>','<div data-media-id="IMG-01"></div></section>')
+    test('missing-caption-no-purpose-fallback',lambda:'INTERNAL_MEDIA_PURPOSE_SENTINEL' not in render(asset,asset_body,'final') and '<figcaption>' not in render(asset,asset_body,'final'))
+    noalt=copy.deepcopy(asset);noalt['media'][0].pop('alt');test('missing-reader-alt-denied',lambda:render(noalt,asset_body,'final'),True)
+    misnamed=out/'actually-svg.jpg';misnamed.write_bytes((skill/'assets/examples/document-demo.svg').read_bytes())
+    test('image-MIME-from-encoding',lambda:image_data(misnamed).startswith('data:image/svg+xml;'))
+    fake=out/'fake.png';fake.write_text('<html>not an image</html>');test('non-image-extension-rejected',lambda:image_data(fake),True)
+    evil=out/'active.svg';evil.write_text('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');test('active-SVG-rejected',lambda:image_data(evil),True)
+    digest=hashlib.sha256(public.encode()).hexdigest()
+    judgment={'html_sha256':digest,'layers':{'content':{'status':'pass','scope':'fixture scope','evidence':{'M01':'Specific fixture claim is supported by the supplied fixture.'}},'visual':{'status':'not-run'}}}
+    test('review-pass-bound-to-artifact',lambda:inspect(public,'final',probe,judgment,out)['layers']['content']['status']=='pass')
+    for name in ['content','visual']:
+        failed=copy.deepcopy(judgment);failed['layers'][name]={'status':'fail','scope':'seeded defect','evidence':{'M01':'A visible claim or hierarchy contradicts this fixture brief.'}}
+        test('review-'+name+'-fail-blocks-summary',lambda f=failed:inspect(public,'final',probe,f,out)['status']=='fail')
+    stale=copy.deepcopy(judgment);stale['html_sha256']='0'*64
+    test('stale-review-rejected',lambda:inspect(public,'final',probe,stale,out)['status']=='fail')
+    missing=copy.deepcopy(judgment);missing['layers']['content']['evidence']={}
+    test('pass-without-module-evidence-rejected',lambda:inspect(public,'final',probe,missing,out)['status']=='fail')
+    invalid_shot=copy.deepcopy(judgment);invalid_shot['layers']['visual']={'status':'pass','scope':'fixture','evidence':{'M01':'checked'},'screenshots':[{'path':'missing.png','sha256':'0'*64}]}
+    test('missing-review-screenshot-rejected',lambda:inspect(public,'final',probe,invalid_shot,out)['status']=='fail')
+    import base64
+    png=out/'actual-png.jpg';png.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j4n8AAAAASUVORK5CYII='))
+    test('raster-MIME-ignores-wrong-extension',lambda:image_data(png).startswith('data:image/png;'))
+    visual=copy.deepcopy(judgment);visual['layers']['visual']={'status':'pass','scope':'binding fixture only; not actual visual certification','evidence':{'M01':'Fixture record covers this module.'},'screenshots':[{'path':png.name,'sha256':hashlib.sha256(png.read_bytes()).hexdigest()}]}
+    test('visual-review-file-binding-accepted',lambda:inspect(public,'final',probe,visual,out)['layers']['visual']['status']=='pass')
+    stale_shot=copy.deepcopy(visual);stale_shot['layers']['visual']['screenshots'][0]['sha256']='0'*64
+    test('changed-screenshot-rejected',lambda:inspect(public,'final',probe,stale_shot,out)['status']=='fail')
+    from check_html import Page
+    test('shell-copy-reader-facing',lambda:'原型占位' not in ''.join(Page(public).text) and '固定目标：' not in ''.join(Page(public).text))
+    partial=copy.deepcopy(judgment);partial['layers']['visual']={'status':'pass','scope':'fixture','evidence':{'M01':'checked'},'screenshots':[]}
+    test('visual-pass-without-screenshots-rejected',lambda:inspect(public,'final',probe,partial,out)['status']=='fail')
     # Fresh authored synthetic complete page; no old task HTML, body, layout or approvals are read.
     page=record(9,True);page['task']['title']='把一次调研，变成可核对的内容作品 · 合成设计验证'
     titles=['从一次调研，做出可核对的内容作品','先解决三种真实阻碍','每个阶段，都留下可展示的成果','内容线：把选题推进到作品','运营线：从读者问题到内容回应','先看到变化，再核对证据','用范围解释数字，避免效果幻觉','看任务与门槛，再看薪资','带着作品与核对记录继续']
@@ -127,7 +165,8 @@ def main():
     full=hero+need+journey+production+kos+case+metrics+jobshtml+nextpage
     (out/'showcase-body.html').write_text(full,encoding='utf-8');(out/'showcase-record.json').write_text(json.dumps(page,ensure_ascii=False,indent=2),encoding='utf-8')
     draft=render(page,full);(out/'showcase-draft.html').write_text(draft,encoding='utf-8');approve(page,'draft','modules',page['modules']);page['task']['stage']='DELIVERY';html=render(page,full,'final');(out/'showcase-final.html').write_text(html,encoding='utf-8')
-    test('T08-references-deduplicated',lambda:html.count('data-source-id=')==1 and html.count('class="qt-t-citations"')==9)
+    test('T08-internal-sources-deduplicated-in-review',lambda:draft.count('data-source-id=')==1 and '内部来源核对' in draft)
+    test('T08-final-no-automatic-source-UI',lambda:'data-source-id=' not in html and 'class="qt-t-citations"' not in html and '引用与口径' not in html)
     test('final-no-review-DOM',lambda:not any(k in html.split('<main',1)[1].split('</main>',1)[0] for k in ['data-review-only','data-fact-state','data-qt-review-toggle']))
     (out/'showcase-final-record.json').write_text(json.dumps(page,ensure_ascii=False,indent=2),encoding='utf-8')
     reference=record(3,True);reference['task'].update(stage='DELIVERY',density='reference',title='合成资料页 · 材料核对');approve(reference,'draft','modules',reference['modules'])
@@ -136,6 +175,42 @@ def main():
     # Keep the editorial before/after decisions inspectable, not a count of shortened sentences.
     decisions=[{'module':'M03','raw':'重复讲三阶段、三收获、作品清单。','decision':'合并到阶段→成果→核对记录；作品不再另起重复价值块。','copy':titles[2],'visual':'journey同一行连接动作与成果；H5相邻。'}, {'module':'M04','raw':'每项工具四五句操作，再在结尾补产出。','decision':'提取动作链，工具为辅，终点成果突出；必要操作保留。','copy':titles[3],'visual':'有序生产链＋工具标签＋终点成果带。'}, {'module':'M06','raw':'前/后/学校/字段等权罗列。','decision':'先呈现变化，再展示证据及贡献边界；不造效果。','copy':titles[5],'visual':'前后变化差异面积＋三图完整证据与共同图注基线。'}]
     (out/'editorial-decisions.json').write_text(json.dumps(decisions,ensure_ascii=False,indent=2))
+    # Three unrelated briefs exercise publication with new copy, not the college test page.
+    topics=[
+      {'key':'product','title':'会议记录协作台','raw':['记录会议议题','分配每条待办的负责人','按会议导出待办','没有自动转写或节省时间数据'],
+       'excluded':'排除另一款产品的转写速度测评：真实测评也不能证明本工具具备该功能。',
+       'sections':[('M01','h1','会议待办，明确到人','会议记录协作台帮助团队记录讨论内容，分配待办负责人，并按会议导出待办。'),('M02','h2','会后，从记录找到下一步','为每条待办标明负责人，再按会议导出清单，供后续跟进时查阅。'),('M03','h2','从一场会议开始整理','先记录议题与讨论内容，再补上待办事项和对应负责人。')]},
+      {'key':'activity','title':'周末植物观察','raw':['成年初学者','每周六09:00—11:00','滨河公园东门集合','自带手机，用照片记录叶形','不采摘植物'],
+       'excluded':'排除研究人员实验成果：与成人入门观察活动的参与价值无直接关系。',
+       'sections':[('M01','h1','周末植物观察','用手机记录叶形，练习观察身边的植物。活动面向成年初学者。'),('M02','h2','时间与集合地点','每周六09:00—11:00，滨河公园东门集合。请自带可拍照的手机。'),('M03','h2','用照片留下观察记录','观察叶形并拍照记录，不采摘植物。可以对照自己的照片，回看叶片的形状与细节。')]},
+      {'key':'guide','title':'扫描文件命名指南','raw':['保留未修改原件','按日期、主题命名副本','修改后核对页数','原文先讲改名，末尾才提示保留原件'],
+       'excluded':'排除云盘下载速度排行榜：不能解释命名方法，也不支持本次操作结论。',
+       'sections':[('M01','h1','扫描文件，按日期和主题命名','保留原件后，再为副本改名，便于按日期和主题查找。'),('M02','h2','先留原件，再统一名称','复制一份未修改的文件作为原件；将工作副本按“日期—主题”命名，例如“2026-10-27—会议记录”。'),('M03','h2','改名后核对页数','打开副本，核对页数是否与原件一致，确认没有把不同文件混在一起。')]}
+    ]
+    for topic in topics:
+        rr=record(3,True);rr['task'].update(stage='DELIVERY',title=topic['title'],density='display' if topic['key']!='guide' else 'explain')
+        approve(rr,'draft','modules',rr['modules'])
+        rr['sources']=[{**source,'title':topic['title']+'原始输入','supports':' / '.join(topic['raw']),'internal_note':topic['excluded']}];approve(rr,'list','sources',rr['sources'])
+        parts=[]
+        for idx,(ident,tag,title,copytext) in enumerate(topic['sections']):
+            m=rr['modules'][idx];m.update(title=title,key_message=title,sources=['S-INPUT-01'],reader_question=['这是什么？','怎样使用/参加？','下一步如何完成？'][idx],deduplication='按独立读者问题分工；不重复同一价值句')
+            m['content_layers']={'primary':title,'support':copytext,'evidence':'输入列明的功能/安排/操作条件','conditions':'材料未提供的效果不作主张'}
+            m['visual_intent']={'focus':title,'order':'标题→必要说明→下一步','web':'正文先行，按阅读任务组织','h5':'短句自然断行，不引入装饰段落'}
+            classes='qt-t-stack qt-section' if idx else ('qt-t-hero' if topic['key']!='guide' else 'qt-t-stack qt-section')
+            heading=('<span class="qt-t-title-phrase">扫描文件，</span><span class="qt-t-title-phrase">按日期和主题命名</span>' if topic['key']=='guide' and idx==0 else title)
+            content=f'<div class="qt-t-stack"><{tag}>{heading}</{tag}><p>{copytext}</p>'
+            if idx==0:content+='<nav class="qt-t-route"><a href="#M02">'+('查看活动安排' if topic['key']=='activity' else '查看具体方法')+'</a></nav>'
+            content+='</div>'
+            parts.append(f'<section data-module-id="{ident}" class="{classes}">{content}</section>')
+        bb=''.join(parts);hh=render(rr,bb,'final');prefix=out/('topic-'+topic['key'])
+        prefix.with_suffix('.html').write_text(hh,encoding='utf-8');prefix.with_suffix('.json').write_text(json.dumps(rr,ensure_ascii=False,indent=2),encoding='utf-8')
+        (out/('brief-'+topic['key']+'.json')).write_text(json.dumps(topic,ensure_ascii=False,indent=2),encoding='utf-8')
+        test('topic-'+topic['key']+'-no-internal-copy',lambda h=hh,t=topic:'data-source-id=' not in h and t['excluded'] not in h and '内部来源核对' not in h)
+        # Bad copy can still be structurally valid. Only an actual semantic judgment rejects it.
+        defective=hh.replace(topic['sections'][1][3],'编辑说明：本段来源已读，尚未确认采用，先供制作时核对。')
+        defect_review={'html_sha256':hashlib.sha256(defective.encode()).hexdigest(),'layers':{'content':{'status':'fail','scope':'seeded reader-facing copy defect','evidence':{'M02':'制作核验话术进入对外正文；读者原问题未被回答。'}}}}
+        test('topic-'+topic['key']+'-structural-pass-does-not-certify-copy',lambda h=defective,r=rr:inspect(h,'final',r)['status']=='pass' and inspect(h,'final',r)['layers']['content']['status']=='not-run')
+        test('topic-'+topic['key']+'-semantic-fail-propagates',lambda h=defective,r=rr,j=defect_review:inspect(h,'final',r,j,out)['status']=='fail')
     result={'status':'fail' if any(c['status']=='fail' for c in checks) else 'pass','checks':checks,'image_generation_calls':0,'stub_requested_ids':stub,'is_business_retest':False,'not_run':['real project reread and fresh business approvals','real image generation','real video decode','independent agent evaluation']}
     (out/'regression.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'status':result['status'],'checks':len(checks),'failed':[c for c in checks if c['status']=='fail']},ensure_ascii=False));return result['status']!='pass'

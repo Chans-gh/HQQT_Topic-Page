@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from html import escape
 from html.parser import HTMLParser
 from pathlib import Path
-import base64, mimetypes, re, xml.etree.ElementTree as ET
+import base64, re, xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SHARED = ('HEADER', 'FOOTER', 'STYLE', 'SCRIPT', 'DIALOG')
@@ -31,9 +31,15 @@ def json_text(value):
 def image_data(path):
     path = Path(path)
     raw = path.read_bytes()
-    mime = mimetypes.guess_type(path.name)[0]
-    if mime not in {'image/png','image/jpeg','image/webp','image/svg+xml','image/gif'}:
-        raise ValueError('unsupported image format')
+    if raw.startswith(b'\x89PNG\r\n\x1a\n'):mime='image/png'
+    elif raw.startswith(b'\xff\xd8\xff'):mime='image/jpeg'
+    elif raw.startswith((b'GIF87a',b'GIF89a')):mime='image/gif'
+    elif raw.startswith(b'RIFF') and raw[8:12]==b'WEBP':mime='image/webp'
+    else:
+        try:svg=ET.fromstring(raw)
+        except ET.ParseError:raise ValueError('unsupported image encoding') from None
+        if svg.tag.rsplit('}',1)[-1]!='svg':raise ValueError('unsupported image encoding')
+        mime='image/svg+xml'
     if mime == 'image/svg+xml':
         root = ET.fromstring(raw)
         for node in root.iter():

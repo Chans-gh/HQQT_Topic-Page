@@ -2,7 +2,7 @@
 <!-- 开发参考，非交付专题。每个template是可编辑主体示例，不自动渲染、不代表真实业务信息。
 选择实际关系，替换示意文案；模块用稳定M编号。主开场另加一个H1，组件内H2/H3层级不变。
 按需要复制片段内容到任务body.html，不复制整个文件；去掉可选槽，数量按真实数组展开。
-所有正文必须在data-module-id根节点内；正文来源由record.modules.sources生成；媒体只留空data-media-id槽。
+所有正文必须在data-module-id根节点内；内部来源核验由record.modules.sources生成到审阅区，必要公开出处由执行者写入正文；媒体只留空data-media-id槽。
 -->
 <template id="C01"><section class="qt-section" data-module-id="M01"><h2>同级信息</h2><div class="qt-t-group" data-qt-group><article class="qt-t-card"><h3>对象名称</h3><p>该对象的具体说明。</p></article><article class="qt-t-card"><h3>另一对象</h3><p>与前项同级，不暗示先后。</p></article></div></section></template>
 <template id="C02"><section class="qt-section" data-module-id="M01"><h2>主结论与重点证据</h2><div class="qt-t-evidence"><div class="qt-t-key"><h3>读者首先应理解的判断</h3><p>关键范围和适用条件。</p></div><div class="qt-t-stack"><h3>可核对的依据</h3><p>依据支持哪部分判断，不把相关当因果。</p></div></div></section></template>
@@ -28,8 +28,11 @@
 
 <!-- 表达方法可组合于C01–C12；实际焦点与内容决定选择，不强制配额。 -->
 <template id="cover-composition"><header class="qt-t-hero" data-module-id="M01"><div class="qt-t-stack"><p class="qt-t-eyebrow">主题及受众</p><h1>明确的主结论</h1><p>这是什么、解决什么、必要条件。</p><a class="qt-btn qt-btn-primary" href="#M02">读者的下一步</a></div><div data-media-id="IMG-01"></div></header></template>
-<template id="change-evidence"><section class="qt-section" data-module-id="M01"><h2>变化与支持它的证据</h2><div class="qt-t-change"><div><h3>起点</h3><p>已知起始条件。</p></div><div><h3>变化</h3><p>可核对的变化和参与边界。</p></div></div><div class="qt-t-evidence"><div data-media-id="IMG-01"></div><div class="qt-t-stack"><h3>证据解读</h3><p>统计时间、单位、贡献边界，不虚构因果或保证。</p></div></div></section></template>
+<template id="change-evidence"><section class="qt-section" data-module-id="M01"><h2>变化与支持它的证据</h2><div class="qt-t-change"><div><h3>起点</h3><p>已知起始条件。</p></div><div><h3>变化</h3><p>可核对的变化和参与边界。</p></div></div><div class="qt-t-evidence"><div data-media-id="IMG-01"></div><div class="qt-t-stack"><h3>证据解读</h3><p>用当前材料支持的具体行动或产物解释变化；正文仅写读者需要的内容。</p></div></div></section></template>
 <template id="media-ensemble"><section class="qt-section" data-module-id="M01"><h2>主图与细节</h2><p>先说明这些材料的关系，不把无关双图冒充前后变化。</p><div class="qt-t-group qt-t-media-group" data-qt-group><div data-media-id="IMG-01"></div><div data-media-id="IMG-02"></div></div></section></template>
 <template id="outcome-collection"><section class="qt-section" data-module-id="M01"><h2>成果与用途</h2><div class="qt-t-group qt-t-media-group" data-qt-group><article class="qt-t-card"><div data-media-id="IMG-01"></div><h3>成果名称</h3><p>用它证明什么，必要条件是什么。</p></article><article class="qt-t-card"><div data-media-id="IMG-02"></div><h3>另一成果</h3><p>承担不同用途，不重复同一收获。</p></article></div></section></template>
 <template id="scene-explainer"><div class="qt-t-scene"><div class="qt-t-stack"><h3>结论与必要解释</h3><p>配图只辅助理解，不重复全部正文。</p></div><div data-media-id="IMG-01"></div></div></template>
+
+<!-- action-artifact适合只有过程/作品的案例；替换所有示意文案，不填入无依据的成绩或起点。 -->
+<template id="action-artifact"><section class="qt-section" data-module-id="M01"><h2>把接待安排整理成一张记录表</h2><div class="qt-t-evidence"><div class="qt-t-stack"><h3>按实际服务过程整理字段</h3><p>将预约时间、接待人和服务项目放在同一张表中，供当天接待时查阅。</p><h3>作品细节</h3><p>每条记录对应一次预约，字段名称与实际接待工作保持一致。</p></div><div data-media-id="IMG-01"></div></div></section></template>
 </html>

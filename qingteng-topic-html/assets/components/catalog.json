@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "notice": "Patterns are editable semantic fragments, not a runtime renderer or fixed business structure. New combinations allowed within visual rules.",
   "components": [
     {
@@ -253,7 +253,7 @@
     "compact": "only explicit data-qt-align=compact for justified local combination",
     "capacity": "wrappable font budget + intrinsic media ratio + actual parent; never rendered height feedback",
     "media": "qt-t-media-group aligns media slots/captions; screenshots contain + original size",
-    "review": "per-section numbered citations; deduplicated end references; review notes centralized"
+    "review": "Internal source records only in draft/refine review; no automatic public citations or audit footer. Reader-facing attribution is authored."
   },
   "expressions": [
     {
@@ -279,12 +279,14 @@
     {
       "id": "cover-composition",
       "purpose": "主题与行动共同构图，H5装饰收小",
-      "snippet": "patterns.html#cover-composition"
+      "snippet": "patterns.html#cover-composition",
+      "use_when": "先确定主题主信息，标题角色随阅读任务；品牌/眉题不重复占据核心信息位置"
     },
     {
       "id": "change-evidence",
       "purpose": "起点/变化/作品证据相邻",
-      "snippet": "patterns.html#change-evidence"
+      "snippet": "patterns.html#change-evidence",
+      "use_when": "有可比较的起点与结果，且证据支持变化；否则选择action-artifact或其他实际关系"
     },
     {
       "id": "media-ensemble",
@@ -300,6 +302,11 @@
       "id": "C04",
       "purpose": "真实同维度字段比较",
       "snippet": "patterns.html#C04"
+    },
+    {
+      "id": "action-artifact",
+      "purpose": "具体行动＋作品细节；无可比起点/结果时不制造变化或效果",
+      "snippet": "patterns.html#action-artifact"
     }
   ]
 }

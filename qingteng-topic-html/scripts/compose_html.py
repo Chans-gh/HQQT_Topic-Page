@@ -29,9 +29,16 @@ def render_media(item, record, mode, task_dir):
         uri = image_data(path)
         role = item['role']
         css = 'qt-t-person-slot' if role == 'person' else 'qt-t-media'
-        img = f'<img src="{uri}" alt="{escape(item.get("alt",item["purpose"]),quote=True)}">'
-        if role == 'screenshot':img=f'<button class="qt-t-zoom" type="button" data-qt-zoom aria-label="放大：{desc}">{img}</button>'
-        return f'<figure id="{ident}" data-media-id="{ident}" class="{css}" data-media-role="{escape(role)}">{img}<figcaption>{escape(item.get("caption",item["purpose"]))}</figcaption></figure>'
+        if not isinstance(item.get('alt'), str):
+            raise ValueError(f'{ident}: explicit reader-facing alt required (empty only for decorative images)')
+        if role == 'screenshot' and not item['alt'].strip():
+            raise ValueError(f'{ident}: evidence screenshot needs descriptive alt')
+        caption = item.get('caption', '')
+        if not isinstance(caption, str):raise ValueError(f'{ident}: caption must be reader-facing text')
+        img = f'<img src="{uri}" alt="{escape(item["alt"],quote=True)}" decoding="async">'
+        if role == 'screenshot':img=f'<button class="qt-t-zoom" type="button" data-qt-zoom aria-label="放大：{escape(item["alt"],quote=True)}">{img}</button>'
+        caption_html = f'<figcaption>{escape(caption)}</figcaption>' if caption.strip() else ''
+        return f'<figure id="{ident}" data-media-id="{ident}" class="{css}" data-media-role="{escape(role)}">{img}{caption_html}</figure>'
     if mode == 'final':raise ValueError(f'{ident}: unresolved image prevents final')
     plan = {'input':'复用输入（待取得）','generate':'确认后生成（当前未生成）','select':'待选择'}[item['plan']]
     return f'<figure id="{ident}" data-media-id="{ident}" class="qt-t-placeholder"><strong>{ident} · {desc}</strong><p>模块：{escape(item["module"])}；角色：{escape(item["role"])}；来源方案：{plan}</p><p>构图/安全区：{escape(item["composition"])}</p><p>Web/H5：{escape(item["responsive"])}</p><figcaption>待提供或待确认的素材占位；不是已生成图片。</figcaption></figure>'
@@ -64,7 +71,7 @@ def compose(record, body, mode, task_dir):
         m.attrs['id']=ident
         for n in list(m.walk()):
             if 'data-source-id' in n.attrs:
-                raise ValueError('source citations are generated from module.sources; do not hand author duplicate state')
+                raise ValueError('source records belong to the generated review area; author necessary public attribution as normal body text')
         media_nodes=[n for n in m.walk() if 'data-media-id' in n.attrs]
         expected={mid for mid in item.get('media',[]) if data['media'][mid].get('status')!='omitted'}
         if {n.attrs['data-media-id'] for n in media_nodes} != expected or len(media_nodes)!=len(expected):
@@ -87,7 +94,6 @@ def compose(record, body, mode, task_dir):
             n.tag='aside';n.attrs.update({'class':'qt-t-resource-notice','data-resource-state':'retained-unavailable' if retained else 'pending'})
             n.children=node(f'<p>{escape(resource.get("public_note") or "视频资源未取得，当前不可播放；未读取音画。")}</p>')
             if not retained:review.append((ident,'待提供',resource.get('title','视频资源')))
-        citations=[]
         for sid in item.get('sources',[]):
             source=data['sources'][sid]
             if source.get('verification') not in {'unverified','verified','unverifiable'} or source.get('adoption') not in {'pending','adopted','rejected'}:
@@ -99,11 +105,8 @@ def compose(record, body, mode, task_dir):
             if adopted and not (approved(record,'list','sources',source) or approved(record,'draft','sources',source)):
                 raise ValueError(f'{sid}: adopted requires recorded exact scope')
             if mode=='final' and not source_ready(record,source):raise ValueError(f'{sid}: unresolved source prevents final')
-            if sid not in used_sources:used_sources[sid]=len(used_sources)+1
-            number=used_sources[sid]
-            citations.append(f'<a href="#qt-source-{escape(sid)}" aria-label="来源{number}：{escape(source.get("title",sid),quote=True)}">[{number}]</a>')
+            used_sources[sid]=source
             if not adopted:review.append((ident,'待确认',f'{sid} 待确认采用'))
-        if citations:m.children+=node('<nav class="qt-t-citations" aria-label="本节引用">'+''.join(citations)+'</nav>')
         if mode!='final':
             state='已确认' if approved(record,'draft','modules',item) and not item.get('issues') else ('需调整' if item.get('issues') else '待确认')
             if item.get('issues'):
@@ -115,20 +118,18 @@ def compose(record, body, mode, task_dir):
         for n in parsed.root.walk():
             if any(k in n.attrs for k in ('data-review-only','data-review-index','data-fact-state','data-experiment')) or 'qt-t-placeholder' in (n.attrs.get('class') or '').split():
                 raise ValueError('remove review/experiment UI from authored fragment before final')
-    references=''
-    if used_sources:
+    source_review=''
+    if mode!='final' and used_sources:
         entries=[]
-        for sid,number in used_sources.items():
-            source=data['sources'][sid];label=escape(source.get('title',sid));url=source.get('url','')
+        for sid,source in used_sources.items():
+            label=escape(source.get('title',sid));url=source.get('url','')
             if url:
                 if not re.match(r'^https?://[^\s]+$',url):raise ValueError('source URL must be http(s)')
                 label=f'<a href="{escape(url,quote=True)}" target="_blank" rel="noopener noreferrer">{label}</a>'
-            note=source.get('public_note') or source.get('supports','')
-            state=''
-            if mode!='final' and not source_ready(record,source):
-                state=f'<span data-fact-state> · {escape(source["verification"])} / {escape(source["adoption"])}</span>'
-            entries.append(f'<li id="qt-source-{escape(sid)}" data-source-id="{escape(sid)}">[{number}] {label} · {escape(note)}{state}</li>')
-        references='<aside class="qt-t-sources" aria-label="引用与口径"><h2>引用与口径</h2><ul>'+''.join(entries)+'</ul></aside>'
+            note=source.get('internal_note') or source.get('public_note') or ''
+            details='；'.join(str(s) for s in (source.get('supports'),note) if s)
+            entries.append(f'<li data-source-id="{escape(sid)}">{escape(sid)} · {label} · {escape(details)} · {escape(source["verification"])} / {escape(source["adoption"])}</li>')
+        source_review='<details data-review-only><summary>内部来源核对</summary><ul>'+''.join(entries)+'</ul></details>'
     controls=''
     if mode!='final':
         entries=''.join(f'<li><a href="#{escape(i)}">{escape(i)} · {escape(s)} · {escape(t)}</a></li>' for i,s,t in review)
@@ -139,8 +140,8 @@ def compose(record, body, mode, task_dir):
             message=module.get('key_message') or module.get('purpose','')
             notes+=f'<li>{escape(i)} · {state} · {module_mode(record,module,mode)} · {escape(message)}</li>'
         status='局部修订完成 · 其余范围待审阅' if record['task'].get('mixed_scope') else ('精修待审阅' if mode=='refine' else '初稿待审阅')
-        controls=f'<aside id="qt-review-controls" class="qt-surface qt-text-group"><p class="qt-t-lead">{status}</p><button type="button" class="qt-btn qt-btn-secondary" data-qt-review-toggle aria-pressed="true">隐藏策划批注与索引</button><details data-review-only data-review-index><summary>{len(review)} 项待审阅 · 清单 {escape(record["task"]["list_version"])} / 初稿 {escape(record["task"]["draft_version"])}</summary><p>显示开关不提交确认；请在对话说明版本与范围。</p><ul>{entries}</ul><ul>{notes}</ul></details></aside>'
-    content=f'<main class="qt-wrap qt-page qt-t-topic" data-density="{escape(record["task"].get("density","explain"),quote=True)}">{controls}{parsed.root.render()}{references}</main>'
+        controls=f'<aside id="qt-review-controls" class="qt-surface qt-text-group"><p class="qt-t-lead">{status}</p><button type="button" class="qt-btn qt-btn-secondary" data-qt-review-toggle aria-pressed="true">隐藏策划批注与索引</button><details data-review-only data-review-index><summary>{len(review)} 项待审阅 · 清单 {escape(record["task"]["list_version"])} / 初稿 {escape(record["task"]["draft_version"])}</summary><p>显示开关不提交确认；请在对话说明版本与范围。</p><ul>{entries}</ul><ul>{notes}</ul></details>{source_review}</aside>'
+    content=f'<main class="qt-wrap qt-page qt-t-topic" data-density="{escape(record["task"].get("density","explain"),quote=True)}">{controls}{parsed.root.render()}</main>'
     shell=(ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")
     expected=blocks(shell)
     result=re.sub(r'<!-- QT_PAGE_CONTENT_START -->.*?<!-- QT_PAGE_CONTENT_END -->',lambda _:f'<!-- QT_PAGE_CONTENT_START -->{content}<!-- QT_PAGE_CONTENT_END -->',shell,flags=re.S)

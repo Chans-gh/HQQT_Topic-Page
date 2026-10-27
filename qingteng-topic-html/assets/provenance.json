@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -9,9 +9,9 @@
     {
       "file": "assets/templates/public-shell.html",
       "source_path": "assets/header/* + locked source package/templates/公共页眉页脚模板.html",
-      "sha256": "1354216073cda7ceaf7c03f405f174fc9e5ab87d3648a89496574878288f79b7",
+      "sha256": "222e3f507c2d9aba734e5e9e6c0436ca36c02ffaae000af60d4c888bc1e09c32",
       "handling": "generated from locked source + official header adaptation",
-      "nature": "1.2.0 five-block shell; stable 320px/60px header, 1200px cap, unchanged footer prototypes"
+      "nature": "1.2.1 five-block shell; official header/layout preserved; footer/dialog public copy updated without changing routes"
     },
     {
       "file": "assets/brand/global-qingteng-logo-color.png",
@@ -149,7 +149,7 @@
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "b35c917c47fe6c0a931cd6ca1e515d7717b2d7df55fd2883ef78ce3a381fddea",
+      "sha256": "c4ee9d7987eb4a72842e115f488b0f4f2d0b55e7f44f457a8f577aaea61a4c04",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -190,15 +190,19 @@
   ],
   "public_blocks_sha256": {
     "HEADER": "3cd0d4d2d1623e18ed63de1d7ada66598149e8f520a54b784b7f8caa5935e3fc",
-    "FOOTER": "d1f863dc1c3c8f143cbd6758c4a5bb1f411bac138b8d6a2a2d17b5736cd64119",
+    "FOOTER": "4a12b7d821628c6c5230d745aaa159c2f272faef34f135caaba3ff3419eb5838",
     "STYLE": "863b9406aa0832984da5f6646d468437ee5bdbcde11330d1d55807a237c56cf4",
-    "SCRIPT": "e254a7f3693d3e4a6accfea25e211c1593ae567ff030548cdb85fa33b82d05ac",
-    "DIALOG": "fa59886c211db53ae844d1a371b6506ac89078cb546317b196e56597b4373828"
+    "SCRIPT": "a8015f2e17e4cd04ecdae3d04653f631c59f0a29ce0cb79e53442304ead1bcc5",
+    "DIALOG": "9d94f84cf1f28750c2e7add8d63ea87571191dffac0445b72abb7c4afa74b0d6"
   },
   "historical_research_boundary": "The locked foundation previously recorded html-content-layout as concluded structural research only. This Skill does not read/call/write/sync it and has no runtime dependency.",
   "upgrade_baseline": {
     "commit": "0018d7043940e9440cb974b3274bbb8ab7e5215a",
     "skill_tree": "71e279329eba00d3bb979634eb0945da2a64e0ef",
     "reason": "real-test editorial, composition, capacity, review and acceptance upgrade"
+  },
+  "editorial_upgrade": {
+    "baseline": "1.2.0",
+    "scope": "reader-facing copy/evidence selection, editorial examples, hierarchy, revision review and media context; official header/routes unchanged, footer/dialog copy made reader-facing"
   }
 }

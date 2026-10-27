@@ -23,7 +23,7 @@ class Page(HTMLParser):
     def handle_startendtag(self,tag,attrs):self.handle_starttag(tag,attrs);self.handle_endtag(tag)
 
 
-def inspect(html,mode='draft',record=None):
+def inspect(html,mode='draft',record=None,review=None,review_dir=None):
     errors=[];warnings=[]
     try:
         if blocks(html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")):errors.append('shared blocks differ from locked shell')
@@ -41,7 +41,9 @@ def inspect(html,mode='draft',record=None):
             if Counter(expected_media)!=Counter(actual_media):errors.append('media scope/count differs from record')
             expected_sources={sid for ident in modules for sid in data['modules'][ident].get('sources',[])}
             actual_sources={a['data-source-id'] for _,a in page.nodes if 'data-source-id' in a}
-            if expected_sources!=actual_sources:errors.append('source scope differs from record')
+            if mode=='final':
+                if actual_sources:errors.append('final contains internal source records')
+            elif expected_sources!=actual_sources:errors.append('source scope differs from record')
             expected_resources=[rid for ident in modules for rid in data['modules'][ident].get('resources',[]) if data['resources'][rid].get('status')!='omitted']
             actual_resources=[a['data-resource-id'] for _,a in page.nodes if 'data-resource-id' in a]
             if Counter(expected_resources)!=Counter(actual_resources):errors.append('resource scope/count differs from record')
@@ -73,6 +75,8 @@ def inspect(html,mode='draft',record=None):
         if mode=='final' and (tag,a) in subject_nodes and (any(k in a for k in ('data-review-only','data-review-index','data-qt-review-toggle','data-fact-state','data-experiment')) or any(re.search(r'placeholder|pending-resource',c,re.I) for c in a.get('class','').split()) or a.get('data-resource-state') in {'pending','unresolved'} or 'data-placeholder' in a):
             errors.append('final contains review/placeholder UI')
     if mode=='final':
+        if any('data-source-id' in a or set(a.get('class','').split()) & {'qt-t-citations','qt-t-sources'} for _,a in subject_nodes):
+            errors.append('final contains generated audit/source UI; write necessary reader-facing attribution in the body')
         if any('data-resource-id' in a for _,a in subject_nodes) and not record:errors.append('final resource decisions require record')
         text=' '.join(page.text)
         if re.search(r'(?:视频|资源|素材).{0,12}(?:待提供|待补|占位)|(?:待提供|待补).{0,8}(?:视频|资源|素材)',text):
@@ -101,17 +105,53 @@ def inspect(html,mode='draft',record=None):
         # Script may contain selector names; final DOM above is authoritative.
         if 'application/json' in html:warnings.append('check embedded JSON contains no private records')
     warnings.append('Consent authenticity, factual support, content relationships and visual composition need executor review.')
-    return {'status':'fail' if errors else 'pass','scope':'static invariants only','html_sha256':hashlib.sha256(html.encode()).hexdigest(),
+    report={'status':'fail' if errors else 'pass','scope':'static invariants only','html_sha256':hashlib.sha256(html.encode()).hexdigest(),
             'layers':{k:{'status':'not-run','reason':'requires actual rendered/semantic or independent delivery review'} for k in ('content','visual','layout','function','delivery')},'mode':mode,'modules':modules,'errors':list(dict.fromkeys(errors)),
-            'warnings':warnings,'not_run':['browser rendering','real device','semantic/user-evidence review']}
+            'warnings':warnings,'not_run':['browser rendering','real device','automated semantic/user-evidence verification']}
+    if review is not None:
+        apply_review(report,review,review_dir)
+    return report
+
+
+def apply_review(report,review,review_dir):
+    """Bind executor decisions to this artifact; never infer semantic quality from text patterns."""
+    try:
+        if review.get('html_sha256')!=report['html_sha256']:
+            raise ValueError('review belongs to a different HTML version')
+        layers=review.get('layers',{})
+        for name in ('content','visual'):
+            layer=layers.get(name,{'status':'not-run'})
+            status=layer.get('status')
+            if status not in {'pass','fail','not-run'}:raise ValueError(f'{name}: invalid review status')
+            if status=='pass':
+                evidence=layer.get('evidence',{})
+                if not layer.get('scope') or not isinstance(evidence,dict) or set(evidence)!=set(report['modules']) or not all(isinstance(v,str) and v.strip() for v in evidence.values()):
+                    raise ValueError(f'{name}: pass needs scope and evidence for every rendered module')
+                if name=='visual':
+                    shots=layer.get('screenshots',[])
+                    if not shots or review_dir is None:raise ValueError('visual: pass needs verifiable screenshot files')
+                    for shot in shots:
+                        path=Path(review_dir)/shot['path']
+                        if hashlib.sha256(path.read_bytes()).hexdigest()!=shot['sha256']:
+                            raise ValueError('visual: screenshot SHA mismatch')
+            report['layers'][name]=layer
+            if status=='fail':report['errors'].append(f'{name} review failed')
+        report['scope']='static invariants plus version-bound executor review; review authenticity and judgment are not automated'
+    except (ValueError,KeyError,TypeError,AttributeError,OSError) as exc:
+        # An invalid report must never leave either semantic layer marked pass.
+        for name in ('content','visual'):report['layers'][name]={'status':'not-run','reason':'invalid review evidence'}
+        report['errors'].append(str(exc))
+    report['status']='fail' if report['errors'] else 'pass'
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('html',type=Path)
     p.add_argument('--mode',choices=['draft','refine','final'],default='draft');p.add_argument('--record',type=Path);p.add_argument('--report',type=Path)
+    p.add_argument('--review',type=Path,help='Optional executor content/visual review JSON bound to HTML and screenshot SHA')
     a=p.parse_args()
-    if a.report and (a.report.resolve().is_relative_to(ROOT) or a.report.resolve() in {a.html.resolve(), a.record.resolve() if a.record else a.html.resolve()}):p.error('report must be outside skill and must not overwrite inputs')
-    report=inspect(a.html.read_text(encoding="utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None)
+    if a.report and (a.report.resolve().is_relative_to(ROOT) or a.report.resolve() in {p.resolve() for p in (a.html,a.record,a.review) if p}):p.error('report must be outside skill and must not overwrite inputs')
+    report=inspect(a.html.read_text(encoding="utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None,
+                   json.loads(a.review.read_text(encoding='utf-8')) if a.review else None,a.review.parent if a.review else None)
     text=json.dumps(report,ensure_ascii=False,indent=2)
     if a.report:a.report.write_text(text+'\n', encoding="utf-8")
     print(text);return bool(report['errors'])

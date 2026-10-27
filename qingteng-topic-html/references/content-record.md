@@ -11,11 +11,11 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。s
 - `sources[]`：id（S-INPUT-01/S-WEB-01等）、revision、list_version、draft_version、kind（input/web）、title、locator或url、publisher、accessed、supports、verification（unverified/verified/unverifiable）、adoption（pending/adopted/rejected）。查证与采用必须分开；网页补充须具体支持页及主体/访问日期/支持内容。未确认采用的已查证补充可在初稿明确标为待确认；最终只能保留符合下述引用语义且已确认采用的内容。
 - `media[]`：id（IMG-01起）、module、revision、list_version、draft_version、purpose、role（screenshot/illustration/person/cover）、plan（input/generate/select）、composition（含文字安全区）、responsive（Web/H5顺序）、status（pending/available/complete/omitted）、local_path（已有文件时）、alt、caption。omitted表示用户同意省略，保留omit审批依据并从body移除对应槽；不得省略未解决关键图来冒充完成。
 - 新任务设`task.editorial_contract=1`；模块增加`reader_question/key_message/content_layers/deduplication/relationship/visual_intent`。content_layers含primary/support/evidence/conditions，visual_intent含focus/order/web/h5；无证据/条件写明“无”，不能用空字段假装已判断。工具只检查决定可恢复，不理解文案优劣；人工仍需验证实际页面体现。
-- 输入引用可设`citation_mode=attributed-input`、`reading=checked`、`read_scope`、`claim_scope=attributed`及`public_note`，并保持实际verification。只有这些条件和真实adopted批准同时成立时可正式引用为“据项目材料”；公开note必须说明范围/未经独立核验的效果。外部事实主张仍需verified；输入材料不自动为其真实性背书。
+- 输入引用可设`citation_mode=attributed-input`、`reading=checked`、`read_scope`、`claim_scope=attributed`及`internal_note`，并保持实际verification。note写核验范围与主张边界，仅作内部依据；兼容旧记录public_note作为内部note读取，不自动输出。收口表示输入读取与采用状态满足条件，不能证明材料中的效果；实际正文仍须符合证据支持范围。外部事实主张仍需verified，不能改为输入引用绕过核验。
 - 非图片资源`resources[]`：RES-01等，module/revision/list_version/draft_version/kind/title/status/public_note。当前单文件组合器支持诚实的pending/unavailable通知和omitted；省略需omit批准，正式保留不可播放通知需status=unavailable、resolution=retain-notice及retain批准（scope.resources）。不默认接受视频占位；真实视频包需另验资源格式/路径/解码，不由本图像检查器认证。模块resources列相应编号，正文只放空data-resource-id槽。
 - `approvals[]`：stage（list/draft/reuse/generate/omit/retain）、version、scope（modules/sources/media/resources各自ID→修订号字典）、evidence（actor=user、locator、text；实际已知的time或sequence可另记）。scope中只列用户明确获准的对象。`list` 核对对象的list_version/revision；`draft` 核对draft_version，模块比较draft_revision、素材/来源比较revision；`reuse/generate/omit`核对素材draft_version/revision。生成需同时有draft方案确认和generate明确授权，不因写了拟生成就获准。
 
-记录中保留输入/绝对路径/用户反馈原文；组合器只公开模块、素材方案、必要引用与最少审阅状态，不将整个JSON内嵌。
+记录中保留输入/绝对路径/用户反馈原文；组合器只渲染执行者编写的正文及明确的素材文案；draft/refine另有可关闭的内部审阅区，final不输出该区或来源记录，不将整个JSON内嵌。supports说明每项材料为何适用，不能用关键词相同或已查证替代关联判断。caption为可选的对外图注；alt需显式编写，截图不能为空，纯装饰可空字符串。两者都不从purpose/核验记录生成；未写caption时省略figcaption。
 
 ## 版本与局部恢复
 
@@ -27,7 +27,7 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。s
 
 `task.mixed_scope=true`时，用draft组合完整active页面，每模块render_mode=draft/refine；refine模块仍必须有精确draft批准，其他模块不会被补批。相关素材遵守各自effective mode。混合输出不等于正式交付。`task.shell_migration`记录from/to、snapshot（相对任务目录或绝对路径）、snapshot_sha256、checks（受影响检查）；组合器核对目标版本和快照字节，不改变对象批准；公共壳更新后仍验整页。
 
-验收记录按content/visual/layout/function/delivery分别写status、scope、evidence与not_run，绑定同一HTML SHA和截图SHA。content/visual必须有执行者逐模块判断；不从工具pass或用户允许制作推断通过。
+验收记录按content/visual/layout/function/delivery分别写status、scope、evidence与not_run，绑定同一HTML SHA和截图SHA。content/visual必须有执行者逐模块判断，说明实际焦点、信息是否成立及问题处理；不从工具pass或用户允许制作推断通过。check_html可用--review校验同一HTML的人工结论，格式及边界见tools；它检查证据关联，不能证明判断正确。
 
 ## 最小示例（仅说明格式）
 

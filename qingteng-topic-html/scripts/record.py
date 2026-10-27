@@ -47,7 +47,8 @@ def source_ready(record, source):
     # An attributed input is a claim ABOUT the supplied material, not independent proof of its claims.
     attributed = (source.get('kind') == 'input' and source.get('citation_mode') == 'attributed-input'
                   and source.get('reading') == 'checked' and bool(source.get('read_scope'))
-                  and source.get('claim_scope') == 'attributed' and bool(source.get('public_note')))
+                  and source.get('claim_scope') == 'attributed'
+                  and bool(source.get('internal_note') or source.get('public_note')))
     return adopted and (source.get('verification') == 'verified' or attributed)
 
 

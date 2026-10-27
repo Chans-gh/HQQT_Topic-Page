@@ -29,6 +29,8 @@ try{
  page.on('request',r=>{if(/^https?:/.test(r.url()))network.push(safeUrl(r.url()));});
  const url=pathToFileURL(path.resolve(input)).href;
  await page.goto(url);await page.evaluate(()=>document.fonts.ready);
+ const decoded=await page.evaluate(async()=>Promise.all([...document.querySelectorAll('main img')].map(async i=>{try{await i.decode();return {alt:i.alt,ok:i.naturalWidth>0};}catch{return {alt:i.alt,ok:false};}})));
+ check('media-decoded',decoded.every(i=>i.ok),decoded);
  const widths=[1440,1024,1001,1000,768,701,700,390,375,320];
  for(const width of [...widths,...widths.slice(0,-1).reverse()]){
   await page.setViewportSize({width,height:950});await page.waitForTimeout(120);
@@ -37,6 +39,26 @@ try{
    const overflow=[...document.querySelectorAll('main *')].filter(e=>visible(e)&&!e.closest('.qt-t-scroll-viewport')&&e.getBoundingClientRect().right>innerWidth+1).map(e=>e.tagName+'.'+e.className);
    const images=[...document.images].filter(i=>visible(i)&&(!i.complete||!i.naturalWidth||i.getBoundingClientRect().width<1||i.getBoundingClientRect().height<1)).map(i=>i.alt);
    const h1=document.querySelector('h1'),h2=document.querySelector('main h2'),h3=document.querySelector('main h3');
+   const fontErrors=[...document.querySelectorAll('main h1,main h2,main h3')].filter(e=>getComputedStyle(e).fontSize!==({H1:innerWidth<=700?'31px':'38px',H2:'26px',H3:'16px'})[e.tagName]).map(e=>e.textContent);
+   const contrast=[],manualContrast=[];
+   const rgb=s=>s.match(/[\d.]+/g)?.map(Number);
+   const blend=(a,b)=>a.slice(0,3).map((v,i)=>v*(a[3]??1)+b[i]*(1-(a[3]??1)));
+   function background(e){
+    if(!e)return [255,255,255];const s=getComputedStyle(e);
+    if(s.backgroundImage!=='none'||s.opacity!=='1'||s.filter!=='none'||s.mixBlendMode!=='normal')return null;
+    const c=rgb(s.backgroundColor);if(!c||c.length<3)return null;
+    if((c[3]??1)===1)return c;
+    const parent=background(e.parentElement);return parent?blend(c,parent):null;
+   }
+   const luminance=c=>c.slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);
+   for(const e of document.querySelectorAll('main *')){
+    if(!visible(e)||getComputedStyle(e).display==='none'||!e.getBoundingClientRect().height||!Array.from(e.childNodes).some(n=>n.nodeType===3&&n.textContent.trim()))continue;
+    const s=getComputedStyle(e),bg=background(e),fg=rgb(s.color),text=e.textContent.trim().slice(0,60);
+    if(!bg||!fg||fg.length<3){manualContrast.push(text);continue;}
+    const a=luminance(blend(fg,bg)),b=luminance(bg),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+    const large=parseFloat(s.fontSize)>=24||(parseFloat(s.fontSize)>=18.66&&parseInt(s.fontWeight)>=700),minimum=large?3:4.5;
+    if(ratio+.001<minimum)contrast.push({text,ratio,minimum,color:s.color,background:bg});
+   }
    const overlaps=[];
    for(const slot of document.querySelectorAll('.qt-t-person-slot')){
     const group=slot.closest('[data-qt-fit]');if(!group)continue;
@@ -63,14 +85,20 @@ try{
      if(boxes.length>1&&(Math.max(...boxes.map(r=>r.y))-Math.min(...boxes.map(r=>r.y))>2||Math.max(...boxes.map(r=>r.bottom))-Math.min(...boxes.map(r=>r.bottom))>2))alignment.push({type:'media-slot/caption',selector,boxes});
     }
    }
-   return {alignment,groups:[...document.querySelectorAll('[data-qt-group]')].map(g=>({id:g.id,box:rect(g),columns:getComputedStyle(g).gridTemplateColumns})),bodyWidth:document.documentElement.scrollWidth,overflow,images,overlaps,hit,h1:getComputedStyle(h1).fontSize,h2:h2?getComputedStyle(h2).fontSize:null,h3:h3?getComputedStyle(h3).fontSize:null,maxContent:document.querySelector('main').getBoundingClientRect().width};
+   return {fontErrors,contrast,manualContrast,alignment,groups:[...document.querySelectorAll('[data-qt-group]')].map(g=>({id:g.id,box:rect(g),columns:getComputedStyle(g).gridTemplateColumns})),bodyWidth:document.documentElement.scrollWidth,overflow,images,overlaps,hit,h1:getComputedStyle(h1).fontSize,h2:h2?getComputedStyle(h2).fontSize:null,h3:h3?getComputedStyle(h3).fontSize:null,maxContent:document.querySelector('main').getBoundingClientRect().width};
   });
   check('layout-'+width,result.bodyWidth<=width+1&&!result.overflow.length&&!result.images.length&&!result.overlaps.length&&!result.hit.length&&!result.alignment.length&&result.maxContent<=1200.1&&result.h1===(width<=700?'31px':'38px')&&(!result.h2||result.h2==='26px')&&(!result.h3||result.h3==='16px'),result);
   report.geometry.push({width,...result});
+  check('text-readability-'+width,!result.fontErrors.length&&!result.contrast.length,{fontErrors:result.fontErrors,contrast:result.contrast,requiresManualBackgroundReview:result.manualContrast});
   if([1440,390].includes(width)&&!report.screenshots.some(s=>s.endsWith(`page-${width}.png`))){
    await page.evaluate(()=>scrollTo(0,0));await page.evaluate(()=>new Promise(requestAnimationFrame));
    const file=path.join(out,`page-${width}.png`);await page.screenshot({path:file,fullPage:true});report.screenshots.push(file);
-   for(const section of await page.locator('[data-module-id]').all()){const id=await section.getAttribute('data-module-id');const file=path.join(out,`module-${id}-${width}.png`);await section.screenshot({path:file,style:'#qt-official-header { visibility:hidden!important }'});report.screenshots.push(file);}
+   for(const section of await page.locator('[data-module-id]').all()){
+    const id=await section.getAttribute('data-module-id');const file=path.join(out,`module-${id}-${width}.png`);
+    const box=await section.boundingBox();await page.setViewportSize({width,height:Math.max(950,Math.ceil(box.height)+172)});
+    await section.screenshot({path:file,style:'#qt-official-header { visibility:hidden!important }'});report.screenshots.push(file);
+   }
+   await page.setViewportSize({width,height:950});
   }
  }
  // All public targets, including footer duplicates, use the same locked behavior.
@@ -110,7 +138,8 @@ try{
  if(await zoom.count()){
   await zoom.click();const dialog=page.locator('.qt-t-lightbox');await dialog.locator('button[data-original]').click();
   const original=await dialog.locator('.qt-t-original').getAttribute('data-original');await page.keyboard.press('Escape');await page.waitForTimeout(80);
-  check('image-original-focus',original==='true'&&await zoom.evaluate(e=>document.activeElement===e),'original size toggle and Escape return focus');
+  const expected=await zoom.evaluate(e=>e.closest('figure')?.querySelector('figcaption')?.textContent||e.querySelector('img').alt);
+  check('image-original-focus',original==='true'&&await zoom.evaluate(e=>document.activeElement===e)&&await dialog.locator('.qt-t-zoom-context').textContent()===expected,'original size, reader-facing context and Escape return focus');
  }
  // Exercise real reload/back paths, not merely the presence of history handlers.
  const moduleCount=await page.locator('[data-module-id]').count();

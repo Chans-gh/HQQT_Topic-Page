@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -149,7 +149,7 @@
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "c4ee9d7987eb4a72842e115f488b0f4f2d0b55e7f44f457a8f577aaea61a4c04",
+      "sha256": "8612499f93106d19f345ef5238b8cb0b69efd3a570e185818696c61395758e09",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },

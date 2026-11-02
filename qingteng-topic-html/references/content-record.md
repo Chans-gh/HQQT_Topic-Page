@@ -29,6 +29,8 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。s
 
 验收记录按content/visual/layout/function/delivery分别写status、scope、evidence与not_run，绑定同一HTML SHA和截图SHA。content/visual必须有执行者逐模块判断，说明实际焦点、信息是否成立及问题处理；不从工具pass或用户允许制作推断通过。check_html可用--review校验同一HTML的人工结论，格式及边界见tools；它检查证据关联，不能证明判断正确。
 
+交付后按用户明确要求分享时，`task.share`可记录url、name、hash、file与时间；该字段是执行者记录的交付事实，不产生或替代授权，脚本忽略此字段。分享对象仍以该文件对应的交付版本为准，不用带审阅UI或未解决关键项的版本冒充最终页。
+
 ## 最小示例（仅说明格式）
 
 ```json

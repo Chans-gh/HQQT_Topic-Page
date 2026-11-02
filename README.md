@@ -1,6 +1,6 @@
 # HQQT Topic Page · 环球青藤专题页 Skill
 
-`qingteng-topic-html` V1.2.1：先提炼主结论、层级和编排意图并确认内容清单，再制作、审阅和精修环球青藤 Web/H5 专题 HTML。独立使用，不依赖作者的本机目录、旧项目或其他Skill；正文单文件，官方青藤页头的搜索/账户等服务允许联网。
+`qingteng-topic-html` V1.2.2：先提炼主结论、层级和编排意图并确认内容清单，再制作、审阅和精修环球青藤 Web/H5 专题 HTML；交付后可按用户明确要求分享页面获取链接。独立使用，不依赖作者的本机目录、旧项目或其他Skill；正文单文件，官方青藤页头的搜索/账户等服务允许联网。
 
 ## 1. 获取源码
 
@@ -50,6 +50,7 @@ py -3 -c "from pathlib import Path; import shutil; shutil.copytree('qingteng-top
 | HTML组合、静态检查、安装自检 | Python 3.9+；仅标准库，不用pip安装包 |
 | 自动浏览器验收 | Node.js 20+、npm、随包锁定的Playwright及Chromium |
 | 联网补充 / 图片生成 | 宿主提供相应工具；没有内置供应商、API Key或生成服务。图片仍按业务确认范围执行 |
+| 分享（可选） | Node.js 18+ 与青水平台 API Key（`QINGSHUI_API_KEY`）；仅用户明确要求时执行，命令与限制见 tools.md 分享节 |
 
 先进入**安装后的Skill目录**检查基础环境：
 
@@ -142,7 +143,7 @@ push只使用已有`GH_TOKEN`/`GITHUB_TOKEN`、已登录`gh`或Git凭据助手�
 
 ## 6. 验收范围
 
-首版已完成F01–F12流程与修订/省略扩展、十视口数量与容量矩阵、局部浏览以及三种不同完整页的Chromium离线验收。V1.0.1补齐安装/依赖/自检与同步；V1.1.0采用官方青藤页头固定适配版：1200px容器上限、Web/H5统一60px、官方导航/搜索/账户，与页脚原型入口分开。原始来源及适配说明见[qingteng-topic-html/assets/header/sources.json](qingteng-topic-html/assets/header/sources.json)；当前实现与验证记录在源项目PROJECT_OFF。
+首版已完成F01–F12流程与修订/省略扩展、十视口数量与容量矩阵、局部浏览以及三种不同完整页的Chromium离线验收。V1.0.1补齐安装/依赖/自检与同步；V1.1.0采用官方青藤页头固定适配版：1200px容器上限、Web/H5统一60px、官方导航/搜索/账户，与页脚原型入口分开。V1.2.0–V1.2.1完善对外表达与通用编辑验收；V1.2.2增加可选分享步骤：仅在用户明确要求时先用prepare_share.py生成分享适配副本（内联远程图片、移除搜索iframe），再经青水CLI（`npx -y -p @qingshuiai/skill qingshui share`）上传并返回链接；已实测全链路（分享、URL可访问、取消分享后URL失效）。分享页运行在平台CSP沙箱，官方页头搜索/账户与表单交互被服务端清洗或降级。原始来源及适配说明见[qingteng-topic-html/assets/header/sources.json](qingteng-topic-html/assets/header/sources.json)；当前实现与验证记录在源项目PROJECT_OFF。
 
 自检的合成页面与确认记录只验证安装和工具，不替代业务事实/授权核对，也不调用真实生图。Safari、iOS、Android实机和Windows实机未验收；浏览器模拟不能冒充实机结论。未安装或发布到任何Skill市场；该源码仓库当前公开。
 

@@ -13,34 +13,36 @@
     const searchButton=root.querySelector('.search-block'),userButton=root.querySelector('.user-info');
     const userMenu=root.querySelector('#qt-official-user'),menuButton=root.querySelector('.qt-menu-button');
     let searchTimer;
-    const toggleUser=open=>{userMenu.hidden=!open;userButton.setAttribute('aria-expanded',String(open));};
-    const toggleNav=open=>{root.dataset.menu=String(open);menuButton.setAttribute('aria-expanded',String(open));};
+    const toggleUser=open=>{if(userMenu)userMenu.hidden=!open;if(userButton)userButton.setAttribute('aria-expanded',String(open));};
+    const toggleNav=open=>{root.dataset.menu=String(open);if(menuButton)menuButton.setAttribute('aria-expanded',String(open));};
     function closeSearch(){
-      if(!search.open)return;
-      search.close();clearTimeout(searchTimer);searchButton.setAttribute('aria-expanded','false');searchButton.focus({preventScroll:true});
+      if(!search||!search.open)return;
+      search.close();clearTimeout(searchTimer);
+      if(searchButton){searchButton.setAttribute('aria-expanded','false');searchButton.focus({preventScroll:true});}
     }
     $root.on('click.qtOfficial','.search-block',()=>{
+      if(!search)return;
       toggleNav(false);toggleUser(false);
       if(search.open){closeSearch();return;}
-      search.showModal();searchButton.setAttribute('aria-expanded','true');
+      search.showModal();if(searchButton)searchButton.setAttribute('aria-expanded','true');
       const frame=search.querySelector('iframe');
-      if(!frame.getAttribute('src')){
+      if(frame&&!frame.getAttribute('src')){
         root.dataset.search='loading';
         frame.addEventListener('load',()=>{clearTimeout(searchTimer);root.dataset.search='loaded';},{once:true});
         frame.src=frame.dataset.src;
         searchTimer=setTimeout(()=>{root.dataset.search='timeout';},12000);
       }
-      search.querySelector('.qt-search-close').focus();
+      const closeButton=search.querySelector('.qt-search-close');if(closeButton)closeButton.focus();
     });
     $root.on('click.qtOfficial','.qt-search-close',closeSearch);
-    search.addEventListener('cancel',event=>{event.preventDefault();closeSearch();});
-    $root.on('click.qtOfficial','.user-info',()=>{toggleNav(false);toggleUser(userMenu.hidden);});
+    if(search)search.addEventListener('cancel',event=>{event.preventDefault();closeSearch();});
+    $root.on('click.qtOfficial','.user-info',()=>{toggleNav(false);if(userMenu)toggleUser(userMenu.hidden);});
     $root.on('click.qtOfficial','.qt-menu-button',()=>{toggleUser(false);toggleNav(root.dataset.menu!=='true');});
     $root.on('keydown.qtOfficial',event=>{
       if(event.key==='Escape'){
-        if(search.open)closeSearch();
-        else if(!userMenu.hidden){toggleUser(false);userButton.focus();}
-        else if(root.dataset.menu==='true'){toggleNav(false);menuButton.focus();}
+        if(search&&search.open)closeSearch();
+        else if(userMenu&&!userMenu.hidden){toggleUser(false);if(userButton)userButton.focus();}
+        else if(root.dataset.menu==='true'){toggleNav(false);if(menuButton)menuButton.focus();}
       }
     });
     document.addEventListener('click',event=>{if(!root.contains(event.target)){toggleUser(false);toggleNav(false);}});
@@ -69,9 +71,10 @@
             for(const img of root.querySelectorAll('.avator img,.user-block-left img'))img.src=avatar.href;
           }
         }catch(_error){}
-        root.querySelector('.login-btn-01').hidden=true;userButton.hidden=false;root.dataset.auth='authenticated';
+        const loginButton=root.querySelector('.login-btn-01');if(loginButton)loginButton.hidden=true;
+        if(userButton)userButton.hidden=false;root.dataset.auth='authenticated';
       },
-      error(){root.dataset.auth='unavailable';root.querySelector('.login-btn-01').title='账户状态暂未取得，可前往官方学习中心继续';}
+      error(){root.dataset.auth='unavailable';const loginButton=root.querySelector('.login-btn-01');if(loginButton)loginButton.title='账户状态暂未取得，可前往官方学习中心继续';}
     });
   }
   window.QingTengHeader=Object.freeze({init,version:'1.2.0'});

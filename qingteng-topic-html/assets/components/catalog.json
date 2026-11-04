@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.4",
   "notice": "Patterns are editable semantic fragments, not a runtime renderer or fixed business structure. New combinations allowed within visual rules.",
   "components": [
     {

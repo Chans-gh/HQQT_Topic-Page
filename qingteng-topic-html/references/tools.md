@@ -60,7 +60,7 @@ node "$SKILL/scripts/check_browser.mjs" "$TASK/draft.html" "$TASK/browser-report
 
 ## 分享（仅限用户明确要求）
 
-分享是对外发布动作：不随交付自动执行，只在用户明确要求对指定文件分享时运行；用户在任务内预先明确授权“交付后自动分享”的，视为该次明确要求。前置条件：Node.js 18+；`QINGSHUI_API_KEY`从环境变量读取（也支持青水skill目录或当前目录`.env`），可选`QINGSHUI_BASE_URL`指定平台地址。本Skill不含任何密钥；未配置时报告未执行并停止，不代用户注册或猜密钥。命令经npx拉取`@qingshuiai/skill`运行，包内命令名为`qingshui`，不把该CLI安装为常驻Skill或全局依赖；直接`npx @qingshuiai/skill share`会报could not determine executable to run，须用`-p`指定包。
+分享是对外发布动作：不随交付自动执行，只在用户明确要求对指定文件分享时运行；用户在任务内预先明确授权“交付后自动分享”的，视为该次明确要求。前置条件：Node.js 18+；`QINGSHUI_API_KEY`从环境变量读取（也支持skill根目录或当前目录`.env`，真实环境变量优先），可选`QINGSHUI_BASE_URL`覆盖服务地址。本Skill不含任何密钥；未配置时报告未执行并停止，不代用户注册或猜密钥。分享脚本已内置：`scripts/share/`（share.js 与 bundle-html.js，源自青水skill v1.2.3 @8d187e9、MIT许可，仅迁移share/assets/unshare与打包清洗逻辑，图片/视频/语音生成能力未迁移），Node直接运行，无第三方依赖、不经npx/npm。
 
 **第一步：生成分享适配副本**（只写副本，不改交付文件）：
 
@@ -73,11 +73,13 @@ python3 "$SKILL/scripts/prepare_share.py" --input "$TASK/final.html" --out "$TAS
 **第二步：上传适配副本**：
 
 ```sh
-npx -y -p @qingshuiai/skill qingshui share "$TASK/final-share-ready.html" --name "页面名称"
-npx -y -p @qingshuiai/skill qingshui assets
-npx -y -p @qingshuiai/skill qingshui unshare <hash>
+node "$SKILL/scripts/share/share.js" share "$TASK/final-share-ready.html" --name "页面名称"
+node "$SKILL/scripts/share/share.js" assets
+node "$SKILL/scripts/share/share.js" unshare <hash>
 ```
 
-首次运行会从npm获取该CLI，属用户要求的分享动作的一部分；环境无法访问npm时如实报告未执行。`share`默认打包内联、剥离@font-face并注入沙箱存储垫片；`--keep-svg`把自包含内联SVG保留原样交服务端清洗；`--no-bundle`用于已是单文件且无外部引用的页面；`--no-scripts`禁脚本；`--no-fetch`不下载远程资源（有远程引用时报错）。成功输出分享URL、32位hash与MIME类型，URL形如`https://<平台域名>/{project}/{user}/{hash}.html`——这是沙箱包装页，原始内容在同URL加`?raw=1`（仅iframe请求头返回）。输出中的⚠️清洗警告（如移除button/input/form标签）逐条如实转述用户；把URL与hash回传，并按[记录约定](content-record.md)可记入`task.share`，该记录不替代用户授权证据。
+`share`默认打包内联、剥离@font-face并注入沙箱存储垫片；`--keep-svg`把自包含内联SVG保留原样交服务端清洗；`--no-bundle`用于已是单文件且无外部引用的页面；`--no-scripts`禁脚本（**成品专题页禁止使用，见下条**）；`--no-fetch`不下载远程资源（有远程引用时报错）。服务地址默认 `https://qingshui.hqwx.com`，白名单 qingshui.hqwx.com / qingshui.hqqt.com（含子域名），非白名单域名直接拒绝。成功输出分享URL、32位hash与MIME类型，URL形如`https://<平台域名>/{project}/{user}/{hash}.html`——这是沙箱包装页，原始内容在同URL加`?raw=1`（仅iframe请求头返回）。输出中的⚠️清洗警告（如移除button/input/form标签）逐条如实转述用户；把URL与hash回传，并按[记录约定](content-record.md)可记入`task.share`，该记录不替代用户授权证据。
+
+**硬约束：成品专题页禁止 `--no-scripts`。** 卡片列宽（`--qt-cols`）与媒体槽位（`--qt-media-slot`）由 `assets/components/topic.js` 在运行时按视口计算并写入自定义属性；禁用脚本后这两个变量停在默认值 1，`.qt-t-group` 退化为单列、图文组宽度塌陷成窄条，文字逐字竖排贴至右侧——页面看起来像样式全坏了，但本地交付文件完全正常，极易误判为模板缺陷。若分享页出现脚本报错，应修正报错来源（页头 `form`/`input`/`button` 被服务端清洗时的空值防护已在公共外壳脚本中处理），不得改用 `--no-scripts` 规避。分享后必须实测：JS 报错数、每模块网格列数、section 实际宽度。
 
 分享页运行在平台CSP沙箱iframe中：脚本不能发起网络请求、读本站Cookie/存储或顶层跳转，官方页头的搜索、账户与表单交互在分享链接中被服务端移除或降级，与本地浏览器验收不同；如实说明，不以分享链接替代本地验收或官方服务检查。用户要求撤回时执行`unshare <hash>`并复测URL失效（取消后短期内有缓存延迟，报告实际状态）。命令失败（网络、鉴权、大小或格式限制）如实返回错误，不重试到成功、不伪造URL，不把失败当交付。

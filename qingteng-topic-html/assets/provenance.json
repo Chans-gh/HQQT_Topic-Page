@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -9,7 +9,7 @@
     {
       "file": "assets/templates/public-shell.html",
       "source_path": "assets/header/* + locked source package/templates/公共页眉页脚模板.html",
-      "sha256": "222e3f507c2d9aba734e5e9e6c0436ca36c02ffaae000af60d4c888bc1e09c32",
+      "sha256": "95ed985b5b2550319ed2eff76fe12d3f97d006cd3bcab4dd2845ffcb685c1d81",
       "handling": "generated from locked source + official header adaptation",
       "nature": "1.2.1 five-block shell; official header/layout preserved; footer/dialog public copy updated without changing routes"
     },
@@ -114,7 +114,7 @@
     {
       "file": "assets/header/header-adapter.css",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "359870c5d37c7291615c137c4fd6638b157c0589b0dba2abd2d976d028b7ad08",
+      "sha256": "2431e805ceeba2860e6959a13738cb849da289ed2c363967f4792d6ea50fd8ea",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -142,14 +142,14 @@
     {
       "file": "assets/header/official-header.js",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "d5379baea8564b564cc9a86f4b1153f5ab3c9880fc14c43069884bc0e974a705",
+      "sha256": "400d97813ad53354dc4d539570c67d421edd69b46fc846bfeaa5c491e0a3a91c",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "8612499f93106d19f345ef5238b8cb0b69efd3a570e185818696c61395758e09",
+      "sha256": "1151f1177f10ed540fe9254d5ca98f397399b13eb0898130bbb95ff188cccf20",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -186,13 +186,19 @@
       "source_sha256": "23e334f07505bb91c3c0d5f18d9e73f759016025059f4c58a5878f69f24d6e76",
       "destination": "scripts/compose_html.py",
       "handling": "根据审阅索引/批注/占位契约实现记录驱动展示，不复制示例业务正文"
+    },
+    {
+      "source_path": "qingshui-skills v1.2.3 @8d187e9 (github.com/myjeffxie/qingshui-skills, MIT) scripts/api.js + scripts/bundle-html.js",
+      "source_sha256": "api.js 69ee14af9e57e94b8a2d39aa2617bfee80ff340647704eaf4050af2ac336b4cb; bundle-html.js 3b940caef6b33211614d8f789f244e41dbb6ea38cce8764e8561f383ed000063",
+      "destination": "scripts/share/share.js + scripts/share/bundle-html.js",
+      "handling": "仅迁移静态资源分享能力（share/assets/unshare 与打包清洗）；剔除图片/视频/语音生成与任务轮询；bundle-html.js逐字拷贝；share.js适配：默认BASE_URL为qingshui.hqwx.com、白名单hqwx.com/hqqt.com、.env读取skill根目录"
     }
   ],
   "public_blocks_sha256": {
     "HEADER": "3cd0d4d2d1623e18ed63de1d7ada66598149e8f520a54b784b7f8caa5935e3fc",
     "FOOTER": "4a12b7d821628c6c5230d745aaa159c2f272faef34f135caaba3ff3419eb5838",
-    "STYLE": "863b9406aa0832984da5f6646d468437ee5bdbcde11330d1d55807a237c56cf4",
-    "SCRIPT": "a8015f2e17e4cd04ecdae3d04653f631c59f0a29ce0cb79e53442304ead1bcc5",
+    "STYLE": "c959d9d05c1eda0708a0d0659431c42afbf51d1d7171697907fdc497a4e41e41",
+    "SCRIPT": "695c0c49d8cb5b42d82d3f49f741cca839c1c672e1d5a32fe86c8e3cb16ca496",
     "DIALOG": "9d94f84cf1f28750c2e7add8d63ea87571191dffac0445b72abb7c4afa74b0d6"
   },
   "historical_research_boundary": "The locked foundation previously recorded html-content-layout as concluded structural research only. This Skill does not read/call/write/sync it and has no runtime dependency.",

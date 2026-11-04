@@ -30,4 +30,4 @@ V1.2.0页头为官方源码适配版：固定jQuery与样式随HTML内嵌，搜�
 
 1.2.0升级仍保持Python标准库与锁定Playwright依赖。隔离验证可复制到Skill发现路径之外的新目录后执行npm ci、doctor --browser及smoke；不要直接覆盖真实安装。更换模板需保存旧快照和来源指纹，不迁移不存在的业务批准。
 
-可选的分享能力仅在用户明确要求分享时使用：需要Node.js 18+与青水平台API Key（青水平台 个人中心 → API密钥 创建后`export QINGSHUI_API_KEY=qs-...`，可选`QINGSHUI_BASE_URL`；也支持青水skill目录或当前目录`.env`）。本Skill不内置密钥、不代配密钥、不自动运行安装向导；未配置时分享步骤报告未执行，制作与验收不受影响。命令、内联行为与CSP沙箱限制见[tools.md](tools.md)分享节。
+可选的分享能力仅在用户明确要求分享时使用：分享脚本已内置（`scripts/share/`，源自青水skill分享源码，Node.js 18+ 直接运行，无第三方依赖、不经npx/npm），需要青水平台API Key（青水平台 个人中心 → API密钥 创建后`export QINGSHUI_API_KEY=qs-...`；默认服务地址 https://qingshui.hqwx.com，可用`QINGSHUI_BASE_URL`覆盖，白名单 qingshui.hqwx.com / qingshui.hqqt.com；也支持skill根目录或当前目录`.env`）。本Skill不内置密钥、不代配密钥；未配置时分享步骤报告未执行，制作与验收不受影响。命令、内联行为与CSP沙箱限制见[tools.md](tools.md)分享节。

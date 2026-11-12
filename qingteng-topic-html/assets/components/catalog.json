@@ -1,5 +1,5 @@
 {
-  "version": "1.2.4",
+  "version": "1.9.0",
   "notice": "Patterns are editable semantic fragments, not a runtime renderer or fixed business structure. New combinations allowed within visual rules.",
   "components": [
     {
@@ -308,5 +308,340 @@
       "purpose": "具体行动＋作品细节；无可比起点/结果时不制造变化或效果",
       "snippet": "patterns.html#action-artifact"
     }
-  ]
+  ],
+  "visual_recipes": [
+    {
+      "id": "light-opening",
+      "relationship": "C02价值说明+辅助范围",
+      "use": "展示型默认浅色；无主行动时用标题文章开场",
+      "responsive": "700以下正文和操作在前，辅助信息在后；无辅助项回收空列",
+      "snippet": "patterns.html#light-opening"
+    },
+    {
+      "id": "category-entry",
+      "relationship": "C01同级分类入口",
+      "use": "有真实分类/对应锚点时使用；无入口时去链接，保留展示卡",
+      "responsive": "按父容器容量减列；700以下单列，保留分类色",
+      "snippet": "patterns.html#category-entry"
+    },
+    {
+      "id": "icon-content",
+      "relationship": "C01内容识别",
+      "use": "同一语义用同一自有图标；元数据来自材料",
+      "responsive": "44px底板与可增长文字并排，长文可换行",
+      "snippet": "patterns.html#icon-content"
+    },
+    {
+      "id": "category-cluster",
+      "relationship": "C02主张与支持+C01同级内容",
+      "use": "彩色主卡承载共同主题，白色支持卡承载独立内容；数量不固定",
+      "responsive": "1000以下主卡在前、支持组在后；删除支持组后主卡自动占满",
+      "snippet": "patterns.html#category-cluster"
+    },
+    {
+      "id": "tonal-scene",
+      "relationship": "C02场景解释",
+      "use": "连续说明加局部强调，避免句句装卡",
+      "responsive": "700以下顺序阅读；删去辅助项不留空列",
+      "snippet": "patterns.html#tonal-scene"
+    },
+    {
+      "id": "person-image-card",
+      "relationship": "C01人物介绍",
+      "use": "仅真实提供的人物；透明图contain、说明独立；不要求人物",
+      "responsive": "240/180px图片槽，正文自然增长",
+      "snippet": "patterns.html#person-image-card"
+    },
+    {
+      "id": "case-image-card",
+      "relationship": "C09证据与解释",
+      "use": "实际作品或行动，图片与解释相邻",
+      "responsive": "截图完整contain与放大，照片按已确认焦点；空媒体删除槽",
+      "snippet": "patterns.html#case-image-card"
+    },
+    {
+      "id": "article-opening",
+      "relationship": "C02文章式引题",
+      "use": "知识或资料的核心问题与阅读范围，轻目录不强推营销",
+      "responsive": "700以下16px内边距，正文连续，不保留空辅助区",
+      "snippet": "patterns.html#article-opening"
+    },
+    {
+      "id": "illustrated-task",
+      "relationship": "任务解释+辅助透明插图",
+      "use": "需要图示帮助理解具体动作或产物时；无图删除槽",
+      "responsive": "H5正文后接图，实际轮廓不压过内容",
+      "snippet": "patterns.html#illustrated-task"
+    },
+    {
+      "id": "task-result",
+      "relationship": "连续步骤与每步产物",
+      "use": "有序动作与对应成果可视单元；连续长文可保留自然段，不机械列产物字段",
+      "responsive": "H5每步动作、说明、图标成果相邻，按内容自然增长",
+      "snippet": "patterns.html#task-result"
+    },
+    {
+      "id": "editorial-opening",
+      "relationship": "主题、引言与条件的主次",
+      "use": "展示字体/强调色用于主信息，正文保留易读字体；不要求多字体或每句上色",
+      "responsive": "正文16px；按实际父宽换列/纵排，保留自然短语和各项说明，不缩字或藏条件",
+      "snippet": "patterns.html#editorial-opening"
+    },
+    {
+      "id": "artifact-symbols",
+      "relationship": "同级产物或能力的识别",
+      "use": "真实短词逐项配不同语义图标；按数量与实际字宽换列，长说明另写",
+      "responsive": "正文16px；按实际父宽换列/纵排，保留自然短语和各项说明，不缩字或藏条件",
+      "snippet": "patterns.html#artifact-symbols"
+    },
+    {
+      "id": "visual-stages",
+      "relationship": "有依据的有序动作与对应成果",
+      "use": "每步动作后接可识别成果单元；不重复产物字段，不把并列作品画成流程",
+      "responsive": "正文16px；按实际父宽换列/纵排，保留自然短语和各项说明，不缩字或藏条件",
+      "snippet": "patterns.html#visual-stages"
+    },
+    {
+      "id": "tonal-evidence",
+      "relationship": "独立材料与说明",
+      "use": "彩色标题区与证据托底体现职责，完整截图可放大，不靠白框区分",
+      "responsive": "正文16px；按实际父宽换列/纵排，保留自然短语和各项说明，不缩字或藏条件",
+      "snippet": "patterns.html#tonal-evidence"
+    },
+    {
+      "id": "value-tiles",
+      "relationship": "有材料支持的并列价值",
+      "use": "重点短标题、对应图标和必要说明组成贴片，项数随材料，不固定三项",
+      "responsive": "正文16px；按实际父宽换列/纵排，保留自然短语和各项说明，不缩字或藏条件",
+      "snippet": "patterns.html#value-tiles"
+    },
+    {
+      "id": "facts-list",
+      "relationship": "标签与值",
+      "use": "标签列共享，长值在值列续行，不以空格模拟列",
+      "responsive": "同一标签宽度，值自然换行，320实看",
+      "snippet": "patterns.html#facts-list"
+    },
+    {
+      "id": "compact-steps",
+      "relationship": "连续有序动作",
+      "use": "短流程和多步骤连续表达；实际需要时就近写结果，不嵌套结果大面板",
+      "responsive": "Web/H5同一阅读顺序，长文自然增长",
+      "snippet": "patterns.html#compact-steps"
+    },
+    {
+      "id": "photo-column",
+      "relationship": "连续现场或细节照片",
+      "use": "同列等宽完整照片，图片高度随固有比例增长；不以相同高度上限制造不齐的可见宽度",
+      "responsive": "Web/H5连续纵排，图注自然增长",
+      "snippet": "patterns.html#photo-column"
+    }
+  ],
+  "content_icons": {
+    "names": [
+      "learning",
+      "locate",
+      "create",
+      "document",
+      "workshop",
+      "analytics",
+      "conversation",
+      "pathway",
+      "image",
+      "audio",
+      "video"
+    ],
+    "slot": "<span data-qt-icon=\"document\"></span>",
+    "family": "original 24x24 viewBox / 1.8 stroke; 26px symbol / 44px tone plate; decorative alongside heading",
+    "extension": "assets/icons/content-<name>.svg, same proportions/style; add provenance fingerprint, no brand-logo imitation"
+  },
+  "typography": {
+    "schema": "qt-typography/1",
+    "breakpoint": 700,
+    "notice": "Visual reading roles, independent of semantic heading depth; values are px. Generated CSS and browser checks read this one table. Utility/public shell and image-internal text are separate.",
+    "roles": {
+      "body": {
+        "web": 16,
+        "h5": 16,
+        "weight": 400,
+        "line_height": 1.65,
+        "selectors": [
+          ".qt-t-topic",
+          ".qt-t-lightbox",
+          ".qt-t-topic .qt-t-unit"
+        ]
+      },
+      "page": {
+        "web": 48,
+        "h5": 36,
+        "weight": 800,
+        "line_height": 1.18,
+        "selectors": [
+          ".qt-t-topic h1"
+        ]
+      },
+      "section": {
+        "web": 32,
+        "h5": 28,
+        "weight": 700,
+        "line_height": 1.3,
+        "selectors": [
+          ".qt-t-topic h2"
+        ]
+      },
+      "card": {
+        "web": 20,
+        "h5": 18,
+        "weight": 700,
+        "line_height": 1.4,
+        "selectors": [
+          ".qt-t-topic h3"
+        ]
+      },
+      "feature": {
+        "web": 24,
+        "h5": 22,
+        "weight": 700,
+        "line_height": 1.35,
+        "selectors": [
+          ".qt-t-topic .qt-t-primary-card h3",
+          ".qt-t-topic .qt-t-task-heading",
+          ".qt-t-topic .qt-t-value-card h3"
+        ]
+      },
+      "intro": {
+        "web": 20,
+        "h5": 18,
+        "weight": 400,
+        "line_height": 1.6,
+        "selectors": [
+          ".qt-t-topic .qt-t-hero > .qt-t-stack:not(.qt-t-hero-note) > p:not(.qt-t-eyebrow)",
+          ".qt-t-topic .qt-t-article-opening > p:not(.qt-t-eyebrow):not(.qt-muted)"
+        ]
+      },
+      "emphasis": {
+        "web": 20,
+        "h5": 18,
+        "weight": 700,
+        "line_height": 1.5,
+        "selectors": [
+          ".qt-t-topic .qt-t-lead",
+          ".qt-t-topic .qt-t-emphasis"
+        ]
+      },
+      "subhead": {
+        "web": 18,
+        "h5": 18,
+        "weight": 700,
+        "line_height": 1.45,
+        "selectors": [
+          ".qt-t-topic .qt-t-inset > strong",
+          ".qt-t-topic .qt-t-artifact > strong"
+        ]
+      },
+      "button": {
+        "web": 16,
+        "h5": 16,
+        "weight": 700,
+        "line_height": 1.5,
+        "selectors": [
+          ".qt-t-topic .qt-btn",
+          ".qt-t-lightbox .qt-btn"
+        ]
+      },
+      "meta": {
+        "web": 14,
+        "h5": 14,
+        "weight": 400,
+        "line_height": 1.5,
+        "selectors": [
+          ".qt-t-topic .qt-small",
+          ".qt-t-topic .qt-t-meta",
+          ".qt-t-topic .qt-t-tag",
+          ".qt-t-topic .qt-t-eyebrow",
+          ".qt-t-topic figcaption",
+          ".qt-t-lightbox .qt-t-zoom-context",
+          ".qt-t-topic #qt-review-controls",
+          ".qt-t-topic .qt-t-kicker"
+        ]
+      },
+      "metric": {
+        "web": 40,
+        "h5": 32,
+        "weight": 800,
+        "line_height": 1.2,
+        "selectors": [
+          ".qt-t-topic .qt-t-metric",
+          ".qt-t-topic .qt-t-price"
+        ]
+      },
+      "utility": {
+        "web": 14,
+        "h5": 14,
+        "weight": 700,
+        "line_height": 1.5,
+        "selectors": [
+          ".qt-t-topic #qt-review-controls .qt-t-lead",
+          ".qt-t-topic #qt-review-controls .qt-btn"
+        ]
+      }
+    }
+  },
+  "layout_contracts": {
+    "cluster": {
+      "structure": "primary + supporting cards/production; wrappers may use group or stack",
+      "alignment": "Visible peer frames share a bottom only when presented side by side; sparse or overfull pairs reflow into continuous rows",
+      "capacity": "Natural wrapping and intrinsic media; no authored card height. Add/delete/rewrite triggers recomposition."
+    },
+    "fields": {
+      "slot": "data-qt-field=\"stable-name\"",
+      "use": "Same-role fields in peer cards, including variable-height preceding title/summary; names and order must correspond",
+      "alignment": "Measured natural field heights shared within a visible row; never across stacked cards"
+    },
+    "detection": "Visible frames remain checked in natural groups; discover unregistered content columns, sparse frame tails and full-width photo painted edges; field/anchor/baseline contracts remain explicit",
+    "anchors": {
+      "slot": "data-qt-anchor=\"stable-name\"",
+      "use": "Same-row corresponding starts; enforced in natural groups too; no automatic padding"
+    },
+    "baselines": {
+      "slot": "data-qt-baseline=\"stable-name\" + optional data-qt-baseline-edge=\"left|right\"",
+      "use": "Explicit cross-module horizontal edge only; different hierarchies use separate names"
+    },
+    "parallel": {
+      "slot": "data-qt-composition=\"parallel\"",
+      "use": "Author-defined content columns with visible peer boundaries; author CSS owns responsive layout, checker and field alignment still apply"
+    }
+  },
+  "production_contract": {
+    "version": 2,
+    "assets": "per-module purpose/decision/media/gaps; transparent PNG verified",
+    "evidence": "explicit claim/relation/basis; sequence identifies same subject/task/work",
+    "review": "separate semantic countercheck; no automatic truth/user acceptance",
+    "buttons": {
+      "primary": {
+        "background": "#06734F",
+        "text": "#FFFFFF",
+        "hover": "#066747"
+      },
+      "secondary": {
+        "background": "#FFFFFF",
+        "text": "#17221E"
+      }
+    }
+  },
+  "editorial_expression": {
+    "font": "正文无衬线；标题或局部引言可选择本机衬线展示栈，回退不影响层级，不联网加载字体",
+    "focus": "先确定读者要做什么/得到什么，方法提醒与检查建议为支持内容；颜色与表面强化该主次",
+    "boundary": "无固定图标/贴片数量；长文/条件不强行拆卡；技术与视觉判断分开"
+  },
+  "reading_contract": {
+    "title": "qt-t-title-phrase + 320px preview; manual semantic line review",
+    "mixed_panels": "data-qt-align=natural preserves intrinsic media only; parallel visible frames and same-role fields remain aligned; sparse evidence reflows",
+    "media_order": "data-qt-fit=media with data-qt-reading=text-first only when the first child is media",
+    "focus": "Normalized reading position survives fit/original, manual scrolling and resize; explicit focus resets; each image initializes independently",
+    "profiles": "preview is partial; full covers all modules/media/buttons and declared widths",
+    "outcome": "production_status + purpose-scoped business_information + exact-HTML user_acceptance; completion needs all three",
+    "custom_columns": "data-qt-composition=parallel checks authored peer boundaries without replacing author CSS; undeclared content columns fail",
+    "photo_columns": "qt-t-photo-column preserves full-width natural photographs; same-column photo painted edges are checked"
+  }
 }

@@ -4,6 +4,7 @@ import argparse, hashlib, json, re, sys
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import unquote
 from html_support import ROOT, blocks, TARGETS
 from record import validate_record
 
@@ -23,7 +24,7 @@ class Page(HTMLParser):
     def handle_startendtag(self,tag,attrs):self.handle_starttag(tag,attrs);self.handle_endtag(tag)
 
 
-def inspect(html,mode='draft',record=None,review=None,review_dir=None):
+def inspect(html,mode='draft',record=None,review=None,review_dir=None,task_dir=None):
     errors=[];warnings=[]
     try:
         if blocks(html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")):errors.append('shared blocks differ from locked shell')
@@ -35,7 +36,7 @@ def inspect(html,mode='draft',record=None,review=None,review_dir=None):
     if not modules:errors.append('no module IDs')
     if record:
         try:
-            data=validate_record(record,mode,modules)
+            data=validate_record(record,mode,modules,task_dir)
             expected_media=[mid for ident in modules for mid in data['modules'][ident].get('media',[]) if data['media'][mid].get('status')!='omitted']
             actual_media=[a['data-media-id'] for _,a in page.nodes if 'data-media-id' in a]
             if Counter(expected_media)!=Counter(actual_media):errors.append('media scope/count differs from record')
@@ -68,7 +69,7 @@ def inspect(html,mode='draft',record=None,review=None,review_dir=None):
             if k.startswith('on'):errors.append('inline event handler forbidden')
             if k in {'href','src','poster'} and v and re.match(r'\s*(?:javascript|vbscript):',v,re.I):errors.append('executable URL forbidden')
         if tag=='a' and a.get('href','').startswith('#'):
-            dest=a['href'][1:].split('?',1)[0]
+            dest=unquote(a['href'][1:])
             if dest not in ids and dest not in TARGETS:errors.append('unresolved anchor: '+dest)
         if tag=='img' and 'alt' not in a:errors.append('image alt missing')
         if tag=='video' and ('autoplay' in a or 'controls' not in a):errors.append('video needs real controls and no autoplay')
@@ -86,6 +87,8 @@ def inspect(html,mode='draft',record=None,review=None,review_dir=None):
         if tag in {'iframe','object','embed','base'}:errors.append(f'unsupported subject runtime tag: {tag}')
         if tag=='link':errors.append('external subject stylesheet/link runtime dependency')
         for k,v in a.items():
+            if k=='data-qt-original-src' and not v.startswith('data:image/'):
+                errors.append('non-embedded original image resource')
             if k in {'src','poster','srcset'} and v and not v.startswith('data:image/'):
                 errors.append(f'non-embedded subject runtime resource: {tag}.{k}')
             if k=='style' and v and re.search(r'url\(\s*[\'"]?(?:https?:|//|file:)|@import',v,re.I):
@@ -94,7 +97,7 @@ def inspect(html,mode='draft',record=None,review=None,review_dir=None):
                 errors.append('external subject SVG/resource reference')
     styles='\n'.join(re.findall(r'<style[^>]*>(.*?)</style>',subject,re.S))
     if re.search(r'\.qt-(?:site-header|site-footer|placeholder-dialog)\b|qt-official-header|\.hqqt-new-head|\.header-fix',styles):errors.append('subject CSS overrides public structure')
-    if re.search(r'@import|url\(\s*[\'"]?(?:https?:|//|file:)',styles,re.I):errors.append('external CSS dependency')
+    if re.search(r'@import|url\s*\(|(?:image-set|image|paint)\s*\(',styles,re.I):errors.append('external CSS dependency')
     if re.search(r'overflow-x\s*:\s*hidden|(?:html|body)\s*\{[^}]*overflow\s*:\s*hidden',styles,re.I):errors.append('overflow hiding masks layout')
     if re.search(r'(?:/Users/|file:///|[A-Z]:\\\\)',html):errors.append('local absolute path leaked')
     if 'html-content-layout' in html:errors.append('legacy dependency/reference leaked into page')
@@ -103,31 +106,90 @@ def inspect(html,mode='draft',record=None,review=None,review_dir=None):
         public=''.join(blocks(html).values()) if not errors else ''
         subject=html.replace(public,'') if public else html
         # Script may contain selector names; final DOM above is authoritative.
-        if 'application/json' in html:warnings.append('check embedded JSON contains no private records')
+        if any(t=='script' and a.get('type','').lower()=='application/json' for t,a in page.nodes):warnings.append('check embedded JSON contains no private records')
     warnings.append('Consent authenticity, factual support, content relationships and visual composition need executor review.')
     report={'status':'fail' if errors else 'pass','scope':'static invariants only','html_sha256':hashlib.sha256(html.encode()).hexdigest(),
+            'delivery_contract':(record or {}).get('task',{}).get('delivery_contract',0),
             'layers':{k:{'status':'not-run','reason':'requires actual rendered/semantic or independent delivery review'} for k in ('content','visual','layout','function','delivery')},'mode':mode,'modules':modules,'errors':list(dict.fromkeys(errors)),
             'warnings':warnings,'not_run':['browser rendering','real device','automated semantic/user-evidence verification']}
     if review is not None:
         apply_review(report,review,review_dir)
+        if (record and record.get('task',{}).get('production_contract',0)>=2
+                and report['layers']['content'].get('status')=='pass'
+                and not review.get('layers',{}).get('content',{}).get('countercheck','').strip()):
+            report['errors'].append('content pass requires the separate countercheck findings; does not certify their truth')
+            report['layers']['content']={'status':'not-run','reason':'countercheck findings missing'}
+    if record is not None:
+        apply_feedback(report,record)
+    if record and record.get('task',{}).get('production_contract',0)>=2:
+        report['asset_fulfillment']={'status':'not-run','reason':'independent requirements/asset review not yet verified'}
+        try:
+            from requirements import audit_requirement_media
+            assets=audit_requirement_media(html,record,task_dir,modules) if mode=='final' else {'status':'not-run','reason':'draft/refine is not asset delivery'}
+            if assets['status']=='pass' and assets['required']:
+                judged=report['layers']['visual'].get('asset_review',{})
+                judged=judged if isinstance(judged,dict) else {}
+                entries=judged.get('evidence',{})
+                if (report['layers']['visual'].get('status')=='pass' and judged.get('status')=='pass' and isinstance(entries,dict) and set(entries)==set(assets['required'])
+                        and all(isinstance(v,str) and v.strip() for v in entries.values())
+                        and (review or {}).get('html_sha256')==report['html_sha256']):
+                    assets['visual_review']='pass'
+                elif judged.get('status')=='fail':
+                    assets['status']='fail';assets['reason']='required illustrations failed actual visual review'
+                else:
+                    assets['status']='not-run';assets['reason']='required illustrations need exact-HTML per-requirement visual evidence'
+            report['asset_fulfillment']=assets
+        except (ValueError,KeyError,TypeError,OSError) as exc:
+            report['asset_fulfillment']={'status':'fail','reason':str(exc)}
+            report['errors'].append(str(exc))
+    finish_report(report)
     return report
+
+
+def apply_feedback(report,record):
+    """Open user findings survive old pass reports and changes to the output bytes."""
+    unresolved=[]
+    for item in record.get('feedback', []):
+        evidence=item.get('evidence', {})
+        resolution=item.get('resolution', {})
+        valid=(item.get('id') and evidence.get('actor')=='user' and evidence.get('locator')
+               and evidence.get('text', '').strip())
+        resolved=(item.get('status')=='resolved' and resolution.get('html_sha256')==report['html_sha256']
+                  and resolution.get('note', '').strip())
+        layers=item.get('layers', [])
+        if not valid or not layers or any(k not in report['layers'] for k in layers):
+            report['errors'].append('invalid user feedback record');continue
+        if resolved:continue
+        unresolved.append(item['id'])
+        for name in layers:
+            report['layers'][name]={'status':'fail','scope':'unresolved user feedback',
+                                    'evidence':{item['id']:evidence['text']}}
+    if unresolved:report['errors'].append('unresolved user feedback: '+','.join(unresolved))
+    report['unresolved_feedback']=unresolved
 
 
 def apply_review(report,review,review_dir):
     """Bind executor decisions to this artifact; never infer semantic quality from text patterns."""
+    # Replacing a review replaces its outcome too; missing metadata is not prior acceptance.
+    report.pop('business_information',None);report.pop('user_acceptance',None)
     try:
         if review.get('html_sha256')!=report['html_sha256']:
             raise ValueError('review belongs to a different HTML version')
+        apply_outcome(report,review.get('outcome'))
         layers=review.get('layers',{})
-        for name in ('content','visual'):
+        for name in ('content','visual','delivery'):
             layer=layers.get(name,{'status':'not-run'})
             status=layer.get('status')
             if status not in {'pass','fail','not-run'}:raise ValueError(f'{name}: invalid review status')
             if status=='pass':
                 evidence=layer.get('evidence',{})
-                if not layer.get('scope') or not isinstance(evidence,dict) or set(evidence)!=set(report['modules']) or not all(isinstance(v,str) and v.strip() for v in evidence.values()):
+                if not layer.get('scope') or not isinstance(evidence,dict) or (name!='delivery' and set(evidence)!=set(report['modules'])) or not evidence or not all(isinstance(v,str) and v.strip() for v in evidence.values()):
                     raise ValueError(f'{name}: pass needs scope and evidence for every rendered module')
                 if name=='visual':
+                    target=layer.get('target',{'status':'not-run'})
+                    if target.get('status') not in {'pass','fail','not-run'}:raise ValueError('invalid target visual status')
+                    if target.get('status')=='pass' and (not target.get('reference') or not all(target.get('dimensions',{}).get(k) for k in ('atmosphere','palette','icons','surfaces','rhythm','focus'))):
+                        raise ValueError('target visual pass needs reference and six observed dimensions')
                     shots=layer.get('screenshots',[])
                     if not shots or review_dir is None:raise ValueError('visual: pass needs verifiable screenshot files')
                     for shot in shots:
@@ -139,20 +201,105 @@ def apply_review(report,review,review_dir):
         report['scope']='static invariants plus version-bound executor review; review authenticity and judgment are not automated'
     except (ValueError,KeyError,TypeError,AttributeError,OSError) as exc:
         # An invalid report must never leave either semantic layer marked pass.
-        for name in ('content','visual'):report['layers'][name]={'status':'not-run','reason':'invalid review evidence'}
+        for name in ('content','visual','delivery'):report['layers'][name]={'status':'not-run','reason':'invalid review evidence'}
+        report.pop('business_information',None);report.pop('user_acceptance',None)
         report['errors'].append(str(exc))
     report['status']='fail' if report['errors'] else 'pass'
+
+
+def apply_outcome(report,outcome):
+    """Validate scoped declarations, without certifying factual truth or consent authenticity."""
+    if outcome is None:return
+    if not isinstance(outcome,dict):raise ValueError('outcome must be an object')
+    business=outcome.get('business_information',{'status':'unknown'})
+    acceptance=outcome.get('user_acceptance',{'status':'unknown'})
+    def text(value):return isinstance(value,str) and bool(value.strip())
+    if not isinstance(business,dict) or business.get('status') not in {'complete','incomplete','not-applicable','unknown'}:
+        raise ValueError('invalid business information status')
+    if business['status']!='unknown':
+        if not text(business.get('scope')) or not text(business.get('evidence')):
+            raise ValueError('business information needs purpose scope and evidence/reason')
+        missing=business.get('missing')
+        if not isinstance(missing,list) or not all(text(v) for v in missing):raise ValueError('business missing must be a list of concrete information gaps')
+        if (business['status']=='incomplete')!=bool(missing):raise ValueError('business incomplete needs gaps; complete/not-applicable must have none')
+    if not isinstance(acceptance,dict) or acceptance.get('status') not in {'accepted','rejected','not-reviewed','unknown'}:
+        raise ValueError('invalid user acceptance status')
+    if acceptance['status'] in {'accepted','rejected'}:
+        evidence=acceptance.get('evidence')
+        if (not text(acceptance.get('scope')) or not isinstance(evidence,dict) or evidence.get('actor')!='user'
+                or not text(evidence.get('locator')) or not text(evidence.get('text'))
+                or evidence.get('html_sha256')!=report['html_sha256']):
+            raise ValueError('user acceptance needs exact-HTML user text, source locator and scope')
+    report['business_information']=business.copy();report['user_acceptance']=acceptance.copy()
+
+
+
+def merge_browser(report,browser_report,report_dir):
+    """Merge measured layers only after checking artifact and screenshot identities."""
+    try:
+        if browser_report.get('html_sha256')!=report['html_sha256']:raise ValueError('browser report belongs to a different HTML version')
+        if browser_report.get('status') not in {'pass','fail','not-run'}:raise ValueError('invalid browser report status')
+        if browser_report.get('modules') is not None and browser_report['modules']!=report['modules']:raise ValueError('browser module scope differs')
+        if browser_report.get('status')=='pass' and not browser_report.get('checks'):raise ValueError('browser pass has no checks')
+        shots=browser_report.get('screenshots',[]);hashes=browser_report.get('screenshot_sha256',{})
+        if browser_report.get('status')=='pass' and not shots:raise ValueError('browser pass has no screenshots')
+        for shot in shots:
+            path=Path(shot);path=path if path.is_absolute() else Path(report_dir)/path
+            if hashlib.sha256(path.read_bytes()).hexdigest()!=hashes.get(path.name):raise ValueError('browser screenshot SHA mismatch')
+        for name in ('layout','function'):
+            layer=browser_report.get('layers',{}).get(name,{'status':'not-run'})
+            if browser_report.get('profile') == 'preview' or browser_report.get('completion_eligible') is False:
+                layer = {'status': 'not-run', 'reason': 'partial preview cannot certify complete layout or function coverage'}
+            if layer.get('status') not in {'pass','fail','not-run'}:raise ValueError('invalid browser layer status')
+            # Neither top-level fail nor failed checks can disappear behind layer pass.
+            failed=[c['id'] for c in browser_report.get('checks',[]) if c.get('status')=='fail']
+            if layer.get('status')=='pass' and (browser_report.get('status')!='pass' or failed):
+                layer={'status':'fail','reason':'browser execution/checks failed','failed':failed}
+            if report['layers'][name].get('status')=='fail':layer=report['layers'][name]
+            report['layers'][name]=layer
+            if layer.get('status')=='fail':report['errors'].append(name+' browser review failed')
+        if browser_report.get('status')=='fail':report['errors'].append('browser report failed')
+        report['browser_scope']={'scope':browser_report.get('scope'),'engine':browser_report.get('engine'),
+                                 'services':browser_report.get('services',{}),'official_services':browser_report.get('official_services',{}),'not_run':browser_report.get('not_run',[])}
+    except (ValueError,KeyError,TypeError,AttributeError,OSError) as exc:
+        for name in ('layout','function'):
+            if report['layers'][name].get('status')!='fail':report['layers'][name]={'status':'not-run','reason':'invalid browser evidence'}
+        report['errors'].append(str(exc))
+    if report['layers']['layout'].get('status')!='not-run' or report['layers']['function'].get('status')!='not-run':
+        report['not_run']=[s for s in report['not_run'] if s!='browser rendering']
+    finish_report(report)
+
+
+def finish_report(report):
+    visual=report['layers']['visual'];target=visual.get('target',{'status':'not-run','reason':'reference-target review not supplied'})
+    if target.get('status')=='fail' and 'target visual review failed' not in report['errors']:report['errors'].append('target visual review failed')
+    report['target_visual']=target
+    asset_state=report.get('asset_fulfillment',{}).get('status')
+    failed=asset_state=='fail' or bool(report['errors']) or any(v.get('status')=='fail' for v in report['layers'].values()) or target.get('status')=='fail'
+    produced=all(v.get('status')=='pass' for v in report['layers'].values()) and target.get('status')=='pass' and asset_state in {None,'pass'}
+    report['production_status']='fail' if failed else ('pass' if produced else 'not-run')
+    report.setdefault('business_information',{'status':'unknown','reason':'purpose-scoped information review not supplied'})
+    report.setdefault('user_acceptance',{'status':'unknown','reason':'exact-artifact user decision not supplied'})
+    rejected=report['user_acceptance']['status']=='rejected'
+    ready=report['business_information']['status'] in {'complete','not-applicable'}
+    accepted=report['user_acceptance']['status']=='accepted'
+    report['status']='fail' if failed or rejected else 'pass'
+    report['completion_status']='fail' if failed or rejected else ('pass' if produced and ready and accepted else 'not-run')
+    report['scope']='Version-bound production review, purpose-scoped business completeness and user acceptance are separate; declarations do not automate truth or consent verification'
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('html',type=Path)
     p.add_argument('--mode',choices=['draft','refine','final'],default='draft');p.add_argument('--record',type=Path);p.add_argument('--report',type=Path)
-    p.add_argument('--review',type=Path,help='Optional executor content/visual review JSON bound to HTML and screenshot SHA')
+    p.add_argument('--review',type=Path,help='Executor content/visual/delivery JSON bound to HTML and screenshot SHA')
+    p.add_argument('--browser-report',type=Path,help='Same-HTML browser report.json; verifies screenshot SHA and propagates failures')
     a=p.parse_args()
-    if a.report and (a.report.resolve().is_relative_to(ROOT) or a.report.resolve() in {p.resolve() for p in (a.html,a.record,a.review) if p}):p.error('report must be outside skill and must not overwrite inputs')
+    if a.report and (a.report.resolve().is_relative_to(ROOT) or a.report.resolve() in {p.resolve() for p in (a.html,a.record,a.review,a.browser_report) if p}):p.error('report must be outside skill and must not overwrite inputs')
     report=inspect(a.html.read_text(encoding="utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None,
-                   json.loads(a.review.read_text(encoding='utf-8')) if a.review else None,a.review.parent if a.review else None)
+                   json.loads(a.review.read_text(encoding='utf-8')) if a.review else None,a.review.parent if a.review else None,a.record.parent if a.record else None)
+    if a.browser_report:merge_browser(report,json.loads(a.browser_report.read_text(encoding='utf-8')),a.browser_report.parent)
+    finish_report(report)
     text=json.dumps(report,ensure_ascii=False,indent=2)
     if a.report:a.report.write_text(text+'\n', encoding="utf-8")
-    print(text);return bool(report['errors'])
+    print(text);return report['status']!='pass'
 if __name__=='__main__':sys.exit(main())

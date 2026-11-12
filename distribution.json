@@ -15,6 +15,19 @@
   ],
   "local_only_paths": [
     "maintenance/topic-html-review-upgrade-spec-v1.0.md",
-    "maintenance/topic-html-upgrade-acceptance-v1.2.0.md"
+    "maintenance/topic-html-upgrade-acceptance-v1.2.0.md",
+    "maintenance/topic-html-visual-system-upgrade-spec-v1.0.md",
+    "maintenance/visual_regression.py",
+    "maintenance/visual_browser.mjs",
+    "maintenance/repair_regression.py",
+    "maintenance/repair_browser.mjs",
+    "maintenance/topic-html-production-upgrade-v1.4.0.md",
+    "maintenance/production_regression.py",
+    "maintenance/production_browser.mjs",
+    "maintenance/reading_regression.py",
+    "maintenance/outcome_browser.mjs",
+    "maintenance/outcome_regression.py",
+    "maintenance/alignment_browser.mjs",
+    "maintenance/requirements_regression.py"
   ]
 }

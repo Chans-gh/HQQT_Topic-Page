@@ -3,15 +3,44 @@
 import argparse, hashlib, json, re, sys
 from html import escape
 from pathlib import Path
-from html_support import ROOT, Fragment, Node, blocks, image_data
-from record import validate_record, approved, generation_plan, source_ready, module_mode
+from html_support import ROOT, Fragment, Node, blocks, image_data, TARGETS
+from record import validate_record, approved, generation_allowed, generation_plan, source_ready, module_mode, execution_allowed
 
 
 def node(html):
     return Fragment(html).root.children
 
 
-def render_media(item, record, mode, task_dir):
+def validate_anchors(modules, data):
+    """Reject lost/ambiguous IDs before reading or encoding any business media."""
+    from urllib.parse import unquote
+    shell = (ROOT/'assets/templates/public-shell.html').read_text(encoding='utf-8')
+    reserved = set(re.findall(r'\bid="([^"]+)"', shell))
+    canonical = {m.attrs['data-module-id'] for m in modules}
+    media_ids = {i for m in modules for i in data['modules'][m.attrs['data-module-id']].get('media', [])
+                 if data['media'][i].get('status') != 'omitted'}
+    claimed = set(canonical) | media_ids | reserved
+    for module in modules:
+        ident = module.attrs['data-module-id']
+        if 'id' in module.attrs and module.attrs['id'] != ident:
+            raise ValueError(f'{ident}: author id={module.attrs["id"]!r} would be lost; use id={ident!r} and update its links')
+        for n in module.walk():
+            value = n.attrs.get('id')
+            if value is None or n is module:
+                continue
+            if not value or re.search(r'\s', value) or value in claimed:
+                raise ValueError(f'{ident}: duplicate/reserved/invalid author id {value!r}')
+            if 'data-media-id' in n.attrs or 'data-resource-id' in n.attrs:
+                raise ValueError(f'{ident}: generated media/resource slot must not carry an author id')
+            claimed.add(value)
+    for module in modules:
+        for n in module.walk():
+            href = n.attrs.get('href', '')
+            if href.startswith('#') and unquote(href[1:]) not in claimed | TARGETS:
+                raise ValueError(f'{module.attrs["data-module-id"]}: unresolved author anchor {href!r}; use a module or existing inner id')
+
+
+def render_media(item, record, mode, task_dir, asset_audit=None, asset_cache=None):
     ident = escape(item['id']); desc = escape(item.get('purpose',''))
     required = ('purpose','role','composition','responsive','plan','module')
     if any(not item.get(k) for k in required):
@@ -22,11 +51,11 @@ def render_media(item, record, mode, task_dir):
         if item['plan'] == 'input' and not approved(record,'reuse','media',item):
             raise ValueError(f'{ident}: input reuse requires exact instruction evidence')
         if item['plan'] == 'generate':
-            if mode == 'draft' or not (approved(record,'generate','media',item) and approved(record,'draft','media',item)):
+            if mode == 'draft' or not generation_allowed(record,item):
                 raise ValueError(f'{ident}: generated asset outside authorized refine scope')
         path = Path(item['local_path'])
         if not path.is_absolute():path = task_dir/path
-        uri = image_data(path)
+        uri = asset_cache.image(path) if asset_cache else image_data(path)
         role = item['role']
         css = 'qt-t-person-slot' if role == 'person' else 'qt-t-media'
         if not isinstance(item.get('alt'), str):
@@ -36,15 +65,57 @@ def render_media(item, record, mode, task_dir):
         caption = item.get('caption', '')
         if not isinstance(caption, str):raise ValueError(f'{ident}: caption must be reader-facing text')
         img = f'<img src="{uri}" alt="{escape(item["alt"],quote=True)}" decoding="async">'
-        if role == 'screenshot':img=f'<button class="qt-t-zoom" type="button" data-qt-zoom aria-label="放大：{escape(item["alt"],quote=True)}">{img}</button>'
+        if role == 'screenshot':
+            original=''
+            if item.get('original_path'):
+                p=Path(item['original_path']);p=p if p.is_absolute() else task_dir/p
+                original_uri = asset_cache.image(p) if asset_cache else image_data(p)
+                if original_uri != uri:
+                    original=f' data-qt-original-src="{original_uri}"'
+            if item.get('focus_region') is not None:
+                original += f' data-qt-focus-region="{escape(json.dumps(item["focus_region"]),quote=True)}" data-qt-focus-note="{escape(item["focus_note"],quote=True)}"'
+            img=f'<button class="qt-t-zoom" type="button" data-qt-zoom{original} aria-label="放大：{escape(item["alt"],quote=True)}">{img}</button>'
         caption_html = f'<figcaption>{escape(caption)}</figcaption>' if caption.strip() else ''
-        return f'<figure id="{ident}" data-media-id="{ident}" class="{css}" data-media-role="{escape(role)}">{img}{caption_html}</figure>'
+        background=f' data-media-background="{escape(item["background"],quote=True)}"' if item.get('background') else ''
+        row = next((r for r in (asset_audit or {}).get('assets', []) if r['id'] == item['id']), {})
+        metrics = f' data-media-bytes="{row.get("bytes", path.stat().st_size)}"'
+        bounds = row.get('subject_region')
+        if not bounds and row.get('png', {}).get('visible_bounds'):
+            png = row['png']; x0,y0,x1,y1 = png['visible_bounds']
+            bounds = [x0/png['width'], y0/png['height'], (x1+1)/png['width'], (y1+1)/png['height']]
+        if bounds:
+            metrics += f' data-qt-subject-bounds="{escape(json.dumps(bounds), quote=True)}"'
+        return f'<figure id="{ident}" data-media-id="{ident}" class="{css}" data-media-role="{escape(role)}"{background}{metrics}>{img}{caption_html}</figure>'
     if mode == 'final':raise ValueError(f'{ident}: unresolved image prevents final')
-    plan = {'input':'复用输入（待取得）','generate':'确认后生成（当前未生成）','select':'待选择'}[item['plan']]
-    return f'<figure id="{ident}" data-media-id="{ident}" class="qt-t-placeholder"><strong>{ident} · {desc}</strong><p>模块：{escape(item["module"])}；角色：{escape(item["role"])}；来源方案：{plan}</p><p>构图/安全区：{escape(item["composition"])}</p><p>Web/H5：{escape(item["responsive"])}</p><figcaption>待提供或待确认的素材占位；不是已生成图片。</figcaption></figure>'
+    plan = {'input':'复用输入（待取得）','generate':'已获准生成（当前未生成）' if generation_allowed(record,item) else '拟生成（授权范围待确认）','select':'待选择'}[item['plan']]
+    return f'<figure id="{ident}" data-media-id="{ident}" class="qt-t-placeholder"><strong>{ident} · {desc}</strong><p>模块：{escape(item["module"])}；角色：{escape(item["role"])}；来源方案：{plan}</p><p>构图/安全区：{escape(item["composition"])}</p><p>Web/H5：{escape(item["responsive"])}</p><figcaption>素材尚未到位；当前是说明占位，不是已生成图片。</figcaption></figure>'
 
 
-def compose(record, body, mode, task_dir):
+def subject_css(text):
+    """Small, intentionally bounded authoring interface, not a general CSS sanitizer."""
+    clean=re.sub(r'/\*.*?\*/','',text,flags=re.S).strip()
+    if re.search(r'[<@\\]|url\s*\(|(?:image-set|image|paint)\s*\(|(?:https?|file|data|javascript):|//|expression\s*\(|!important|behavior\s*:|-moz-binding',clean,re.I):
+        raise ValueError('subject CSS: imports, resources, escapes, active CSS and !important are not supported')
+    rules=re.findall(r'([^{}]+)\{([^{}]*)\}',clean)
+    if re.sub(r'[^{}]+\{[^{}]*\}','',clean).strip() or (clean and not rules):raise ValueError('subject CSS: only flat qualified rules supported')
+    for selectors,body in rules:
+        for selector in selectors.split(','):
+            selector=selector.strip()
+            if not re.match(r'^\.qt-t-topic\s+\.qt-u-[a-z][a-z0-9-]*(?=[\s.:>+~]|$)',selector):
+                raise ValueError('subject CSS: each selector must start .qt-t-topic .qt-u-<name>')
+            if not re.fullmatch(r'[a-zA-Z0-9_ .:>+~()\-]+',selector) or re.search(r':(?:has|is|where|not|host|root|global)\b|\.qt-(?!u-|t-topic\b)',selector):
+                raise ValueError('subject CSS: unsupported/public selector')
+        for declaration in body.split(';'):
+            if not declaration.strip():continue
+            if ':' not in declaration:raise ValueError('subject CSS: invalid declaration')
+            prop,value=map(str.strip,declaration.split(':',1))
+            if not re.fullmatch(r'(?:[a-z][a-z-]*|--qt-u-[a-z0-9-]+)',prop) or not value or re.search(r'position\s*:\s*(?:fixed|sticky)|overflow-x\s*:\s*hidden',declaration,re.I):
+                raise ValueError('subject CSS: unsupported declaration')
+    return clean
+
+
+def compose(record, body, mode, task_dir, css_text="", asset_cache=None):
+    custom_css=subject_css(css_text)
     migration=record.get('task',{}).get('shell_migration')
     if migration:
         version=json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))['version']
@@ -58,8 +129,22 @@ def compose(record, body, mode, task_dir):
     modules = [c for c in parsed.root.children if isinstance(c,Node)]
     if any(isinstance(c,str) and c.strip() for c in parsed.root.children):raise ValueError('all body content must belong to modules')
     ids = [m.attrs.get('data-module-id') for m in modules]
-    data = validate_record(record,mode,ids)
+    data = validate_record(record,mode,ids,task_dir)
+    validate_anchors(modules, data)
+    from production import audit_assets, AssetCache
+    asset_cache = asset_cache or AssetCache()
+    asset_audit = audit_assets(record,task_dir,mode,cache=asset_cache)
     all_nodes = list(parsed.root.walk())
+    for n in all_nodes:
+        if 'data-qt-icon' in n.attrs:
+            name=n.attrs['data-qt-icon']
+            if not re.fullmatch(r'[a-z][a-z-]*',name or ''):raise ValueError('invalid content icon name')
+            icon=ROOT/f'assets/icons/content-{name}.svg'
+            if not icon.is_file() or n.children:raise ValueError('unknown icon or nonempty content icon slot')
+            n.attrs.update({'class':(n.attrs.get('class','')+' qt-t-icon').strip(),'aria-hidden':'true'})
+            svg=Fragment(icon.read_text(encoding='utf-8')).root.children[0]
+            svg.attrs.update({'aria-hidden':'true','focusable':'false'})
+            n.children=[svg]
     if any(n.attrs.get('data-module-id') not in ids for n in all_nodes if 'data-module-id' in n.attrs):
         raise ValueError('nested unknown module')
     if sum('data-module-id' in n.attrs for n in all_nodes) != len(ids):raise ValueError('nested/duplicate module IDs')
@@ -79,10 +164,11 @@ def compose(record, body, mode, task_dir):
         for n in media_nodes:
             if n.children:raise ValueError('media slot must be empty; composer supplies media/placeholder')
             media=data['media'][n.attrs['data-media-id']]
-            rendered=Fragment(render_media(media,record,effective,task_dir)).root.children[0]
+            rendered=Fragment(render_media(media,record,effective,task_dir,asset_audit,asset_cache)).root.children[0]
             n.tag,n.attrs,n.children=rendered.tag,rendered.attrs,rendered.children
             if media.get('status') not in {'available','complete'}:
-                review.append((media['id'],'待提供',media['purpose']))
+                state='待制作' if media.get('plan')=='generate' and generation_allowed(record,media) else '待确认生成范围' if media.get('plan')=='generate' else '待提供'
+                review.append((media['id'],state,media['purpose']))
         resource_nodes=[n for n in m.walk() if 'data-resource-id' in n.attrs]
         expected_resources={rid for rid in item.get('resources',[]) if data['resources'][rid].get('status')!='omitted'}
         if {n.attrs['data-resource-id'] for n in resource_nodes}!=expected_resources or len(resource_nodes)!=len(expected_resources):
@@ -102,13 +188,13 @@ def compose(record, body, mode, task_dir):
             if source.get('kind')=='web' and not all(source.get(k) for k in ('url','publisher','accessed','supports')):
                 raise ValueError(f'{sid}: missing web source evidence')
             adopted=source['adoption']=='adopted'
-            if adopted and not (approved(record,'list','sources',source) or approved(record,'draft','sources',source)):
+            if adopted and not (approved(record,'list','sources',source) or approved(record,'draft','sources',source) or execution_allowed(record,'refine','sources',source)):
                 raise ValueError(f'{sid}: adopted requires recorded exact scope')
             if mode=='final' and not source_ready(record,source):raise ValueError(f'{sid}: unresolved source prevents final')
             used_sources[sid]=source
             if not adopted:review.append((ident,'待确认',f'{sid} 待确认采用'))
         if mode!='final':
-            state='已确认' if approved(record,'draft','modules',item) and not item.get('issues') else ('需调整' if item.get('issues') else '待确认')
+            state=('已确认' if approved(record,'draft','modules',item) else '获准直接制作，实际页面未审阅' if execution_allowed(record,'refine','modules',item) else '待确认') if not item.get('issues') else '需调整'
             if item.get('issues'):
                 m.children+=node(f'<p class="qt-t-key" data-fact-state>未决事项：{escape("；".join(item["issues"]))}</p>')
             issues='；'.join(item.get('issues',[])) or '核对实际文案、结构与相关素材方案。'
@@ -136,7 +222,7 @@ def compose(record, body, mode, task_dir):
         notes=''
         for i in ids:
             module=data['modules'][i]
-            state='需调整' if module.get('issues') else ('已确认' if approved(record,'draft','modules',module) else '待确认')
+            state='需调整' if module.get('issues') else ('已确认' if approved(record,'draft','modules',module) else '获准直接制作，实际页面未审阅' if execution_allowed(record,'refine','modules',module) else '待确认')
             message=module.get('key_message') or module.get('purpose','')
             notes+=f'<li>{escape(i)} · {state} · {module_mode(record,module,mode)} · {escape(message)}</li>'
         status='局部修订完成 · 其余范围待审阅' if record['task'].get('mixed_scope') else ('精修待审阅' if mode=='refine' else '初稿待审阅')
@@ -147,7 +233,7 @@ def compose(record, body, mode, task_dir):
     result=re.sub(r'<!-- QT_PAGE_CONTENT_START -->.*?<!-- QT_PAGE_CONTENT_END -->',lambda _:f'<!-- QT_PAGE_CONTENT_START -->{content}<!-- QT_PAGE_CONTENT_END -->',shell,flags=re.S)
     result=re.sub(r'<title>.*?</title>',lambda _:f'<title>{escape(record["task"]["title"])}</title>',result,count=1,flags=re.S)
     css=(ROOT/'assets/components/topic.css').read_text(encoding="utf-8");js=(ROOT/'assets/components/topic.js').read_text(encoding="utf-8")
-    result=result.replace('</head>',f'<style id="qt-topic-style">{css}</style></head>')
+    result=result.replace('</head>',f'<style id="qt-topic-style">{css}</style><style id="qt-subject-style">{custom_css}</style></head>')
     result=result.replace('</body>',f'<script id="qt-topic-script">{js}</script></body>')
     assert blocks(result)==expected
     return result
@@ -158,6 +244,7 @@ def main():
     parser.add_argument('--record',required=True,type=Path)
     parser.add_argument('--body',type=Path)
     parser.add_argument('--out',type=Path)
+    parser.add_argument('--subject-css',type=Path,help='Scoped flat CSS: .qt-t-topic .qt-u-<name>; no imports/resources/public overrides')
     parser.add_argument('--mode',choices=['draft','refine','final'],default='draft')
     parser.add_argument('--generation-plan',action='store_true',help='Print eligible IDs only; no side effects')
     parser.add_argument('--modules',nargs='+',help='Scope for generation-plan only')
@@ -165,17 +252,22 @@ def main():
     record=json.loads(args.record.read_text(encoding="utf-8"))
     if args.generation_plan:
         if args.mode!='refine' or not args.modules:parser.error('plan needs --mode refine --modules')
-        print(json.dumps(generation_plan(record,args.modules),ensure_ascii=False,indent=2));return
+        print(json.dumps(generation_plan(record,args.modules,args.record.resolve().parent),ensure_ascii=False,indent=2));return
     if not args.body or not args.out:parser.error('--body and --out required')
     if args.out.resolve().is_relative_to(ROOT):raise ValueError('output must be outside skill')
-    if args.out.resolve() in {args.body.resolve(),args.record.resolve()}:raise ValueError('output cannot overwrite inputs')
-    result=compose(record,args.body.read_text(encoding="utf-8"),args.mode,args.record.resolve().parent)
+    if args.out.resolve() in {p.resolve() for p in (args.body,args.record,args.subject_css) if p}:raise ValueError('output cannot overwrite inputs')
+    result=compose(record,args.body.read_text(encoding="utf-8"),args.mode,args.record.resolve().parent,args.subject_css.read_text(encoding='utf-8') if args.subject_css else '')
     # Validate BEFORE any output write, preventing partial artifacts on failure.
     from check_html import inspect
     report=inspect(result,args.mode,record)
-    if report['errors']:raise ValueError('; '.join(report['errors']))
+    # A rejected page still needs a renderable candidate for fixing and re-reviewing.
+    # Feedback remains a failing acceptance result; only structural errors block writing.
+    structural=[e for e in report['errors'] if not e.startswith('unresolved user feedback:')]
+    if structural:raise ValueError('; '.join(structural))
     args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(result, encoding="utf-8")
-    print(json.dumps({'output':str(args.out),'mode':args.mode,'modules':report['modules'],'image_generation_calls':0},ensure_ascii=False))
+    from production import audit_assets
+    assets=audit_assets(record,args.record.resolve().parent,args.mode)
+    print(json.dumps({'output':str(args.out),'mode':args.mode,'modules':report['modules'],'completion_status':report['completion_status'],'unresolved_feedback':report.get('unresolved_feedback',[]),'composer_generation_calls':0,'task_generated_assets':assets['task_generated_assets'],'generation_scope':assets['generation_scope']},ensure_ascii=False))
 
 if __name__=='__main__':
     try:main()

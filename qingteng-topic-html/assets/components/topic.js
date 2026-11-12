@@ -2,6 +2,7 @@
 (() => {
  'use strict';
  const topic=document.querySelector('.qt-t-topic');if(!topic)return;
+ const fieldGroups='[data-qt-group],.qt-t-group,.qt-t-production,[data-qt-composition="parallel"]';
  const canvas=document.createElement('canvas').getContext('2d');
  const num=x=>parseFloat(x)||0;
  const chrome=el=>{const s=getComputedStyle(el);return num(s.paddingLeft)+num(s.paddingRight)+num(s.borderLeftWidth)+num(s.borderRightWidth);};
@@ -14,7 +15,7 @@
  // Readable wrapping budget, in the current font, rather than a whole unbroken sentence.
  // Media uses intrinsic ratio only: a previous rendered height must never feed the next width.
  function natural(el){
-  const font=num(getComputedStyle(el).fontSize)||14;
+  const font=num(getComputedStyle(el).fontSize)||16;
   const text=Math.min(measure(el),font*18+chrome(el));
   const img=el.matches('img')?el:el.querySelector('img');
   const ratio=img&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1;
@@ -22,10 +23,50 @@
   return Math.max(text,media,chrome(el));
  }
  function childrenOf(el){return [...el.children].filter(c=>!c.hidden&&!c.hasAttribute('data-qt-empty'));}
+ function prepareClusters(){
+  topic.querySelectorAll('.qt-t-cluster').forEach(el=>{
+   const items=childrenOf(el),support=items[1];
+   delete el.dataset.qtEmptySupport;
+   if(items.length!==2){el.dataset.qtLayout=items.length<2?'single':'stacked';return;}
+   const flow=support.matches('.qt-t-stack,.qt-t-group,.qt-t-production')?support:support.matches('.qt-t-cluster-support')?support.firstElementChild:support;
+   const empty=!support.textContent.trim()&&!support.querySelector('img,video,button,input');
+   if(empty){el.dataset.qtLayout='single';el.dataset.qtEmptySupport='true';return;}
+   if(flow?.matches('.qt-t-stack,.qt-t-group,.qt-t-production')&&!flow.classList.contains('qt-t-support-flow'))flow.classList.add('qt-t-support-flow');
+   // Probe intrinsic content at the proposed column widths, never at the last output height.
+   const budget=natural(items[0])+natural(support)+14;
+   el.dataset.qtLayout=innerWidth<=1000||available(el)-chrome(el)<budget?'stacked':'probe';
+  });
+ }
+ function balanceClusters(){
+  let changed=false;
+  topic.querySelectorAll('.qt-t-cluster[data-qt-layout="probe"]').forEach(el=>{
+   const [a,b]=childrenOf(el),ah=a.getBoundingClientRect().height,bh=b.getBoundingClientRect().height;
+   // A very sparse opposite column becomes its own reading row, not a tall empty card.
+   const unbalanced=Math.abs(ah-bh)>32&&Math.min(ah,bh)<Math.max(ah,bh)*.8;
+   el.dataset.qtLayout=unbalanced?'stacked':'columns';changed=changed||unbalanced;
+  });
+  return changed;
+ }
+ function alignFields(){
+  topic.querySelectorAll('[data-qt-field]').forEach(e=>e.style.removeProperty('min-block-size'));
+  topic.querySelectorAll(fieldGroups).forEach(group=>{
+   const rows=new Map();for(const item of childrenOf(group)){const key=Math.round(item.getBoundingClientRect().top);if(!rows.has(key))rows.set(key,[]);rows.get(key).push(item);}
+   for(const row of rows.values()){
+    if(row.length<2)continue;
+    const names=[...new Set(row.flatMap(item=>[...item.querySelectorAll('[data-qt-field]')].filter(e=>e.closest(fieldGroups)===group).map(e=>e.dataset.qtField)))];
+    for(const name of names){
+     const fields=row.map(item=>[...item.querySelectorAll('[data-qt-field]')].find(e=>e.dataset.qtField===name&&e.closest(fieldGroups)===group));
+     if(fields.some(e=>!e))continue;
+     const height=Math.max(...fields.map(e=>e.getBoundingClientRect().height));
+     fields.forEach(e=>e.style.setProperty('min-block-size',height+'px'));
+    }
+   }
+  });
+ }
  let frame;
- function layout(){
+ function layoutGroups(){
   // Groups own their full alignment boundary. Compact fitting is an explicit local intent.
-  topic.querySelectorAll('[data-qt-group]').forEach(el=>{
+  topic.querySelectorAll('[data-qt-group],.qt-t-group,.qt-t-production').forEach(el=>{
    const items=childrenOf(el),n=items.length,host=available(el),gap=14;
    const mediaGroup=n>0&&items.every(item=>item.matches('figure')?!!item.querySelector('img'):item.querySelectorAll('figure').length===1);
    if(mediaGroup&&!el.classList.contains('qt-t-media-group')){el.classList.add('qt-t-media-group');el.dataset.qtMediaAuto='true';}
@@ -34,11 +75,18 @@
    const recommended=n<=4?n:([5,6,9].includes(n)?3:4);
    const desired=Math.max(1,...items.map(natural));
    const capacity=Math.max(1,Math.floor((host+gap)/(desired+gap)));
-   let cols=Math.max(1,Math.min(recommended,capacity,innerWidth<=700?1:4));
+   const symbols=el.classList.contains('qt-t-artifacts')&&items.every(item=>!item.querySelector('p,ul,ol'));
+   let cols=Math.max(1,Math.min(recommended,capacity,innerWidth<=700?(symbols?2:1):4));
    if(n>cols&&n%cols===1&&cols>2)cols--; // avoid a lone last step when a balanced row is available
    el.style.setProperty('--qt-cols',cols);
    el.style.inlineSize='100%';el.style.marginInline='0';
   });
+ }
+ function layout(){
+  topic.querySelectorAll('[data-qt-field]').forEach(e=>e.style.removeProperty('min-block-size'));
+  prepareClusters();layoutGroups();
+  if(balanceClusters())layoutGroups();
+  alignFields();
   topic.querySelectorAll('[data-qt-fit]').forEach(el=>{
    const host=available(el),outer=chrome(el),inner=Math.max(0,host-outer),children=childrenOf(el),gap=14;
    if(!children.length)return;
@@ -49,7 +97,8 @@
    }
    const person=type==='person',lead=person?children[children.length-1]:children[0],main=person?children[0]:children[1];
    const leadN=natural(lead),mainN=natural(main);
-   const stacked=innerWidth<=700||inner<Math.min(leadN,24*14)+gap+Math.min(mainN,24*14);
+   const readingFont=num(getComputedStyle(main).fontSize)||16;
+   const stacked=innerWidth<=700||inner<Math.min(leadN,24*readingFont)+gap+Math.min(mainN,24*readingFont);
    const leadSize=Math.min(inner/2,Math.max(leadN,inner*(type==='media'?.45:.35)));
    el.dataset.layout=stacked?'stacked':'columns';
    el.style.setProperty('--qt-lead',Math.max(1,Math.floor(leadSize))+'px');
@@ -57,6 +106,7 @@
   });
   // A shared slot and caption row for each visual row. Measure intrinsic ratios, never output height.
   topic.querySelectorAll('.qt-t-media-group').forEach(el=>{
+   if(el.dataset.qtAlign==='natural'){for(const f of el.querySelectorAll('figure')){f.style.removeProperty('--qt-media-slot');f.style.removeProperty('--qt-caption-size');}return;}
    const items=childrenOf(el),rows=new Map();
    for(const item of items){const key=Math.round(item.offsetTop);if(!rows.has(key))rows.set(key,[]);rows.get(key).push(item);}
    for(const row of rows.values()){
@@ -68,6 +118,13 @@
     const caption=Math.max(0,...figures.map(f=>f.querySelector('figcaption')?.getBoundingClientRect().height||0));
     for(const f of figures)f.style.setProperty('--qt-caption-size',caption+'px');
    }
+  });
+  // Probe at each width; a sparse evidence column becomes a reading row.
+  topic.querySelectorAll('.qt-t-evidence').forEach(el=>{
+   el.dataset.qtEvidenceLayout='probe';
+   const items=childrenOf(el);if(items.length!==2)return;
+   const [a,b]=items.map(e=>e.getBoundingClientRect());
+   if(Math.min(a.right,b.right)<=Math.max(a.left,b.left)+2&&Math.abs(a.height-b.height)>Math.max(32,Math.max(a.height,b.height)*.2))el.dataset.qtEvidenceLayout='stacked';
   });
   topic.querySelectorAll('.qt-t-scroll').forEach(el=>{
    const viewport=el.querySelector('.qt-t-scroll-viewport');
@@ -81,8 +138,8 @@
  }
  const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(layout);};
  const resize=new ResizeObserver(schedule);resize.observe(topic);
- topic.querySelectorAll('[data-qt-fit],[data-qt-group],.qt-t-scroll').forEach(e=>resize.observe(e.parentElement));
- new MutationObserver(schedule).observe(topic,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','hidden','src','data-qt-align']});
+ topic.querySelectorAll(fieldGroups+', [data-qt-fit],.qt-t-cluster,.qt-t-evidence,.qt-t-scroll').forEach(e=>resize.observe(e.parentElement));
+ new MutationObserver(schedule).observe(topic,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','hidden','src','data-qt-align','data-qt-composition']});
  addEventListener('resize',schedule);document.fonts.ready.then(schedule);topic.addEventListener('load',schedule,true);schedule();
  const review=topic.querySelector('[data-qt-review-toggle]');
  if(review)review.addEventListener('click',()=>{const show=review.getAttribute('aria-pressed')!=='true';review.setAttribute('aria-pressed',String(show));review.textContent=show?'隐藏策划批注与索引':'显示策划批注与索引';topic.querySelectorAll('[data-review-only]').forEach(n=>n.hidden=!show);schedule();});
@@ -102,13 +159,64 @@
   el.addEventListener('click',e=>{if(e.target.closest('[data-scroll-prev]'))move(-1);if(e.target.closest('[data-scroll-next]'))move(1);const b=e.target.closest('[data-scroll-expand]');if(b){const expanded=el.dataset.expanded!=='true';el.dataset.expanded=String(expanded);b.setAttribute('aria-expanded',String(expanded));b.textContent=expanded?'恢复局部浏览':'完整展开';schedule();}});
   v.addEventListener('keydown',e=>{if(e.target!==v)return;const keys=el.dataset.axis==='x'?['ArrowLeft','ArrowRight']:['ArrowUp','ArrowDown'];if(keys.includes(e.key)){e.preventDefault();move(e.key===keys[0]?-1:1);}if(['Home','End'].includes(e.key)){e.preventDefault();move(e.key==='Home'?-1:1,true);}});
  });
- let dialog=null,opener=null;
- function close(){if(!dialog?.open)return;dialog.close();const target=opener;target?.focus({preventScroll:true});requestAnimationFrame(()=>target?.isConnected&&target.focus({preventScroll:true}));}
+ let dialog=null,opener=null,focusRegion=null,zoomTicket=0,readingPoint=null,zoomBusy=false,programmedScroll=null;
+ function rememberReading(force=false){
+  if(zoomBusy||!dialog?.open)return;
+  const v=dialog.querySelector('.qt-t-original'),r=v.querySelector('img').getBoundingClientRect(),b=v.getBoundingClientRect();
+  if(v.dataset.mode==='fit'||!r.width||!r.height)return;
+  if(force!==true&&programmedScroll&&Math.abs(v.scrollLeft-programmedScroll.left)<1&&Math.abs(v.scrollTop-programmedScroll.top)<1)return;
+  readingPoint={x:Math.max(0,Math.min(1,(b.left+v.clientLeft+v.clientWidth/2-r.left)/r.width)),y:Math.max(0,Math.min(1,(b.top+v.clientTop+v.clientHeight/2-r.top)/r.height))};
+  programmedScroll={left:v.scrollLeft,top:v.scrollTop};
+ }
+ function close(){if(!dialog?.open)return;zoomTicket++;dialog.close();const target=opener;target?.focus({preventScroll:true});requestAnimationFrame(()=>target?.isConnected&&target.focus({preventScroll:true}));}
+ async function zoomMode(mode,{initial=false,resize=false}={}){
+  if(!initial&&!resize)rememberReading();
+  zoomBusy=true;
+  const ticket=++zoomTicket,v=dialog.querySelector('.qt-t-original'),img=v.querySelector('img');
+  if(mode==='focus'&&!focusRegion)mode='fit';
+  // Establish intent before decode so rapid mode changes can retain it too.
+  if(mode==='focus'&&!resize)readingPoint={x:(focusRegion[0]+focusRegion[2])/2,y:(focusRegion[1]+focusRegion[3])/2};
+  v.dataset.mode=mode;v.dataset.original=String(mode==='original');img.style.removeProperty('width');v.style.removeProperty('height');
+  dialog.querySelector('[data-original]').setAttribute('aria-pressed',String(mode==='original'));
+  dialog.querySelector('[data-fit]').setAttribute('aria-pressed',String(mode==='fit'));
+  dialog.querySelector('[data-focus]').setAttribute('aria-pressed',String(mode==='focus'));
+  try{await img.decode();}catch{if(ticket===zoomTicket)zoomBusy=false;return;}
+  if(ticket!==zoomTicket||!dialog.open)return;
+  if(mode==='fit')img.style.width=Math.min(img.naturalWidth,v.clientWidth,innerHeight*.65*img.naturalWidth/img.naturalHeight)+'px';
+  if(mode==='focus'){
+   const [x0,y0,x1,y1]=focusRegion;
+   const scale=Math.min(1,v.clientWidth/(img.naturalWidth*(x1-x0)),v.clientHeight/(img.naturalHeight*(y1-y0)));
+   img.style.width=img.naturalWidth*scale+'px';
+   v.style.height=Math.min(innerHeight*.65,img.naturalHeight*scale*(y1-y0)+32)+'px';
+   v.scrollLeft=Math.max(0,img.naturalWidth*scale*x0-Math.min(16,(v.clientWidth-img.naturalWidth*scale*(x1-x0))/2));
+   v.scrollTop=Math.max(0,img.naturalHeight*scale*y0-Math.min(16,(v.clientHeight-img.naturalHeight*scale*(y1-y0))/2));
+  }else{v.scrollTop=0;v.scrollLeft=0;}
+  // Fit is an overview: retain the last reading point for the next detailed view.
+  // Resize also retains it; only an explicit focus action resets to the source region.
+  if(mode!=='fit'&&(mode==='original'||resize)&&readingPoint){
+   const r=img.getBoundingClientRect(),b=v.getBoundingClientRect();
+   v.scrollLeft+=r.left+readingPoint.x*r.width-(b.left+v.clientLeft+v.clientWidth/2);
+   v.scrollTop+=r.top+readingPoint.y*r.height-(b.top+v.clientTop+v.clientHeight/2);
+  }
+  programmedScroll={left:v.scrollLeft,top:v.scrollTop};
+  requestAnimationFrame(()=>{if(ticket===zoomTicket){zoomBusy=false;if(mode==='original'&&!readingPoint)rememberReading(true);}});
+ }
  topic.addEventListener('click',e=>{
   const button=e.target.closest('[data-qt-zoom]');if(!button)return;
-  if(!dialog){dialog=document.createElement('dialog');dialog.className='qt-t-lightbox';dialog.setAttribute('aria-label','原图查看');dialog.innerHTML='<div class="qt-t-scroll-controls"><button class="qt-btn qt-btn-secondary" type="button" data-close>关闭原图</button><button class="qt-btn qt-btn-secondary" type="button" data-original aria-pressed="false">原尺寸查看</button></div><p class="qt-t-zoom-context"></p><div class="qt-t-original" tabindex="0" aria-label="可滚动的原图"><img alt=""></div>';document.body.append(dialog);dialog.querySelector('[data-close]').addEventListener('click',close);dialog.addEventListener('cancel',e=>{e.preventDefault();close();});dialog.querySelector('[data-original]').addEventListener('click',e=>{const pressed=e.target.getAttribute('aria-pressed')!=='true';e.target.setAttribute('aria-pressed',String(pressed));dialog.querySelector('.qt-t-original').dataset.original=String(pressed);});}
-  opener=button;const img=button.querySelector('img'),target=dialog.querySelector('img');target.src=img.src;target.alt=img.alt;
-  dialog.querySelector('.qt-t-zoom-context').textContent=button.closest('figure')?.querySelector('figcaption')?.textContent||img.alt;
-  dialog.querySelector('.qt-t-original').dataset.original='false';dialog.querySelector('[data-original]').setAttribute('aria-pressed','false');dialog.showModal();dialog.querySelector('[data-close]').focus();
+  if(!dialog){
+   dialog=document.createElement('dialog');dialog.className='qt-t-lightbox';dialog.setAttribute('aria-label','原图查看');
+   dialog.innerHTML='<div class="qt-t-scroll-controls"><button class="qt-btn qt-btn-secondary" type="button" data-close>关闭原图</button><button class="qt-btn qt-btn-secondary" type="button" data-focus aria-pressed="false">查看相关区域</button><button class="qt-btn qt-btn-secondary" type="button" data-fit aria-pressed="false">适应窗口</button><button class="qt-btn qt-btn-secondary" type="button" data-original aria-pressed="false">原尺寸查看</button></div><p class="qt-t-zoom-context"></p><div class="qt-t-original" tabindex="0" aria-label="可滚动的原图"><img alt=""></div>';
+   document.body.append(dialog);dialog.querySelector('[data-close]').addEventListener('click',close);dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+   for(const [attr,mode] of [['data-focus','focus'],['data-fit','fit'],['data-original','original']])dialog.querySelector('['+attr+']').addEventListener('click',()=>zoomMode(mode));
+   dialog.querySelector('.qt-t-original').addEventListener('scroll',()=>rememberReading(),{passive:true});
+   addEventListener('resize',()=>{if(dialog.open)zoomMode(dialog.querySelector('.qt-t-original').dataset.mode,{resize:true});});
+  }
+  opener=button;const img=button.querySelector('img'),target=dialog.querySelector('img');target.src=button.dataset.qtOriginalSrc||img.src;target.alt=img.alt;
+  try{focusRegion=JSON.parse(button.dataset.qtFocusRegion||'null');}catch{focusRegion=null;}
+  dialog.querySelector('[data-focus]').hidden=!focusRegion;
+  const caption=button.closest('figure')?.querySelector('figcaption')?.textContent||img.alt;
+  dialog.querySelector('.qt-t-zoom-context').textContent=caption+(button.dataset.qtFocusNote?' · '+button.dataset.qtFocusNote:'');
+  readingPoint=null;zoomBusy=false;programmedScroll=null;
+  dialog.showModal();zoomMode(focusRegion?'focus':'fit',{initial:true});dialog.querySelector('[data-close]').focus();
  });
 })();

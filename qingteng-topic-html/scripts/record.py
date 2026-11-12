@@ -41,9 +41,55 @@ def approved(record, stage, kind, item):
     return False
 
 
+def execution_allowed(record, action, kind, item):
+    """Permission to finish scoped work, distinct from a review of rendered output."""
+    revision = item.get('draft_revision') if kind == 'modules' else item.get('revision')
+    for entry in record.get('execution_authorizations', []):
+        evidence = entry.get('evidence', {})
+        if (entry.get('version') == item.get('draft_version')
+                and item.get('draft_version') and revision
+                and isinstance(entry.get('actions'), list) and action in entry['actions']
+                and entry.get('scope', {}).get(kind, {}).get(item['id']) == revision
+                and evidence.get('actor') == 'user' and evidence.get('locator')
+                and evidence.get('text', '').strip()):
+            return True
+    return False
+
+
+def refine_allowed(record, kind, item):
+    return approved(record, 'draft', kind, item) or execution_allowed(record, 'refine', kind, item)
+
+
+def generation_allowed(record, item):
+    return refine_allowed(record, 'media', item) and (
+        approved(record, 'generate', 'media', item) or execution_allowed(record, 'generate', 'media', item))
+
+
+def validate_asset_review(record, mode, module_ids):
+    if not record.get('task', {}).get('production_contract') or mode == 'draft':
+        return
+    review = record['task'].get('asset_review', {})
+    if not isinstance(review, dict):
+        raise ValueError('asset assessment must be an object')
+    if (review.get('decision') not in {'none', 'reuse', 'generate', 'mixed'}
+            or not isinstance(review.get('rationale'), str) or not review['rationale'].strip()):
+        raise ValueError('production requires an explicit asset assessment, including an intentional no-image decision')
+    if not isinstance(review.get('gaps'), list):
+        raise ValueError('asset assessment requires a gaps list')
+    if mode == 'final' and review['gaps']:
+        raise ValueError('unresolved asset assessment gaps prevent final')
+    active_ids = {m['id'] for m in record.get('modules', []) if not m.get('removed')}
+    active = [m for m in record.get('media', []) if m.get('module') in active_ids and m.get('status') != 'omitted']
+    plans = {m.get('plan') for m in active}
+    expected = {'none': set(), 'reuse': {'input'}, 'generate': {'generate'}, 'mixed': {'input', 'generate'}}[review['decision']]
+    if plans != expected:
+        raise ValueError('asset assessment differs from the active image plans')
+
+
 def source_ready(record, source):
     adopted = source.get('adoption') == 'adopted' and (
-        approved(record, 'list', 'sources', source) or approved(record, 'draft', 'sources', source))
+        approved(record, 'list', 'sources', source) or approved(record, 'draft', 'sources', source)
+        or execution_allowed(record, 'refine', 'sources', source))
     # An attributed input is a claim ABOUT the supplied material, not independent proof of its claims.
     attributed = (source.get('kind') == 'input' and source.get('citation_mode') == 'attributed-input'
                   and source.get('reading') == 'checked' and bool(source.get('read_scope'))
@@ -72,10 +118,12 @@ def validate_editorial(item):
         raise ValueError(f'{item["id"]}: visual focus/order/web/h5 required')
 
 
-def validate_record(record, mode, module_ids):
+def validate_record(record, mode, module_ids, task_dir=None):
     if mode not in {'draft', 'refine', 'final'}:
         raise ValueError('mode must be draft/refine/final')
     task = record.get('task', {})
+    if 'delivery_contract' in task and (type(task['delivery_contract']) is not int or task['delivery_contract']!=1):
+        raise ValueError('delivery_contract must be 1 when supplied')
     allowed = {'draft': {'DRAFT', 'DRAFT_REVIEW'}, 'refine': {'REFINE'}, 'final': {'DELIVERY'}}
     mixed_refine = mode == 'refine' and task.get('mixed_scope') and task.get('stage') in {'DRAFT','DRAFT_REVIEW'}
     if task.get('stage') not in allowed[mode] and not mixed_refine:
@@ -83,17 +131,20 @@ def validate_record(record, mode, module_ids):
     data = objects(record)
     if not module_ids or len(module_ids) != len(set(module_ids)):
         raise ValueError('nonempty unique module scope required')
+    from requirements import validate_requirements
+    validate_requirements(record, task_dir, mode, module_ids)
+    validate_asset_review(record, mode, module_ids)
     for ident in module_ids:
         item = data['modules'].get(ident)
         if mixed_refine and item and item.get('render_mode') != 'refine':
             raise ValueError(f'{ident}: generation/refine scope is not declared refined')
         if not item or item.get('removed'):
             raise ValueError(f'unknown/removed module {ident}')
-        if not approved(record, 'list', 'modules', item):
-            raise ValueError(f'{ident}: missing exact list approval')
+        if not (approved(record, 'list', 'modules', item) or execution_allowed(record, 'refine', 'modules', item)):
+            raise ValueError(f'{ident}: missing exact list review or scoped execution authorization')
         effective = module_mode(record, item, mode)
-        if effective != 'draft' and not approved(record, 'draft', 'modules', item):
-            raise ValueError(f'{ident}: missing exact draft approval')
+        if effective != 'draft' and not refine_allowed(record, 'modules', item):
+            raise ValueError(f'{ident}: missing exact draft review or scoped execution authorization')
         if task.get('editorial_contract') == 1:
             validate_editorial(item)
         for sid in item.get('sources', []):
@@ -133,7 +184,7 @@ def validate_record(record, mode, module_ids):
                     if not approved(record, 'reuse', 'media', media):
                         raise ValueError(f'{mid}: input reuse is not authorized')
                 elif media.get('plan') == 'generate':
-                    if not (approved(record, 'draft', 'media', media) and approved(record, 'generate', 'media', media)):
+                    if not generation_allowed(record, media):
                         raise ValueError(f'{mid}: generation is not authorized')
                 else:
                     raise ValueError(f'{mid}: source plan still undecided')
@@ -151,12 +202,14 @@ def validate_record(record, mode, module_ids):
         active = {m['id'] for m in data['modules'].values() if not m.get('removed')}
         if set(module_ids) != active and set(task.get('delivery_scope', [])) != set(module_ids):
             raise ValueError('partial final requires explicit task.delivery_scope')
+    from production import validate_production
+    validate_production(record, mode, module_ids)
     return data
 
 
-def generation_plan(record, module_ids):
+def generation_plan(record, module_ids, task_dir=None):
     """Pure output only. Never calls any generator or updates approvals/status."""
-    data = validate_record(record, 'refine', module_ids)
+    data = validate_record(record, 'refine', module_ids, task_dir)
     eligible, blocked = [], []
     current_media = {mid for ident in module_ids for mid in data['modules'][ident].get('media', [])}
     for item in data['media'].values():
@@ -164,10 +217,91 @@ def generation_plan(record, module_ids):
             continue
         if item.get('status') in {'complete', 'omitted'}:
             continue
-        if (approved(record, 'draft', 'media', item)
-                and approved(record, 'generate', 'media', item)):
+        if generation_allowed(record, item):
             eligible.append(item['id'])
         else:
             blocked.append(item['id'])
     return {'eligible': eligible, 'blocked': blocked,
             'notice': 'Record check only; executor must verify actual user evidence. No calls executed.'}
+
+
+def task_bundle(source, out, paths):
+    """Copy explicit task inputs and referenced media into a new self-contained directory."""
+    import hashlib, json
+    from pathlib import Path
+    source=Path(source).resolve();out=Path(out).resolve()
+    from html_support import ROOT
+    if out.is_relative_to(ROOT) or out==source or out.is_relative_to(source):
+        raise ValueError('bundle output must be new, outside source task and Skill')
+    if out.exists():raise ValueError('bundle output already exists')
+    selected={}
+    for name in paths:
+        if Path(name).is_absolute() or '..' in Path(name).parts or name=='snapshot.json':raise ValueError('unsafe task path')
+        f=source/name
+        if not f.is_file() or not f.resolve().is_relative_to(source):raise ValueError('missing or unsafe task input: '+name)
+        selected[name]=f.read_bytes()
+    if 'record.json' not in selected:raise ValueError('record.json is required')
+    record=json.loads(selected['record.json'])
+    if record.get('task', {}).get('requirements_contract') is not None:
+        brief = source / 'requirements.json'
+        if not brief.is_file():
+            raise ValueError('independent requirements.json is missing')
+        selected['requirements.json'] = brief.read_bytes()
+    from production import asset_paths
+    for item in record.get('media',[]):
+        for field,media in asset_paths(item,source).items():
+            raw=media.read_bytes();sha=hashlib.sha256(raw).hexdigest()
+            dest='media/'+sha+media.suffix.lower()
+            selected[dest]=raw;item[field]=dest
+    selected['record.json']=(json.dumps(record,ensure_ascii=False,indent=2)+'\n').encode()
+    manifest={'schema':'qt-task-snapshot/1','files':{k:hashlib.sha256(v).hexdigest() for k,v in selected.items()},
+              'notice':'Exact task inputs/media; approvals retained, not created. Does not freeze the Skill runtime.'}
+    out.mkdir(parents=True)
+    for name,raw in selected.items():
+        f=out/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_bytes(raw)
+    (out/'snapshot.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    return manifest
+
+
+def main():
+    import argparse, hashlib, json
+    from pathlib import Path
+    from html_support import ROOT
+    p=argparse.ArgumentParser(description='Initialize tasks, snapshot inputs/media, restore verified snapshots into new directories; never approves or generates.')
+    sub=p.add_subparsers(dest='command',required=True)
+    init=sub.add_parser('init');init.add_argument('--out',required=True,type=Path);init.add_argument('--id',required=True);init.add_argument('--title',required=True)
+    snap=sub.add_parser('snapshot');snap.add_argument('task',type=Path);snap.add_argument('--out',required=True,type=Path)
+    snap.add_argument('--files',nargs='+',default=['record.json','body.html'],help='Task-relative paths; always include record.json, body, custom CSS and current HTML as applicable')
+    restore=sub.add_parser('restore');restore.add_argument('snapshot',type=Path);restore.add_argument('--out',required=True,type=Path)
+    a=p.parse_args();out=a.out.resolve()
+    if out.is_relative_to(ROOT) or out.exists():p.error('output must be a new directory outside Skill; never overwrites')
+    try:
+        if a.command=='init':
+            out.mkdir(parents=True)
+            record={'task':{'id':a.id,'title':a.title,'stage':'INTAKE','density':'explain','editorial_contract':1,'production_contract':2,'delivery_contract':1,'requirements_contract':1,'asset_review':{'decision':'pending','rationale':'','gaps':[]},'list_version':'C01','draft_version':'D01'},'inputs':[],'modules':[],'sources':[],'media':[],'resources':[],'approvals':[],'execution_authorizations':[],'feedback':[]}
+            brief={'schema':'qt-requirements/1','review':{'status':'pending','context':[],'note':''},'assets':[]}
+            raw=(json.dumps(brief,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
+            (out/'requirements.json').write_bytes(raw)
+            record['task']['requirements_sha256']=hashlib.sha256(raw).hexdigest()
+            record['requirement_bindings']={}
+            (out/'record.json').write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+            (out/'body.html').write_text('<!-- Author modules after actual list confirmation; init grants no approvals. -->\n',encoding='utf-8')
+            result={'stage':'INTAKE','approvals_created':0}
+        elif a.command=='snapshot':result=task_bundle(a.task,out,a.files)
+        else:
+            folder=a.snapshot.resolve();manifest=json.loads((folder/'snapshot.json').read_text(encoding='utf-8'))
+            if manifest.get('schema')!='qt-task-snapshot/1' or not manifest.get('files'):raise ValueError('invalid snapshot manifest')
+            for name,sha in manifest['files'].items():
+                if Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('unsafe snapshot path')
+                f=folder/name
+                if not f.resolve().is_relative_to(folder) or not f.is_file() or hashlib.sha256(f.read_bytes()).hexdigest()!=sha:raise ValueError('snapshot path/SHA mismatch: '+name)
+            saved=json.loads((folder/'record.json').read_text(encoding='utf-8'))
+            for item in saved.get('media',[]):
+                for field in ('local_path','original_path'):
+                    asset=item.get(field)
+                    if asset and (Path(asset).is_absolute() or asset not in manifest['files']):raise ValueError('snapshot media is not self-contained')
+            result=task_bundle(folder,out,list(manifest['files']))
+        print(json.dumps({'output':str(out),**result},ensure_ascii=False,indent=2))
+    except (ValueError,KeyError,TypeError,OSError) as e:p.exit(1,'ERROR: '+str(e)+'\n')
+
+if __name__=='__main__':main()

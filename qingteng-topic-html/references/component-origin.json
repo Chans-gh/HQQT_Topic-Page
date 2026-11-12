@@ -100,6 +100,30 @@
       "sha256": "d22534b2956a109e69716a559e1cfa1185c885aa55fb9a81eeb80b0a4c7d39fb",
       "bytes": 699,
       "runtime_dependencies": []
+    },
+    {
+      "file": "icons/content-image.svg",
+      "role": "content-icon",
+      "origin": "Original currentColor SVG authored in this Skill, 2026-10-29",
+      "sha256": "44543db0f36a8aa067f04b56dc8fe9f54801b6abccf42816f8af2328b8d3afc9",
+      "bytes": 280,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/content-audio.svg",
+      "role": "content-icon",
+      "origin": "Original currentColor SVG authored in this Skill, 2026-10-29",
+      "sha256": "bb62948e29d158173af740905ed704c4f7e53e51aca9db6803bd249fe4336f2b",
+      "bytes": 267,
+      "runtime_dependencies": []
+    },
+    {
+      "file": "icons/content-video.svg",
+      "role": "content-icon",
+      "origin": "Original currentColor SVG authored in this Skill, 2026-10-29",
+      "sha256": "3ba949aef4fe7e2e7384cceafe03b179d5b40c27b00cfed2cba5cf2f606274c4",
+      "bytes": 242,
+      "runtime_dependencies": []
     }
   ],
   "scope": "Only listed shipped assets retained; filenames are original provenance names, see provenance.json mapping."

@@ -23,7 +23,9 @@ def diagnose(browser=False):
                 'references/workflow.md', 'references/visual-spec.md', 'references/content-record.md',
                 'assets/header/official-header.html','assets/header/official-header.css','assets/header/header-adapter.css',
                 'assets/header/official-header.js','assets/header/logo-02.svg','assets/header/sources.json',
-                'assets/vendor/jquery-1.11.3.min.js','scripts/build_shell.py','scripts/browser_header.mjs']
+                'assets/vendor/jquery-1.11.3.min.js','scripts/build_shell.py','scripts/browser_reading.mjs','scripts/export_media.py','scripts/browser_header.mjs','scripts/browser_layout.mjs',
+                'scripts/production.py','scripts/check_task.py','scripts/requirements.py',
+                'scripts/prepare_share.py','scripts/share/share.js','scripts/share/bundle-html.js']
     missing = [name for name in required if not (ROOT / name).is_file()]
     add('files', not missing, {'missing': missing})
     try:
@@ -37,9 +39,11 @@ def diagnose(browser=False):
         for svg in (ROOT/'assets').rglob('*.svg'):
             ET.parse(svg)
         add('assets', not invalid, {'checked': len(manifest['assets']), 'invalid': invalid})
-        from build_shell import render
+        from build_shell import render, render_typography
         shell=(ROOT/'assets/templates/public-shell.html').read_text(encoding='utf-8')
         add('generated-shell',render(shell)==shell,'Official header source assets match generated template')
+        css=(ROOT/'assets/components/topic.css').read_text(encoding='utf-8')
+        add('generated-typography',render_typography(css)==css,'Catalog role table matches generated subject typography')
     except (OSError, ValueError, KeyError, ET.ParseError) as exc:
         add('assets', False, str(exc))
     node, npm = shutil.which('node'), shutil.which('npm')

@@ -2,7 +2,7 @@
 /**
  * 青水静态资源分享（share / assets / unshare）
  *
- * 打包逻辑见同目录 bundle-html.js（逐字拷贝）。
+ * 打包逻辑见同目录 bundle-html.js（保留来源打包逻辑）。
  * 相对源码的两处适配：
  * 1. 默认 QINGSHUI_BASE_URL 为 https://qingshui.hqwx.com；
  * 2. 域名白名单为 qingshui.hqwx.com 与 qingshui.hqqt.com（含各自子域名）。
@@ -347,5 +347,3 @@ async function main() {
 }
 
 main();
-
-

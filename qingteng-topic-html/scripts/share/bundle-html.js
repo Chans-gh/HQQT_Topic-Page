@@ -585,4 +585,3 @@ async function main() {
 module.exports = { bundleHTML, inlineCSS, toDataURI, _resetRemoteCache };
 
 if (require.main === module) main();
-

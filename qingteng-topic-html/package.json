@@ -1,13 +1,15 @@
 {
   "name": "qingteng-topic-html",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "description": "Optional local Chromium verification for the Qingteng topic HTML skill",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "test": "npm run test:share && npm run test:page-modes && npm run test:navigation && npm run test:input-sources",
+    "test": "npm run test:share && npm run test:page-modes && npm run test:navigation && npm run test:input-sources && npm run test:document-viewer",
+    "test:document-viewer": "node scripts/document_viewer_test.js",
+    "test:document-viewer-browser": "node scripts/document_viewer_browser.mjs",
     "test:input-sources": "node scripts/input_sources_test.js",
     "test:navigation-browser": "node scripts/navigation_browser.mjs",
     "test:navigation": "node scripts/navigation_test.js",

@@ -1,6 +1,6 @@
 {
   "schema": "qt-page-modes/1",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "notice": "Page modes choose information organization inside one locked Qingteng brand system; they are not visual skins.",
   "modes": [
     {
@@ -27,7 +27,7 @@
       "criteria": "商品册、作品集、资料目录或多对象选览；读者要浏览、比较或查看原件，页序与媒体识别较重要。",
       "densities": ["display", "reference"],
       "component_priority": ["C01", "C04", "C09", "C10"],
-      "navigation": "按真实分类或原件顺序索引；是否采用原件浏览另行决定。",
+      "navigation": "按真实分类或原件顺序索引；在内容重构、原稿浏览、摘要+原稿三种策略中明确选择。",
       "preview_focus": ["目录入口开场", "对象或原件浏览模块"]
     },
     {

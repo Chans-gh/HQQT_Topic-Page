@@ -17,6 +17,18 @@ python3 "$SKILL/scripts/input_sources.py" inventory --record "$TASK/record.json"
 
 `--allow-not-run`只用于材料接收阶段；新任务组合HTML前至少有一条输入，且不能保留`not-run`。绑定`local_path+sha256`的原文件会随snapshot复制到`inputs/`；恢复时校验自包含路径和文件指纹。`partial/blocked`允许对已读且独立成立的范围继续制作，未读范围不得被猜测补齐。
 
+## 目录/原稿策略与浏览器
+
+目录或多页资料按 [document-viewer](document-viewer.md) 选择内容重构、原稿浏览或摘要+原稿。脚本只校验策略、原输入、承载模块、页码和媒体对应，不生成页图或审批清单：
+
+```sh
+python3 "$SKILL/scripts/document_viewer.py" route --strategy hybrid
+python3 "$SKILL/scripts/document_viewer.py" validate --record "$TASK/record.json" --allow-pending
+python3 "$SKILL/scripts/document_viewer.py" validate --record "$TASK/record.json"
+```
+
+新任务组合前必须将`document_strategy`设为selected或带理由的not-applicable；`catalog`页面模式必须selected。原稿/混合策略需至少一份已绑定已取得页图的source document。从patterns复制`source-document-viewer`，页码锚点与`DOC-xx-Pxx`对应；无脚本和分享清洗后所有页图仍按DOM顺序可读。
+
 ## 页面模式记录与只读校验
 
 新任务init创建`task.page_mode_contract=1`、pending的`task.page_mode`和空`direction_previews`。执行者读取材料后按[页面模式](page-modes.md)填写结构化state、主/备选、依据/风险和真实用户selection；脚本不调用AI、不替用户选择、不修改记录。

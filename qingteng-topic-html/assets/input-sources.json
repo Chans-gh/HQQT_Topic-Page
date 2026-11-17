@@ -1,6 +1,6 @@
 {
   "schema": "qt-input-adapters/1",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "notice": "Host capability routing and read-scope recording only. This catalog does not parse files, call connectors, or infer unread content.",
   "statuses": ["not-run", "complete", "partial", "blocked"],
   "methods": ["pending", "direct", "connector", "export", "parser", "ocr", "transcript", "visual", "browser", "manual", "mixed"],

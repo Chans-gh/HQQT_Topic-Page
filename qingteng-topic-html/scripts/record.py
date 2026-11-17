@@ -139,6 +139,14 @@ def validate_record(record, mode, module_ids, task_dir=None):
         require_selected=True,
         task_dir=task_dir,
     )
+    from document_viewer import validate_document_viewer
+    validate_document_viewer(
+        record,
+        data['media'],
+        data['modules'],
+        lambda item: approved(record, 'list', 'modules', item),
+        require_decided=True,
+    )
     if not module_ids or len(module_ids) != len(set(module_ids)):
         raise ValueError('nonempty unique module scope required')
     from requirements import validate_requirements
@@ -317,7 +325,7 @@ def main():
     try:
         if a.command=='init':
             out.mkdir(parents=True)
-            record={'task':{'id':a.id,'title':a.title,'stage':'INTAKE','density':'explain','editorial_contract':1,'production_contract':2,'delivery_contract':1,'requirements_contract':1,'input_contract':1,'page_mode_contract':1,'page_mode':{'schema':'qt-page-mode/1','status':'pending','method':'pending','state':{'purpose':'','audience':'','next_action':'','material_types':[],'evidence_shapes':[],'content_scale':'','constraints':[]},'recommendation':{'primary':'','alternative':'','reasons':[],'risks':[],'confidence':None,'probabilities':{}},'selection':{'status':'pending','mode':'','evidence':{}}},'inputs':[],'modules':[],'sources':[],'media':[],'resources':[],'direction_previews':[],'approvals':[],'execution_authorizations':[],'feedback':[]}
+            record={'task':{'id':a.id,'title':a.title,'stage':'INTAKE','density':'explain','editorial_contract':1,'production_contract':2,'delivery_contract':1,'requirements_contract':1,'input_contract':1,'page_mode_contract':1,'document_viewer_contract':1,'document_strategy':{'schema':'qt-document-strategy/1','status':'pending','mode':'','rationale':'','documents':[]},'page_mode':{'schema':'qt-page-mode/1','status':'pending','method':'pending','state':{'purpose':'','audience':'','next_action':'','material_types':[],'evidence_shapes':[],'content_scale':'','constraints':[]},'recommendation':{'primary':'','alternative':'','reasons':[],'risks':[],'confidence':None,'probabilities':{}},'selection':{'status':'pending','mode':'','evidence':{}}},'inputs':[],'modules':[],'sources':[],'media':[],'resources':[],'source_documents':[],'direction_previews':[],'approvals':[],'execution_authorizations':[],'feedback':[]}
             brief={'schema':'qt-requirements/1','review':{'status':'pending','context':[],'note':''},'assets':[]}
             raw=(json.dumps(brief,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
             (out/'requirements.json').write_bytes(raw)

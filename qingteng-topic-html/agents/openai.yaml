@@ -1,4 +1,4 @@
 interface:
   display_name: "环球青藤专题页"
-  short_description: "记录多格式材料范围，推荐模式并制作、验收 Web/H5 专题页"
-  default_prompt: "使用 $qingteng-topic-html 读取这些材料，记录已读与未读范围，再推荐页面模式并提交拟呈现内容清单。"
+  short_description: "记录多格式材料，推荐模式并制作含原稿浏览的 Web/H5 专题页"
+  default_prompt: "使用 $qingteng-topic-html 读取这些材料，记录已读与未读范围，再推荐页面模式；目录材料同时建议内容重构、原稿浏览或混合策略，并提交拟呈现内容清单。"

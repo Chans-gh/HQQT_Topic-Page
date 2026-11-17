@@ -4,7 +4,7 @@
 
 ## 数据契约
 
-JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。新任务另有`input_contract=1`和`page_mode_contract=1`；格式分别见[多格式输入](input-sources.md)与[页面模式](page-modes.md)。stage 为 INTAKE、LIST_REVIEW、DRAFT、DRAFT_REVIEW、REFINE、DELIVERY；三个组合模式分别接受 DRAFT/DRAFT_REVIEW、REFINE、DELIVERY。脚本不改变阶段。清单阶段只写对话清单/记录，不调用组合脚本。
+JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。新任务另有`input_contract=1`、`page_mode_contract=1`和`document_viewer_contract=1`；格式分别见[多格式输入](input-sources.md)、[页面模式](page-modes.md)与[原稿浏览](document-viewer.md)。stage 为 INTAKE、LIST_REVIEW、DRAFT、DRAFT_REVIEW、REFINE、DELIVERY；三个组合模式分别接受 DRAFT/DRAFT_REVIEW、REFINE、DELIVERY。脚本不改变阶段。清单阶段只写对话清单/记录，不调用组合脚本。
 
 - `task.page_mode`：`schema=qt-page-mode/1`，分开保存结构化state、recommendation与selection。推荐可来自executor/typesafe/user；selection必须有真实user evidence。新任务组合HTML前必须selected；旧任务缺contract按legacy恢复，不追认历史推荐。
 - `inputs[]`：新任务使用`qt-input-source/1`，含 id/revision/kind/locator/original_name 与 extraction。extraction 显式记录 status/method/read_scope/unread_scope/structure_loss/media_status/attachments/errors；本地原文件另记 local_path 与 sha256。`complete`不能留未读范围，`partial`必须同时写已读/未读，`blocked`保留错误与未读，`not-run`不得组合 HTML。旧任务缺 contract 仍可恢复，不追认其已读。
@@ -16,6 +16,8 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。�
 - 非图片资源`resources[]`：RES-01等，module/revision/list_version/draft_version/kind/title/status/public_note。当前单文件组合器支持诚实的pending/unavailable通知和omitted；省略需omit批准，正式保留不可播放通知需status=unavailable、resolution=retain-notice及retain批准（scope.resources）。不默认接受视频占位；真实视频包需另验资源格式/路径/解码，不由本图像检查器认证。模块resources列相应编号，正文只放空data-resource-id槽。
 - `approvals[]`：stage（list/draft/reuse/generate/omit/retain）、version、scope（modules/sources/media/resources各自ID→修订号字典）、evidence（actor=user、locator、text；实际已知的time或sequence可另记）。scope中只列用户明确获准的对象。`list` 核对对象的list_version/revision；`draft` 核对draft_version，模块比较draft_revision、素材/来源比较revision；`reuse/generate/omit`核对素材draft_version/revision。生成需同时有draft方案确认和generate明确授权，不因写了拟生成就获准。
 - `direction_previews[]`：可选，最多两项。id使用PV-01起，含mode、modules、status（planned/rendered/selected/rejected）；渲染后保存任务相对artifact与html_sha256，selected/rejected需真实user evidence。预览仅能使用list已确认模块；选择不产生draft审批。
+- `task.document_strategy`：`qt-document-strategy/1`，status为pending/selected/not-applicable。selected保存content-redesign/source-viewer/hybrid、真实rationale与documents范围；not-applicable保存理由且mode/scope为空。它是呈现策略，不产生清单批准。
+- `source_documents[]`：DOC-01起，使用`qt-source-document/1`，含revision/title/module/input_ids/unread_scope/pages。页使用DOC-01-P01稳定ID，保存number/label/status/source_locator；available页绑定同模块media，unavailable页不伪造素材。原稿/混合策略中每份已选文档至少有一页available。
 
 记录中保留输入/绝对路径/用户反馈原文；组合器只渲染执行者编写的正文及明确的素材文案；draft/refine另有可关闭的内部审阅区，final不输出该区或来源记录，不将整个JSON内嵌。supports说明每项材料为何适用，不能用关键词相同或已查证替代关联判断。caption为可选的对外图注；alt需显式编写，截图不能为空，纯装饰可空字符串。两者都不从purpose/核验记录生成；未写caption时省略figcaption。
 
@@ -39,10 +41,10 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。�
 
 ```json
 {
-  "task": {"id":"demo","title":"材料整理方法","stage":"DRAFT","density":"explain","input_contract":1,"list_version":"C01","draft_version":"D01"},
+  "task": {"id":"demo","title":"材料整理方法","stage":"DRAFT","density":"explain","input_contract":1,"document_viewer_contract":1,"document_strategy":{"schema":"qt-document-strategy/1","status":"not-applicable","mode":"","rationale":"没有原稿材料","documents":[]},"list_version":"C01","draft_version":"D01"},
   "inputs": [{"id":"A01","schema":"qt-input-source/1","revision":1,"kind":"text","locator":"用户消息","original_name":"","extraction":{"status":"complete","method":"direct","read_scope":["已提供全文"],"unread_scope":[],"structure_loss":[],"media_status":"not-applicable","attachments":[],"errors":[]}}],
   "modules": [{"id":"M01","order":1,"revision":1,"list_version":"C01","draft_revision":1,"draft_version":"D01","title":"核对材料","purpose":"让读者知道如何开始","points":["列出实际能取得的材料及未读范围"],"sources":[],"media":[],"required":true,"issues":[]}],
-  "sources": [], "media": [],
+  "sources": [], "media": [], "source_documents": [],
   "approvals": [{"stage":"list","version":"C01","scope":{"modules":{"M01":1}},"evidence":{"actor":"user","locator":"实际消息定位（示例不可作为业务授权）","text":"确认C01的M01，制作初稿"}}]
 }
 ```

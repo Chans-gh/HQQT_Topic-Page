@@ -186,6 +186,55 @@
   nav.addEventListener('click',event=>{const link=event.target.closest('a[href^="#"]');const item=sections.find(candidate=>candidate.link===link);if(item)select(item);});
   addEventListener('hashchange',fromHash);fromHash();
  });
+ // Source-document pages stay in reading order; controls only navigate a local viewport or expand it.
+ topic.querySelectorAll('[data-qt-document-viewer]').forEach(viewer=>{
+  const viewport=viewer.querySelector('.qt-t-document-pages');
+  const pages=viewport?[...viewport.querySelectorAll('[data-doc-page]')]:[];
+  if(!viewport||!pages.length)return;
+  const links=[...viewer.querySelectorAll('.qt-t-document-index a[href^="#"]')];
+  const prev=viewer.querySelector('[data-doc-prev]'),next=viewer.querySelector('[data-doc-next]'),status=viewer.querySelector('[data-doc-status]'),expand=viewer.querySelector('[data-doc-expand]');
+  let index=0,ticking=false;
+  const targetIndex=link=>pages.findIndex(page=>link.hash==='#'+page.id);
+  const update=value=>{
+   index=Math.max(0,Math.min(pages.length-1,value));
+   links.forEach(link=>{if(targetIndex(link)===index)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});
+   if(prev)prev.disabled=index===0;if(next)next.disabled=index===pages.length-1;
+   if(status)status.textContent=`第 ${index+1} / ${pages.length} 页`;
+  };
+  const go=(value,focus=false)=>{
+   update(value);const page=pages[index],expanded=viewer.dataset.expanded==='true';
+   if(expanded)page.scrollIntoView({block:'start',behavior:reducedMotion?'auto':'smooth'});
+   else {const top=page.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop;viewport.scrollTo({top,behavior:reducedMotion?'auto':'smooth'});}
+   if(focus)viewport.focus({preventScroll:true});
+  };
+  links.forEach(link=>link.addEventListener('click',event=>{
+   const value=targetIndex(link);if(value<0)return;event.preventDefault();
+   try{history.replaceState(null,'','#'+pages[value].id);}catch{}
+   go(value,true);
+  }));
+  viewer.addEventListener('click',event=>{
+   if(event.target.closest('[data-doc-prev]'))go(index-1,true);
+   if(event.target.closest('[data-doc-next]'))go(index+1,true);
+   if(event.target.closest('[data-doc-expand]')){
+    const expanded=viewer.dataset.expanded!=='true';viewer.dataset.expanded=String(expanded);
+    expand.setAttribute('aria-expanded',String(expanded));expand.textContent=expanded?'恢复局部浏览':'完整展开';go(index);
+   }
+  });
+  viewport.addEventListener('scroll',()=>{
+   if(ticking||viewer.dataset.expanded==='true')return;ticking=true;requestAnimationFrame(()=>{
+    ticking=false;const top=viewport.getBoundingClientRect().top;
+    const nearest=pages.map((page,i)=>({i,d:Math.abs(page.getBoundingClientRect().top-top)})).sort((a,b)=>a.d-b.d)[0];
+    if(nearest)update(nearest.i);
+   });
+  },{passive:true});
+  viewport.addEventListener('keydown',event=>{
+   if(event.target!==viewport)return;
+   if(['PageUp','PageDown','Home','End'].includes(event.key)){
+    event.preventDefault();const value=event.key==='Home'?0:event.key==='End'?pages.length-1:index+(event.key==='PageUp'?-1:1);go(value);
+   }
+  });
+  const hashIndex=pages.findIndex(page=>'#'+page.id===location.hash);update(hashIndex>=0?hashIndex:0);
+ });
  let dialog=null,opener=null,focusRegion=null,zoomTicket=0,readingPoint=null,zoomBusy=false,programmedScroll=null;
  function rememberReading(force=false){
   if(zoomBusy||!dialog?.open)return;

@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -16,16 +16,23 @@
     {
       "file": "assets/page-modes.json",
       "source_path": "original 2.0.0 page mode catalog",
-      "sha256": "1310b07408cdc88504f9c76725e83c5eb4f2907f3e7924b672819b9573d4fc5f",
+      "sha256": "aba16636508e7b0b7d9b49a3c62a4eb8c9a51bb9ae357453ea4e7ac5c61da505",
       "handling": "original structured routing catalog; no external template code",
       "nature": "closed page-mode criteria and deterministic component/navigation mapping; not a visual skin library"
     },
     {
       "file": "assets/input-sources.json",
       "source_path": "original 2.2.0 input adapter catalog",
-      "sha256": "a88ffe23784623aac776281409927356d54222af1f9a884e4800aa93be490b01",
+      "sha256": "c819036f4d7a6b7358995a970ccb65590966c0dd599c62dc3407b6499c3696a4",
       "handling": "original host-routing and read-scope contract; no parser, connector or user material",
       "nature": "closed input kinds and deterministic extraction-status vocabulary"
+    },
+    {
+      "file": "assets/document-viewer.json",
+      "source_path": "original 2.3.0 document strategy catalog",
+      "sha256": "bdd996ca0be0844c3f2576396c568e180a4c87ea25298508cb78c27ea8c5e7ad",
+      "handling": "original presentation strategy and progressive-viewer policy; no source pages or external runtime",
+      "nature": "closed content-redesign/source-viewer/hybrid strategy vocabulary"
     },
     {
       "file": "assets/brand/global-qingteng-logo-color.png",
@@ -163,7 +170,7 @@
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "f41f73b52321909fb18451dd32ddc99b44d63cd0647aa3a2ca04d75ce35bdcc6",
+      "sha256": "9a274d0bfba2f93c7fa53739d828a5db8c4f63c4752f15234cb2ab7b55f2f717",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -233,28 +240,28 @@
     {
       "file": "assets/components/topic.css",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "9e96aa69dd3fe6cb6b3b5fe52ce58138925f35bd0ef0bf729697c1443cbaa0af",
+      "sha256": "8a986f19e2e73cedd0e5c7b33b9690c3373f315ef54ac40353c6e9420aea7bab",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/topic.js",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "44c593b6695fdf65694b7a6d5765b2e85db637ec0094cff34564b62565ba879d",
+      "sha256": "acf7c5ebb302b148cb3f3acb86edd8ba710d9be711a8608539744f726f84e720",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/catalog.json",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "d7c2f3c8df89123cad2e6c6bf9f93db070f68b78ebf52669457a4f82634e1ac7",
+      "sha256": "fe8084ef29c7d43a7330b7b78c82585503b44e5d479a42d450ea02bcdaf82a52",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/patterns.html",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "ee28818f60858761acb06112aa3636a4921eb6e7eb91080b3d04365092b37d45",
+      "sha256": "9e687bd8e791eb075d61e660634ce49ba6f85162fb3fc2e589d8bb6bf97ee842",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
@@ -406,5 +413,11 @@
     "baseline_version": "2.1.0",
     "scope": "Structured text/Feishu/DOCX/PDF/spreadsheet/web/image/video/mixed input inventory, honest extraction states and SHA-bound source snapshots",
     "boundary": "The catalog and validator do not parse, fetch, authenticate, verify source claims or infer unread content"
+  },
+  "document_viewer_revision": {
+    "version": "2.3.0",
+    "baseline_version": "2.2.0",
+    "scope": "Explicit content-redesign/source-viewer/hybrid strategy, source-page records and an all-pages-in-DOM progressive original-document viewer",
+    "boundary": "The viewer does not render PDF/DOCX files, invent unavailable pages, verify source claims or approve a content list"
   }
 }

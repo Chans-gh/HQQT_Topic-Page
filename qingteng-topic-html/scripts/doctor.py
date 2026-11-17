@@ -28,14 +28,14 @@ def diagnose(browser=False):
         checks.append({'id': name, 'status': 'pass' if passed else ('fail' if required else 'optional-missing'), 'detail': detail})
     add('python', sys.version_info >= (3, 9), '.'.join(map(str, sys.version_info[:3])))
     required = ['SKILL.md', 'agents/openai.yaml', 'package.json', 'package-lock.json', 'assets/provenance.json',
-                'assets/templates/public-shell.html', 'assets/components/catalog.json', 'assets/page-modes.json', 'assets/input-sources.json',
+                'assets/templates/public-shell.html', 'assets/components/catalog.json', 'assets/page-modes.json', 'assets/input-sources.json', 'assets/document-viewer.json',
                 'assets/components/patterns.html', 'assets/components/topic.css', 'assets/components/topic.js',
                 'references/workflow.md', 'references/visual-spec.md', 'references/content-record.md',
-                'references/quality-checks.md', 'references/page-modes.md', 'references/input-sources.md', 'references/navigation.md', 'references/setup.md',
+                'references/quality-checks.md', 'references/page-modes.md', 'references/input-sources.md', 'references/document-viewer.md', 'references/navigation.md', 'references/setup.md',
                 'assets/header/official-header.html','assets/header/official-header.css','assets/header/header-adapter.css',
                 'assets/header/official-header.js','assets/header/logo-02.svg','assets/header/sources.json',
                 'assets/vendor/jquery-1.11.3.min.js','scripts/build_shell.py','scripts/browser_reading.mjs','scripts/export_media.py','scripts/browser_header.mjs','scripts/browser_layout.mjs',
-                'scripts/production.py','scripts/check_task.py','scripts/requirements.py','scripts/input_sources.py','scripts/input_sources_test.js','scripts/page_modes.py','scripts/page_modes_test.js','scripts/navigation_test.js','scripts/navigation_browser.mjs',
+                'scripts/production.py','scripts/check_task.py','scripts/requirements.py','scripts/input_sources.py','scripts/input_sources_test.js','scripts/document_viewer.py','scripts/document_viewer_test.js','scripts/document_viewer_browser.mjs','scripts/page_modes.py','scripts/page_modes_test.js','scripts/navigation_test.js','scripts/navigation_browser.mjs',
                 'scripts/prepare_share.py','scripts/share/share.js','scripts/share/bundle-html.js',
                 'scripts/share/share_regression_test.js']
     missing = [name for name in required if not (ROOT / name).is_file()]
@@ -45,7 +45,7 @@ def diagnose(browser=False):
         add('entry', text.startswith('---\nname: qingteng-topic-html\n') and 'description:' in text, 'Skill metadata')
         manifest = json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))
         skill_version=manifest['version']
-        versions=[json.loads((ROOT/name).read_text(encoding='utf-8'))['version'] for name in ('package.json','package-lock.json','assets/components/catalog.json','assets/header/sources.json','assets/page-modes.json','assets/input-sources.json')]
+        versions=[json.loads((ROOT/name).read_text(encoding='utf-8'))['version'] for name in ('package.json','package-lock.json','assets/components/catalog.json','assets/header/sources.json','assets/page-modes.json','assets/input-sources.json','assets/document-viewer.json')]
         add('version-consistency',all(v==skill_version for v in versions),{'skill':skill_version,'runtime_versions':versions})
         invalid = [a['file'] for a in manifest['assets'] if a['sha256'] not in asset_hashes(ROOT/a['file'])]
         for svg in (ROOT/'assets').rglob('*.svg'):

@@ -1,0 +1,35 @@
+{
+  "schema": "qt-document-strategies/1",
+  "version": "2.3.0",
+  "notice": "A strategy controls how already-read source material is presented. It does not read documents, create page images, or approve content.",
+  "strategies": [
+    {
+      "id": "content-redesign",
+      "label": "内容重构",
+      "use_when": "读者要快速理解与行动，原页版式不是证据或核心体验。",
+      "presentation": "按已读内容重新组织原生HTML；必要原页只作局部证据图。",
+      "requires_page_images": false
+    },
+    {
+      "id": "source-viewer",
+      "label": "原稿浏览",
+      "use_when": "页序、版式、图表或原件样貌是读者要核对的主体。",
+      "presentation": "将已取得的原页派生图按页序保留在DOM，提供页码索引、局部浏览与完整展开。",
+      "requires_page_images": true
+    },
+    {
+      "id": "hybrid",
+      "label": "摘要 + 原稿",
+      "use_when": "既需要编辑后的快速入口，也需要保留原页供完整核对。",
+      "presentation": "先用原生HTML说明重点，再提供已读原页浏览区；两者不复制矛盾。",
+      "requires_page_images": true
+    }
+  ],
+  "viewer_policy": {
+    "all_pages_in_dom": true,
+    "real_fragment_links": true,
+    "local_scroll_may_expand": true,
+    "external_pdf_runtime": false,
+    "share_without_scripts": "All page images and captions remain in reading order; controls become ordinary anchors or inert buttons."
+  }
+}

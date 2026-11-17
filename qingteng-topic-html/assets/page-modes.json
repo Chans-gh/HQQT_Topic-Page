@@ -1,0 +1,72 @@
+{
+  "schema": "qt-page-modes/1",
+  "version": "2.0.0",
+  "notice": "Page modes choose information organization inside one locked Qingteng brand system; they are not visual skins.",
+  "modes": [
+    {
+      "id": "report",
+      "label": "报告阅读",
+      "criteria": "调研、复盘、白皮书、案例或长文；读者主要要理解结论、依据、数据范围与来源。",
+      "densities": ["reference", "explain"],
+      "component_priority": ["C02", "C06", "C09", "C10"],
+      "navigation": "长页使用真实锚点目录；结论与证据相邻。",
+      "preview_focus": ["结论型开场", "代表性证据模块"]
+    },
+    {
+      "id": "course",
+      "label": "课程教程",
+      "criteria": "训练营、操作手册、多日课程或教程；读者要按顺序学习、完成动作并核对完成条件。",
+      "densities": ["explain"],
+      "component_priority": ["C07", "C09", "C12", "C10"],
+      "navigation": "目录定位完整章节；多日内容可用阶段索引但不隐藏正文。",
+      "preview_focus": ["学习路径开场", "步骤与成果模块"]
+    },
+    {
+      "id": "catalog",
+      "label": "产品目录",
+      "criteria": "商品册、作品集、资料目录或多对象选览；读者要浏览、比较或查看原件，页序与媒体识别较重要。",
+      "densities": ["display", "reference"],
+      "component_priority": ["C01", "C04", "C09", "C10"],
+      "navigation": "按真实分类或原件顺序索引；是否采用原件浏览另行决定。",
+      "preview_focus": ["目录入口开场", "对象或原件浏览模块"]
+    },
+    {
+      "id": "operations",
+      "label": "运营说明",
+      "criteria": "运营周报、规则说明、数据说明、状态排查或执行闭环；读者要判断状态、定位异常并采取动作。",
+      "densities": ["reference", "explain"],
+      "component_priority": ["C05", "C06", "C07", "C10", "C12"],
+      "navigation": "按判断链路或执行环节定位；指标必须带范围与解释。",
+      "preview_focus": ["状态结论开场", "指标或处置链模块"]
+    },
+    {
+      "id": "campaign",
+      "label": "活动转化",
+      "criteria": "活动介绍、招生、产品落地或明确行动页面；读者要判断是否适合、理解权益条件并完成真实下一步。",
+      "densities": ["display", "explain"],
+      "component_priority": ["C01", "C02", "C03", "C07", "C09"],
+      "navigation": "围绕一个主要行动组织；价格、排期、权益和入口必须有真实材料。",
+      "preview_focus": ["价值与对象开场", "行动条件模块"]
+    },
+    {
+      "id": "custom",
+      "label": "自定义组合",
+      "criteria": "五种模式都不能准确覆盖，或材料明确需要跨模式且无法选出主导阅读任务。",
+      "densities": ["display", "explain", "reference"],
+      "component_priority": [],
+      "navigation": "按实际读者任务单独说明，不借自定义绕过品牌与验收规则。",
+      "preview_focus": ["自定义主任务开场", "最能体现差异的代表模块"]
+    }
+  ],
+  "preview_policy": {
+    "max_directions": 2,
+    "requires_list_approval": true,
+    "default_scope": "同一已确认内容的开场与一个代表模块",
+    "forbidden": [
+      "新增事实或素材",
+      "把预览选择当作初稿确认",
+      "绕过公共模板或品牌组件",
+      "自动分享预览"
+    ]
+  }
+}

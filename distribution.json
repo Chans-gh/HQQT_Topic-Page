@@ -8,6 +8,7 @@
     "README.md",
     ".gitignore",
     "distribution.json",
+    "docs/plans/",
     "maintenance/github_sync.py",
     "maintenance/upgrade_regression.py",
     "maintenance/upgrade_browser.mjs",

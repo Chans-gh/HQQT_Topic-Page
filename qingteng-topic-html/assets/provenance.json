@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.9.1",
+  "version": "2.0.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -12,6 +12,13 @@
       "sha256": "84750487e82fd89bde33aae6417cbd83a5da07362eab3333b7ebce6626f1991e",
       "handling": "generated from locked source + official header adaptation",
       "nature": "1.3.0 canonical five-block shell; official header source preserved; mobile footer details retain all 13 target mappings"
+    },
+    {
+      "file": "assets/page-modes.json",
+      "source_path": "original 2.0.0 page mode catalog",
+      "sha256": "206cbda58193f883da6115650d695d35559c9375c446907ca1d7d2c48e9718a6",
+      "handling": "original structured routing catalog; no external template code",
+      "nature": "closed page-mode criteria and deterministic component/navigation mapping; not a visual skin library"
     },
     {
       "file": "assets/brand/global-qingteng-logo-color.png",
@@ -149,7 +156,7 @@
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "f7b38d891efd9139a904ab2122608eda7e40791c4bc15459416da3dc60196fe2",
+      "sha256": "a82781b8d210db60ff7ae1bc326d113cc14bc7fcd26fe73485b86c86fa984708",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -233,7 +240,7 @@
     {
       "file": "assets/components/catalog.json",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "07d278da18409295228a35d67b492cf27ff1a4fc310c7596d474df921510333a",
+      "sha256": "6c2c6b6224bcd0ba31a67a86da4fda1422f3f9b8076927e796a66a8b14d26b90",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
@@ -374,5 +381,11 @@
     "baseline_version": "1.9.0",
     "scope": "Preserve topic images when the share sanitizer removes zoom buttons; add no-upload size and raster-pixel preflight plus Node regression coverage",
     "boundary": "Pixel count is a heuristic for server-side PNG transcoding risk and does not claim an upload will succeed"
+  },
+  "page_mode_revision": {
+    "version": "2.0.0",
+    "baseline_version": "1.9.1",
+    "scope": "Structured report/course/catalog/operations/campaign routing, user-selected mode evidence, at-most-two list-approved direction previews and deterministic catalog validation",
+    "boundary": "Mode recommendations do not approve a content list, create facts or assets, prove semantic correctness, or publish a preview"
   }
 }

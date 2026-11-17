@@ -4,6 +4,20 @@ Python 3.9+标准库，无API/密钥。浏览器脚本需要Node.js20+、随包�
 
 首次环境准备与doctor/smoke见 [setup.md](setup.md)；缺浏览器依赖时准确记录未执行，不自动下载。
 
+## 页面模式记录与只读校验
+
+新任务init创建`task.page_mode_contract=1`、pending的`task.page_mode`和空`direction_previews`。执行者读取材料后按[页面模式](page-modes.md)填写结构化state、主/备选、依据/风险和真实用户selection；脚本不调用AI、不替用户选择、不修改记录。
+
+```sh
+python3 "$SKILL/scripts/page_modes.py" validate --record "$TASK/record.json" --allow-pending
+python3 "$SKILL/scripts/page_modes.py" validate --record "$TASK/record.json"
+python3 "$SKILL/scripts/page_modes.py" brief --record "$TASK/record.json"
+```
+
+`--allow-pending`只用于材料/清单阶段检查字段形状；组合新任务HTML前必须selected。brief仅返回已选模式在`assets/page-modes.json`中的密度、组件优先级、导航和预览焦点，不生成页面。使用TypeSafe时由宿主按官方Choice/State接口取得推荐并保存概率/confidence；本工具不读取密钥或联网。组件映射是起点，仍按真实信息关系选择C01–C12。
+
+方向预览在清单确认后由执行者用相同已确认内容制作，最多两份，artifact使用任务相对路径并记录SHA。snapshot会复制已渲染预览并相对化；预览选择不是draft审批，不进入final DOM，也不自动分享。
+
 ## 制作主体
 
 执行者阅读与编排，手工写 `body.html`；从 `assets/components/patterns.html`复制实际需要的template内部片段并替换示意文案。每个顶层section/article/header必须有`data-module-id`，所有正文均归属模块。一个H1放在开场模块中；其他模块H2、内部H3。不要把原材料HTML/脚本拼进可执行片段；文案用HTML转义或安全文本节点，URL限明确用途的http(s)/锚点。片段不允许script/style/iframe/内联事件/内联style；样式和交互由Skill自有topic.css/js提供，特殊主体布局通过下述--subject-css接口输入并重新检查，不能改公共块。

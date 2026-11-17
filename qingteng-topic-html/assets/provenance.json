@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -16,9 +16,16 @@
     {
       "file": "assets/page-modes.json",
       "source_path": "original 2.0.0 page mode catalog",
-      "sha256": "63f1ad78caa6f65896bfca95361bb8b48f26c8ef549a370f762dcf5c055b57c0",
+      "sha256": "1310b07408cdc88504f9c76725e83c5eb4f2907f3e7924b672819b9573d4fc5f",
       "handling": "original structured routing catalog; no external template code",
       "nature": "closed page-mode criteria and deterministic component/navigation mapping; not a visual skin library"
+    },
+    {
+      "file": "assets/input-sources.json",
+      "source_path": "original 2.2.0 input adapter catalog",
+      "sha256": "a88ffe23784623aac776281409927356d54222af1f9a884e4800aa93be490b01",
+      "handling": "original host-routing and read-scope contract; no parser, connector or user material",
+      "nature": "closed input kinds and deterministic extraction-status vocabulary"
     },
     {
       "file": "assets/brand/global-qingteng-logo-color.png",
@@ -156,7 +163,7 @@
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "1cc0ebcc867b28d17f8d9dbe23c7541163a06d577a570d89a180f8a83ba5d793",
+      "sha256": "f41f73b52321909fb18451dd32ddc99b44d63cd0647aa3a2ca04d75ce35bdcc6",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -240,7 +247,7 @@
     {
       "file": "assets/components/catalog.json",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "8237b8b6c77d63fd331a422a051dfa7aa35e2fc976f795ad2bc5275a0760fd49",
+      "sha256": "d7c2f3c8df89123cad2e6c6bf9f93db070f68b78ebf52669457a4f82634e1ac7",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
@@ -393,5 +400,11 @@
     "baseline_version": "2.0.0",
     "scope": "In-flow real-anchor contents and Day/stage indexes with active-location enhancement, horizontal mobile browsing and no hidden sections",
     "boundary": "Navigation does not infer chapter structure, completion state or user progress; all authored targets still require review"
+  },
+  "input_adapter_revision": {
+    "version": "2.2.0",
+    "baseline_version": "2.1.0",
+    "scope": "Structured text/Feishu/DOCX/PDF/spreadsheet/web/image/video/mixed input inventory, honest extraction states and SHA-bound source snapshots",
+    "boundary": "The catalog and validator do not parse, fetch, authenticate, verify source claims or infer unread content"
   }
 }

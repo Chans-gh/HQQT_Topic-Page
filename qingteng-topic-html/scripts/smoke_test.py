@@ -29,9 +29,12 @@ def run_case(out, browser=False):
                                  'risks':['合成材料不能代表真实专题语义质量'],'confidence':None,'probabilities':{}},
                'selection':{'status':'selected','mode':'report','evidence':{'actor':'user','locator':'synthetic fixture','text':'仅本地无副作用安装测试使用报告阅读模式'}}}
     record = {'task':{'id':'synthetic-install-check','title':'安装验收 · 合成示例','stage':'DRAFT',
-                      'density':'reference','editorial_contract':1,'page_mode_contract':1,'page_mode':page_mode,
+                      'density':'reference','editorial_contract':1,'input_contract':1,'page_mode_contract':1,'page_mode':page_mode,
                       'list_version':'C01','draft_version':'D01'},
-              'inputs':[],'modules':[module],'sources':[],'media':[],
+              'inputs':[{'id':'A01','schema':'qt-input-source/1','revision':1,'kind':'text','locator':'synthetic fixture','original_name':'',
+                         'extraction':{'status':'complete','method':'direct','read_scope':['合成测试主题全文'],'unread_scope':[],
+                                       'structure_loss':[],'media_status':'not-applicable','attachments':[],'errors':[]}}],
+              'modules':[module],'sources':[],'media':[],
               'direction_previews':[],
               'approvals':[{'stage':'list','version':'C01','scope':{'modules':{'M01':1}},
                             'evidence':{'actor':'user','locator':'synthetic fixture, not real business consent','text':'仅授权本地无副作用安装测试'}}]}
@@ -61,7 +64,14 @@ def run_case(out, browser=False):
     execute('pending-page-mode-denied', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(pending_path),
                                          '--body',str(body_path),'--out',str(out/'must-not-route.html')], expected=1)
     checks.append({'id':'pending-mode-output-absent','status':'pass' if not (out/'must-not-route.html').exists() else 'fail'})
-    legacy = copy.deepcopy(record); legacy['task'].pop('page_mode_contract'); legacy['task'].pop('page_mode')
+    pending_input = copy.deepcopy(record); pending_input['inputs'][0]['extraction']={'status':'not-run','method':'pending','read_scope':[],
+        'unread_scope':['尚未读取合成输入'],'structure_loss':[],'media_status':'unread','attachments':[],'errors':[]}
+    pending_input_path = out/'pending-input.json'; pending_input_path.write_text(json.dumps(pending_input, ensure_ascii=False), encoding='utf-8')
+    execute('pending-input-denied', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(pending_input_path),
+                                     '--body',str(body_path),'--out',str(out/'must-not-read.html')], expected=1)
+    checks.append({'id':'pending-input-output-absent','status':'pass' if not (out/'must-not-read.html').exists() else 'fail'})
+    legacy = copy.deepcopy(record); legacy['task'].pop('page_mode_contract'); legacy['task'].pop('page_mode'); legacy['task'].pop('input_contract')
+    legacy['inputs']=[{'id':'A01','kind':'text','locator':'synthetic fixture','read_scope':'合成全文','unread_scope':'无'}]
     legacy_path = out/'legacy-record.json'; legacy_path.write_text(json.dumps(legacy, ensure_ascii=False), encoding='utf-8')
     execute('legacy-record-compatible', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(legacy_path),
                                          '--body',str(body_path),'--out',str(out/'legacy-draft.html')])

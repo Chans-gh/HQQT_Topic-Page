@@ -4,6 +4,19 @@ Python 3.9+标准库，无API/密钥。浏览器脚本需要Node.js20+、随包�
 
 首次环境准备与doctor/smoke见 [setup.md](setup.md)；缺浏览器依赖时准确记录未执行，不自动下载。
 
+## 多格式输入记录与只读校验
+
+`record.py init`为新任务创建`task.input_contract=1`。宿主实际读取文本、飞书、DOCX、PDF、表格、网页、图片或视频后，按 [input-sources](input-sources.md) 写入方法、已读/未读范围、结构损失、媒体/附件状态与错误。以下脚本不解析文件、不调连接器、不改写记录：
+
+```sh
+python3 "$SKILL/scripts/input_sources.py" route --kind pdf
+python3 "$SKILL/scripts/input_sources.py" validate --record "$TASK/record.json" --allow-not-run
+python3 "$SKILL/scripts/input_sources.py" validate --record "$TASK/record.json"
+python3 "$SKILL/scripts/input_sources.py" inventory --record "$TASK/record.json"
+```
+
+`--allow-not-run`只用于材料接收阶段；新任务组合HTML前至少有一条输入，且不能保留`not-run`。绑定`local_path+sha256`的原文件会随snapshot复制到`inputs/`；恢复时校验自包含路径和文件指纹。`partial/blocked`允许对已读且独立成立的范围继续制作，未读范围不得被猜测补齐。
+
 ## 页面模式记录与只读校验
 
 新任务init创建`task.page_mode_contract=1`、pending的`task.page_mode`和空`direction_previews`。执行者读取材料后按[页面模式](page-modes.md)填写结构化state、主/备选、依据/风险和真实用户selection；脚本不调用AI、不替用户选择、不修改记录。

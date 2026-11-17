@@ -4,10 +4,10 @@
 
 ## 数据契约
 
-JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。新任务另有`page_mode_contract=1`与`page_mode`；格式见[页面模式](page-modes.md)。stage 为 INTAKE、LIST_REVIEW、DRAFT、DRAFT_REVIEW、REFINE、DELIVERY；三个组合模式分别接受 DRAFT/DRAFT_REVIEW、REFINE、DELIVERY。脚本不改变阶段。清单阶段只写对话清单/记录，不调用组合脚本。
+JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。新任务另有`input_contract=1`和`page_mode_contract=1`；格式分别见[多格式输入](input-sources.md)与[页面模式](page-modes.md)。stage 为 INTAKE、LIST_REVIEW、DRAFT、DRAFT_REVIEW、REFINE、DELIVERY；三个组合模式分别接受 DRAFT/DRAFT_REVIEW、REFINE、DELIVERY。脚本不改变阶段。清单阶段只写对话清单/记录，不调用组合脚本。
 
 - `task.page_mode`：`schema=qt-page-mode/1`，分开保存结构化state、recommendation与selection。推荐可来自executor/typesafe/user；selection必须有真实user evidence。新任务组合HTML前必须selected；旧任务缺contract按legacy恢复，不追认历史推荐。
-- `inputs[]`：id、kind、locator、read_scope、unread_scope、original_name；重复来源可共用提取结果，但保留输入定位。读取失败是未读，不猜内容。
+- `inputs[]`：新任务使用`qt-input-source/1`，含 id/revision/kind/locator/original_name 与 extraction。extraction 显式记录 status/method/read_scope/unread_scope/structure_loss/media_status/attachments/errors；本地原文件另记 local_path 与 sha256。`complete`不能留未读范围，`partial`必须同时写已读/未读，`blocked`保留错误与未读，`not-run`不得组合 HTML。旧任务缺 contract 仍可恢复，不追认其已读。
 - `modules[]`：id（M01起）、order、revision、list_version、draft_revision、draft_version、title、purpose、points[]、sources[]、media[]、required、issues[]、removed（可选）。revision 跟踪实质范围/事实变化；draft_revision 跟踪需重审的实际写法。排版修复不抹掉已确认范围。
 - `sources[]`：id（S-INPUT-01/S-WEB-01等）、revision、list_version、draft_version、kind（input/web）、title、locator或url、publisher、accessed、supports、verification（unverified/verified/unverifiable）、adoption（pending/adopted/rejected）。查证与采用必须分开；网页补充须具体支持页及主体/访问日期/支持内容。未确认采用的已查证补充可在初稿明确标为待确认；最终只能保留符合下述引用语义且已确认采用的内容。
 - `media[]`：id（IMG-01起）、module、revision、list_version、draft_version、purpose、role（screenshot/illustration/photo/person/cover）、plan（input/generate/select）、composition（含文字安全区）、responsive（Web/H5顺序）、status（pending/available/complete/omitted）、local_path（已有文件时）、alt、caption。omitted表示用户同意省略，保留omit审批依据并从body移除对应槽；不得省略未解决关键图来冒充完成。
@@ -39,8 +39,8 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。�
 
 ```json
 {
-  "task": {"id":"demo","title":"材料整理方法","stage":"DRAFT","density":"explain","list_version":"C01","draft_version":"D01"},
-  "inputs": [{"id":"A01","kind":"text","locator":"用户消息","read_scope":"已提供全文","unread_scope":"无"}],
+  "task": {"id":"demo","title":"材料整理方法","stage":"DRAFT","density":"explain","input_contract":1,"list_version":"C01","draft_version":"D01"},
+  "inputs": [{"id":"A01","schema":"qt-input-source/1","revision":1,"kind":"text","locator":"用户消息","original_name":"","extraction":{"status":"complete","method":"direct","read_scope":["已提供全文"],"unread_scope":[],"structure_loss":[],"media_status":"not-applicable","attachments":[],"errors":[]}}],
   "modules": [{"id":"M01","order":1,"revision":1,"list_version":"C01","draft_revision":1,"draft_version":"D01","title":"核对材料","purpose":"让读者知道如何开始","points":["列出实际能取得的材料及未读范围"],"sources":[],"media":[],"required":true,"issues":[]}],
   "sources": [], "media": [],
   "approvals": [{"stage":"list","version":"C01","scope":{"modules":{"M01":1}},"evidence":{"actor":"user","locator":"实际消息定位（示例不可作为业务授权）","text":"确认C01的M01，制作初稿"}}]
@@ -52,7 +52,7 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。�
 
 编辑取舍和精修延用reader_question/key_message/content_layers/deduplication/relationship/visual_intent与issues/evidence：删除无依据承诺时记其信息作用和具体承接文案；材料稀薄时只保留可支持主题，缺项不编造。精修记录问题来源、动作、同模块成品变化、必要信息去向及截图定位。样例见workflow第11节，不增加机械评分或审批字段。
 
-任务快照使用record.py snapshot/restore；媒体与已渲染方向预览会复制并相对化，批准与修订保持原记录，详见tools。人工评审是任务证据，不进入公开正文；目标视觉target与五层汇总格式见tools。
+任务快照使用record.py snapshot/restore；绑定SHA的本地原输入、媒体与已渲染方向预览会复制并相对化，批准与修订保持原记录，详见tools。人工评审是任务证据，不进入公开正文；目标视觉target与五层汇总格式见tools。
 
 
 ## 执行授权、素材决策与否定反馈

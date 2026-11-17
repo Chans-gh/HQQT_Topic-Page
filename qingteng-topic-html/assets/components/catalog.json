@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "notice": "Patterns are editable semantic fragments, not a runtime renderer or fixed business structure. New combinations allowed within visual rules.",
   "components": [
     {
@@ -635,6 +635,7 @@
     "boundary": "无固定图标/贴片数量；长文/条件不强行拆卡；技术与视觉判断分开"
   },
   "reading_contract": {
+    "navigation": "page-navigation/stage-navigation use real fragment anchors; every section remains in DOM and mobile adds no second sticky bar",
     "title": "qt-t-title-phrase + 320px preview; manual semantic line review",
     "mixed_panels": "data-qt-align=natural preserves intrinsic media only; parallel visible frames and same-role fields remain aligned; sparse evidence reflows",
     "media_order": "data-qt-fit=media with data-qt-reading=text-first only when the first child is media",

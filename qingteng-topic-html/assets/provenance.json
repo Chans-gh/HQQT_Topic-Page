@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -16,7 +16,7 @@
     {
       "file": "assets/page-modes.json",
       "source_path": "original 2.0.0 page mode catalog",
-      "sha256": "206cbda58193f883da6115650d695d35559c9375c446907ca1d7d2c48e9718a6",
+      "sha256": "63f1ad78caa6f65896bfca95361bb8b48f26c8ef549a370f762dcf5c055b57c0",
       "handling": "original structured routing catalog; no external template code",
       "nature": "closed page-mode criteria and deterministic component/navigation mapping; not a visual skin library"
     },
@@ -156,7 +156,7 @@
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "a82781b8d210db60ff7ae1bc326d113cc14bc7fcd26fe73485b86c86fa984708",
+      "sha256": "1cc0ebcc867b28d17f8d9dbe23c7541163a06d577a570d89a180f8a83ba5d793",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -226,28 +226,28 @@
     {
       "file": "assets/components/topic.css",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "84015ff46847987333276970ad7dd8b191a83ead76b04e8ff4c8123c9c13fc44",
+      "sha256": "9e96aa69dd3fe6cb6b3b5fe52ce58138925f35bd0ef0bf729697c1443cbaa0af",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/topic.js",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "6665840d715ca3594cf131ee7e27998885c99eb8561248e56203cba75ec6cccc",
+      "sha256": "44c593b6695fdf65694b7a6d5765b2e85db637ec0094cff34564b62565ba879d",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/catalog.json",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "6c2c6b6224bcd0ba31a67a86da4fda1422f3f9b8076927e796a66a8b14d26b90",
+      "sha256": "8237b8b6c77d63fd331a422a051dfa7aa35e2fc976f795ad2bc5275a0760fd49",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/patterns.html",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "2c10ac564371322480051852117d2f2fd3616cb3d329cc422d37bff94087809a",
+      "sha256": "ee28818f60858761acb06112aa3636a4921eb6e7eb91080b3d04365092b37d45",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
@@ -387,5 +387,11 @@
     "baseline_version": "1.9.1",
     "scope": "Structured report/course/catalog/operations/campaign routing, user-selected mode evidence, at-most-two list-approved direction previews and deterministic catalog validation",
     "boundary": "Mode recommendations do not approve a content list, create facts or assets, prove semantic correctness, or publish a preview"
+  },
+  "navigation_revision": {
+    "version": "2.1.0",
+    "baseline_version": "2.0.0",
+    "scope": "In-flow real-anchor contents and Day/stage indexes with active-location enhancement, horizontal mobile browsing and no hidden sections",
+    "boundary": "Navigation does not infer chapter structure, completion state or user progress; all authored targets still require review"
   }
 }

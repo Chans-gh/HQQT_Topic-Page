@@ -31,11 +31,11 @@ def diagnose(browser=False):
                 'assets/templates/public-shell.html', 'assets/components/catalog.json', 'assets/page-modes.json',
                 'assets/components/patterns.html', 'assets/components/topic.css', 'assets/components/topic.js',
                 'references/workflow.md', 'references/visual-spec.md', 'references/content-record.md',
-                'references/quality-checks.md', 'references/page-modes.md', 'references/setup.md',
+                'references/quality-checks.md', 'references/page-modes.md', 'references/navigation.md', 'references/setup.md',
                 'assets/header/official-header.html','assets/header/official-header.css','assets/header/header-adapter.css',
                 'assets/header/official-header.js','assets/header/logo-02.svg','assets/header/sources.json',
                 'assets/vendor/jquery-1.11.3.min.js','scripts/build_shell.py','scripts/browser_reading.mjs','scripts/export_media.py','scripts/browser_header.mjs','scripts/browser_layout.mjs',
-                'scripts/production.py','scripts/check_task.py','scripts/requirements.py','scripts/page_modes.py','scripts/page_modes_test.js',
+                'scripts/production.py','scripts/check_task.py','scripts/requirements.py','scripts/page_modes.py','scripts/page_modes_test.js','scripts/navigation_test.js','scripts/navigation_browser.mjs',
                 'scripts/prepare_share.py','scripts/share/share.js','scripts/share/bundle-html.js',
                 'scripts/share/share_regression_test.js']
     missing = [name for name in required if not (ROOT / name).is_file()]

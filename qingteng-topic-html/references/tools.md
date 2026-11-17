@@ -18,6 +18,10 @@ python3 "$SKILL/scripts/page_modes.py" brief --record "$TASK/record.json"
 
 方向预览在清单确认后由执行者用相同已确认内容制作，最多两份，artifact使用任务相对路径并记录SHA。snapshot会复制已渲染预览并相对化；预览选择不是draft审批，不进入final DOM，也不自动分享。
 
+## 长页导航
+
+从 `assets/components/patterns.html` 复制 `page-navigation` 或 `stage-navigation` 的 template 内容，替换示意文案和 `href`。每个导航目标必须是主体中已存在的唯一 ID；不使用脚本隐藏 Day 或章节。组合后在启用 JavaScript 与禁用 JavaScript 的情况下各检查一次：前者应更新 `aria-current`，后者仍能通过普通锚点连续阅读。完整约定见 [navigation](navigation.md)。
+
 ## 制作主体
 
 执行者阅读与编排，手工写 `body.html`；从 `assets/components/patterns.html`复制实际需要的template内部片段并替换示意文案。每个顶层section/article/header必须有`data-module-id`，所有正文均归属模块。一个H1放在开场模块中；其他模块H2、内部H3。不要把原材料HTML/脚本拼进可执行片段；文案用HTML转义或安全文本节点，URL限明确用途的http(s)/锚点。片段不允许script/style/iframe/内联事件/内联style；样式和交互由Skill自有topic.css/js提供，特殊主体布局通过下述--subject-css接口输入并重新检查，不能改公共块。

@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -296,7 +296,7 @@
       "source_path": "qingshui-skills v1.2.3 @8d187e9 (github.com/myjeffxie/qingshui-skills, MIT) scripts/api.js + scripts/bundle-html.js",
       "source_sha256": "api.js 69ee14af9e57e94b8a2d39aa2617bfee80ff340647704eaf4050af2ac336b4cb; bundle-html.js 3b940caef6b33211614d8f789f244e41dbb6ea38cce8764e8561f383ed000063",
       "destination": "scripts/share/share.js + scripts/share/bundle-html.js",
-      "handling": "仅迁移静态资源分享能力（share/assets/unshare 与打包清洗）；剔除图片/视频/语音生成与任务轮询；bundle-html.js保留来源逻辑，仅移除末尾多余空行；share.js适配：默认BASE_URL为qingshui.hqwx.com、白名单hqwx.com/hqqt.com、.env读取skill根目录"
+      "handling": "仅迁移静态资源分享能力（share/assets/unshare 与打包清洗）；剔除图片/视频/语音生成与任务轮询；share.js适配：默认BASE_URL为qingshui.hqwx.com、白名单hqwx.com/hqqt.com、.env读取skill根目录；1.9.1在来源逻辑上追加青藤放大图静态降级、位图预检与本地回归"
     }
   ],
   "public_blocks_sha256": {
@@ -368,5 +368,11 @@
     "source_commit": "5a3457703d53ebb8b4910c69a447efbd13435f5d",
     "base_commit": "a853f1bbd56188c4798691824d733aeccdb5a257",
     "scope": "Optional share scripts and public-shell null guards merged with local1.8; no business page shared"
+  },
+  "share_safety_revision": {
+    "version": "1.9.1",
+    "baseline_version": "1.9.0",
+    "scope": "Preserve topic images when the share sanitizer removes zoom buttons; add no-upload size and raster-pixel preflight plus Node regression coverage",
+    "boundary": "Pixel count is a heuristic for server-side PNG transcoding risk and does not claim an upload will succeed"
   }
 }

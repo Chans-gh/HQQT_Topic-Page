@@ -1,10 +1,14 @@
 {
   "name": "qingteng-topic-html",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "description": "Optional local Chromium verification for the Qingteng topic HTML skill",
   "engines": {
     "node": ">=20"
+  },
+  "scripts": {
+    "test": "npm run test:share",
+    "test:share": "node scripts/share/share_regression_test.js"
   },
   "devDependencies": {
     "playwright": "1.62.1"

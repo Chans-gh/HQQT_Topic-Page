@@ -12,7 +12,10 @@ const https = require('https');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { bundleHTML } = require('./bundle-html');
+const { bundleHTML, countZoomButtons, countImageTags, inspectRasterDataURIs } = require('./bundle-html');
+
+const MAX_HTML_BYTES = 10 * 1024 * 1024;
+const RASTER_PIXEL_WARNING = 8 * 1000 * 1000;
 
 function loadDotEnv() {
   // 自动读取 .env：skill 根目录（scripts/share/..）优先，其次当前工作目录；真实环境变量优先于 .env
@@ -175,6 +178,82 @@ function apiUpload(pathname, fields, files) {
   });
 }
 
+function inspectBundledHTML(html) {
+  const bytes = Buffer.byteLength(html, 'utf8');
+  const raster = inspectRasterDataURIs(html);
+  const zoomButtons = countZoomButtons(html);
+  const imageTags = countImageTags(html);
+  const blockers = [];
+  const warnings = [];
+
+  if (bytes > MAX_HTML_BYTES) {
+    blockers.push(`打包后的 HTML 为 ${bytes} 字节，超过服务端 10MB 上限`);
+  }
+  if (zoomButtons > 0) {
+    blockers.push(`仍有 ${zoomButtons} 个 data-qt-zoom 按钮；服务端清洗可能连同图片一起删除`);
+  }
+  if (raster.totalPixels > RASTER_PIXEL_WARNING) {
+    warnings.push(
+      `内联位图累计约 ${raster.totalPixels.toLocaleString('en-US')} 像素；服务端可能转码为 PNG，清洗后 HTML 可能超过 10MB`,
+    );
+  }
+  if (raster.unknownDimensions > 0) {
+    warnings.push(`有 ${raster.unknownDimensions} 张内联位图无法读取尺寸，清洗后体积风险无法完整估算`);
+  }
+
+  return {
+    status: blockers.length ? 'fail' : warnings.length ? 'warn' : 'pass',
+    bytes,
+    imageTags,
+    zoomButtons,
+    raster,
+    blockers,
+    warnings,
+  };
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+async function preflightAsset(filePath, options = {}) {
+  if (!filePath) throw new Error('请指定要预检的 HTML 文件路径');
+  const abs = path.resolve(filePath);
+  if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
+    throw new Error(`文件不存在: ${filePath}`);
+  }
+  const ext = path.extname(abs).toLowerCase();
+  if (ext !== '.html' && ext !== '.htm') throw new Error('preflight 仅支持 HTML 文件');
+
+  const noBundle = options.noBundle === true || options.noBundle === 'true';
+  const html = noBundle
+    ? fs.readFileSync(abs, 'utf8')
+    : await bundleHTML(abs, {
+      allowScripts: options.noScripts !== true && options.noScripts !== 'true',
+      fetchRemote: !(options.noFetch === true || options.noFetch === 'true'),
+      keepSvg: options.keepSvg === true || options.keepSvg === 'true',
+    });
+  const report = inspectBundledHTML(html);
+  report.file = abs;
+  report.bundled = !noBundle;
+
+  console.log(`🔎 分享预检: ${path.basename(abs)}`);
+  console.log(`   ${noBundle ? '当前文件' : '打包后'}体积: ${formatBytes(report.bytes)} / 10.00 MB`);
+  console.log(`   图片标签: ${report.imageTags}；内联位图: ${report.raster.count}（已识别尺寸 ${report.raster.withDimensions}）`);
+  console.log(`   位图像素: ${report.raster.totalPixels.toLocaleString('en-US')}；最大宽高: ${report.raster.maxWidth}×${report.raster.maxHeight}`);
+  console.log(`   遗留放大按钮: ${report.zoomButtons}`);
+  report.blockers.forEach((message) => console.log(`   ❌ ${message}`));
+  report.warnings.forEach((message) => console.log(`   ⚠️  ${message}`));
+  if (report.status === 'pass') console.log('✅ 预检通过');
+  if (report.status === 'warn') {
+    console.log('⚠️  预检通过但有体积风险；建议使用接近页面展示尺寸的派生图，原图另行保留。');
+  }
+  if (report.status === 'fail') console.log('❌ 预检失败，请先修复阻断项再上传。');
+  return report;
+}
+
 async function shareAsset(filePath, options = {}) {
   if (!filePath) throw new Error('请指定要分享的文件路径');
   const abs = path.resolve(filePath);
@@ -189,22 +268,28 @@ async function shareAsset(filePath, options = {}) {
   const noBundle = options.noBundle === true || options.noBundle === 'true' || options.bundle === false || options.bundle === 'false';
   let uploadPath = abs;
   let tempDir = '';
+  let bundledHTML = '';
 
   try {
     if (isHTML && !noBundle) {
       const fetchRemote = !(options.noFetch === true || options.noFetch === 'true');
       console.log(`🧩 正在打包 CSS/JS/图片（本地内联${fetchRemote ? ' + 远程下载' : '，远程引用不下载'}）: ${originalName}`);
-      const html = await bundleHTML(abs, {
+      bundledHTML = await bundleHTML(abs, {
         allowScripts: options.noScripts !== true && options.noScripts !== 'true',
         fetchRemote,
         keepSvg: options.keepSvg === true || options.keepSvg === 'true',
       });
       tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qingshui-share-'));
       uploadPath = path.join(tempDir, 'share.html');
-      fs.writeFileSync(uploadPath, html, 'utf8');
-      if (Buffer.byteLength(html, 'utf8') > 10 * 1024 * 1024) {
-        console.log('⚠️  打包后的 HTML 超过 10MB，服务端可能拒绝上传（HTML 上限 10MB）');
+      fs.writeFileSync(uploadPath, bundledHTML, 'utf8');
+    }
+
+    if (isHTML) {
+      const preflight = inspectBundledHTML(bundledHTML || fs.readFileSync(uploadPath, 'utf8'));
+      if (preflight.blockers.length) {
+        throw new Error(`分享预检失败: ${preflight.blockers.join('；')}`);
       }
+      preflight.warnings.forEach((message) => console.log(`⚠️  ${message}`));
     }
 
     const fields = {
@@ -216,7 +301,11 @@ async function shareAsset(filePath, options = {}) {
     console.log(`📤 上传分享: ${originalName}`);
     const result = await apiUpload('/api/v1/assets', fields, files);
     if (result.status !== 201 || !result.data.success) {
-      throw new Error(`分享失败: ${result.data.error || 'HTTP ' + result.status}`);
+      let message = result.data.error || 'HTTP ' + result.status;
+      if (/清洗后的\s*HTML\s*过大|10485760/.test(message)) {
+        message += '；服务端清洗可能把位图转成 PNG，请改用接近展示尺寸的派生图并先运行 preflight';
+      }
+      throw new Error(`分享失败: ${message}`);
     }
     console.log(`✅ 分享成功: ${result.data.url}`);
     console.log(`   hash: ${result.data.asset.hash}`);
@@ -300,6 +389,16 @@ async function main() {
   const command = args[0];
 
   switch (command) {
+    case 'preflight': {
+      const file = args[1];
+      if (!file) { console.error('用法: node share.js preflight <HTML文件> [--no-bundle] [--no-scripts] [--no-fetch] [--keep-svg]'); process.exit(1); }
+      const options = parseOptions(args.slice(2));
+      try {
+        const report = await preflightAsset(file, options);
+        if (report.status === 'fail') process.exitCode = 2;
+      } catch (e) { console.error(`\n❌ ${e.message}`); process.exitCode = 1; }
+      break;
+    }
     case 'share': {
       const file = args[1];
       if (!file) { console.error('用法: node share.js share <文件> [--name 名称] [--no-bundle] [--no-scripts] [--no-fetch] [--keep-svg]'); process.exit(1); }
@@ -328,12 +427,15 @@ async function main() {
       console.log(`青水静态资源分享脚本
 
 用法:
+  node share.js preflight <HTML文件> [--no-bundle] [--no-scripts] [--no-fetch] [--keep-svg]
+                                                       本地打包并检查图片丢失/清洗后体积风险，不上传、不需要密钥
   node share.js share <文件> [--name 名称] [--no-bundle] [--no-scripts] [--no-fetch] [--keep-svg]
                                                        上传分享 HTML/图片/文档
   node share.js assets [--page 1] [--page-size 20]     查看已分享资源
   node share.js unshare <hash>                         取消分享
 
 分享示例:
+  node share.js preflight ./report.html                上传前预检，不需要 QINGSHUI_API_KEY
   node share.js share ./report.html                    自动内联本地 CSS/JS/图片，远程图片/脚本/样式自动下载后内联
   node share.js share ./poster.png --name 活动海报
   node share.js share ./page.html --no-bundle --no-scripts
@@ -346,4 +448,6 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) main();
+
+module.exports = { shareAsset, preflightAsset, inspectBundledHTML, parseOptions };

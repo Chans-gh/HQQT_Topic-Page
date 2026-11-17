@@ -180,9 +180,17 @@ user状态为accepted/rejected/not-reviewed/unknown。accepted或rejected须有s
 python3 "$SKILL/scripts/prepare_share.py" --input "$TASK/final.html" --out "$TASK/final-share-ready.html" --report "$TASK/share-prep-report.json"
 ```
 
-分享服务与CLI不接受组合页的部分内容，必须先清洗：CLI图片白名单仅收PNG/JPEG/GIF/WebP，拒绝下载远程SVG（官方页头品牌图标即远程SVG）；服务端拒绝iframe/object/embed/video/audio/math等标签（页头官方搜索层是iframe）以及含外部引用的CSS。prepare_share.py在副本中把远程图片内联为data URI（SVG保留为data:image/svg+xml，交服务端白名单清洗）、移除script块之外的真实iframe，脚本内容不动；输出JSON报告（内联数、iframe数、下载失败与遗留引用），报告存在遗留时如实说明再继续。服务端接受内联SVG数据（含模板Logo）与位图data URI，无需替换品牌资产。
+分享服务与CLI不接受组合页的部分内容，必须先清洗：CLI图片白名单仅收PNG/JPEG/GIF/WebP，拒绝下载远程SVG（官方页头品牌图标即远程SVG）；服务端拒绝iframe/object/embed/video/audio/math等标签（页头官方搜索层是iframe）以及含外部引用的CSS。服务端还会移除button；专题页放大图原本位于`button[data-qt-zoom]`内，直接清洗可能把后代图片一并移除。prepare_share.py只在副本中把该单图按钮解包为静态`img`，同时把远程图片内联为data URI（SVG保留为data:image/svg+xml，交服务端白名单清洗）、移除script块之外的真实iframe，脚本内容不动；原交付页仍保留放大能力。JSON报告增加`zoom_buttons_unwrapped`，并继续报告内联数、iframe数、下载失败与遗留引用；存在遗留时如实说明再继续。服务端接受内联SVG数据（含模板Logo）与位图data URI，无需替换品牌资产。
 
-**第二步：上传适配副本**：
+**第二步：本地预检适配副本**（不上传、不需要API Key）：
+
+```sh
+node "$SKILL/scripts/share/share.js" preflight "$TASK/final-share-ready.html"
+```
+
+`preflight`执行与正式分享相同的打包，检查10MB硬上限、遗留的`data-qt-zoom`按钮、内联位图数量和像素规模。位图累计超过约800万像素时给出风险警告：青水可能把WebP/JPEG重编码为PNG，导致本地文件小于10MB但“清洗后的HTML”超过上限。该判断是保守提示，不是服务端结果的替代；有风险时用接近页面展示尺寸的派生图，原图另行保留。阻断项修复后再上传。
+
+**第三步：上传适配副本**：
 
 ```sh
 node "$SKILL/scripts/share/share.js" share "$TASK/final-share-ready.html" --name "页面名称"
@@ -190,7 +198,7 @@ node "$SKILL/scripts/share/share.js" assets
 node "$SKILL/scripts/share/share.js" unshare <hash>
 ```
 
-`share`默认打包内联、剥离@font-face并注入沙箱存储垫片；`--keep-svg`把自包含内联SVG保留原样交服务端清洗；`--no-bundle`用于已是单文件且无外部引用的页面；`--no-scripts`禁脚本（**成品专题页禁止使用，见下条**）；`--no-fetch`不下载远程资源（有远程引用时报错）。服务地址默认 `https://qingshui.hqwx.com`，白名单 qingshui.hqwx.com / qingshui.hqqt.com（含子域名），非白名单域名直接拒绝。成功输出分享URL、32位hash与MIME类型，URL形如`https://<平台域名>/{project}/{user}/{hash}.html`——这是沙箱包装页，原始内容在同URL加`?raw=1`（仅iframe请求头返回）。输出中的⚠️清洗警告（如移除button/input/form标签）逐条如实转述用户；把URL与hash回传，并按[记录约定](content-record.md)可记入`task.share`，该记录不替代用户授权证据。
+`share`默认打包内联、对放大图按钮做同样的静态降级、剥离@font-face并注入沙箱存储垫片；即使漏跑prepare_share.py，也不会把单图放大按钮原样交给服务端。`--keep-svg`把自包含内联SVG保留原样交服务端清洗；`--no-bundle`用于已是单文件且无外部引用的页面；`--no-scripts`禁脚本（**成品专题页禁止使用，见下条**）；`--no-fetch`不下载远程资源（有远程引用时报错）。服务地址默认 `https://qingshui.hqwx.com`，白名单 qingshui.hqwx.com / qingshui.hqqt.com（含子域名），非白名单域名直接拒绝。成功输出分享URL、32位hash与MIME类型，URL形如`https://<平台域名>/{project}/{user}/{hash}.html`——这是沙箱包装页，原始内容在同URL加`?raw=1`（仅iframe请求头返回）。输出中的⚠️清洗警告（如移除button/input/form标签）逐条如实转述用户；把URL与hash回传，并按[记录约定](content-record.md)可记入`task.share`，该记录不替代用户授权证据。
 
 **硬约束：成品专题页禁止 `--no-scripts`。** 卡片列宽（`--qt-cols`）与媒体槽位（`--qt-media-slot`）由 `assets/components/topic.js` 在运行时按视口计算并写入自定义属性；禁用脚本后这两个变量停在默认值 1，`.qt-t-group` 退化为单列、图文组宽度塌陷成窄条，文字逐字竖排贴至右侧——页面看起来像样式全坏了，但本地交付文件完全正常，极易误判为模板缺陷。若分享页出现脚本报错，应修正报错来源（页头 `form`/`input`/`button` 被服务端清洗时的空值防护已在公共外壳脚本中处理），不得改用 `--no-scripts` 规避。分享后必须实测：JS 报错数、每模块网格列数、section 实际宽度。
 

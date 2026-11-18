@@ -2,6 +2,7 @@
 """Synthetic first-run test outside the Skill; browser mode checks official online services."""
 import argparse
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -91,8 +92,12 @@ def run_case(out, browser=False):
                                'evidence':{'actor':'user','locator':'synthetic fixture','text':'仅本地最终组合测试'}})
     record_path.write_text(json.dumps(record, ensure_ascii=False), encoding='utf-8')
     execute('final-compose', command+['--mode','final','--out',str(out/'final.html')])
+    final_static_report = out/'final-static-report.json'
     execute('final-static', [sys.executable,str(ROOT/'scripts/check_html.py'),str(out/'final.html'),
-                             '--record',str(record_path),'--mode','final'])
+                             '--record',str(record_path),'--mode','final','--report',str(final_static_report)])
+    final_static = json.loads(final_static_report.read_text(encoding='utf-8')) if final_static_report.is_file() else {}
+    exact_sha = hashlib.sha256((out/'final.html').read_bytes()).hexdigest() if (out/'final.html').is_file() else ''
+    checks.append({'id':'exact-file-byte-identity','status':'pass' if final_static.get('html_sha256')==exact_sha else 'fail'})
     execute('incomplete-candidate-not-deliverable', [sys.executable,str(ROOT/'scripts/check_html.py'),str(out/'final.html'),
                                                      '--record',str(record_path),'--mode','final','--require-complete'], expected=1)
     version=json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))['version']

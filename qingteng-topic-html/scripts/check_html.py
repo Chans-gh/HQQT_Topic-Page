@@ -27,7 +27,8 @@ class Page(HTMLParser):
 def inspect(html,mode='draft',record=None,review=None,review_dir=None,task_dir=None):
     errors=[];warnings=[]
     try:
-        if blocks(html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")):errors.append('shared blocks differ from locked shell')
+        structural_html=html.replace('\r\n','\n').replace('\r','\n')
+        if blocks(structural_html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")):errors.append('shared blocks differ from locked shell')
     except ValueError as exc:errors.append(str(exc))
     page=Page(html);ids=[a['id'] for _,a in page.nodes if a.get('id')]
     expected_identity=expected_artifact(mode)
@@ -305,7 +306,9 @@ def main():
     p.add_argument('--require-complete',action='store_true',help='Exit nonzero unless production, business information and exact-artifact user acceptance all pass')
     a=p.parse_args()
     if a.report and (a.report.resolve().is_relative_to(ROOT) or a.report.resolve() in {p.resolve() for p in (a.html,a.record,a.review,a.browser_report) if p}):p.error('report must be outside skill and must not overwrite inputs')
-    report=inspect(a.html.read_text(encoding="utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None,
+    # Decode the original bytes directly so Windows CRLF is not normalized before
+    # hashing. Browser evidence is bound to the exact artifact bytes on disk.
+    report=inspect(a.html.read_bytes().decode("utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None,
                    json.loads(a.review.read_text(encoding='utf-8')) if a.review else None,a.review.parent if a.review else None,a.record.parent if a.record else None)
     if a.browser_report:merge_browser(report,json.loads(a.browser_report.read_text(encoding='utf-8')),a.browser_report.parent)
     finish_report(report)

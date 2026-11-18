@@ -259,7 +259,7 @@ def main():
     result=compose(record,args.body.read_text(encoding="utf-8"),args.mode,args.record.resolve().parent,args.subject_css.read_text(encoding='utf-8') if args.subject_css else '')
     # Validate BEFORE any output write, preventing partial artifacts on failure.
     from check_html import inspect
-    report=inspect(result,args.mode,record)
+    report=inspect(result,args.mode,record,task_dir=args.record.resolve().parent)
     # A rejected page still needs a renderable candidate for fixing and re-reviewing.
     # Feedback remains a failing acceptance result; only structural errors block writing.
     structural=[e for e in report['errors'] if not e.startswith('unresolved user feedback:')]

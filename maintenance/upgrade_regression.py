@@ -64,7 +64,7 @@ def main():
     test('mixed-generation-plan-approved-module-only',lambda:generation_plan(mix,['M01'])['eligible']==['IMG-01'])
     test('mixed-generation-unrefined-module-denied',lambda:generation_plan(mix,['M02']),True)
     snapshot=out/'synthetic-prior-snapshot.html';snapshot.write_text(render(record()),encoding='utf-8')
-    migration=record();migration['task']['shell_migration']={'from':'synthetic-prior','to':json.loads((skill/'assets/provenance.json').read_text())['version'],'snapshot':str(snapshot),'snapshot_sha256':hashlib.sha256(snapshot.read_bytes()).hexdigest(),'checks':['public blocks','body styles','business scopes unchanged']}
+    migration=record();migration['task']['shell_migration']={'from':'synthetic-prior','to':json.loads((skill/'assets/provenance.json').read_text(encoding='utf-8'))['version'],'snapshot':str(snapshot),'snapshot_sha256':hashlib.sha256(snapshot.read_bytes()).hexdigest(),'checks':['public blocks','body styles','business scopes unchanged']}
     test('T11-shell-migration-preserves-approval',lambda:render(migration))
     migration['task']['shell_migration']['snapshot_sha256']='0'*64;test('T11-shell-snapshot-tamper-denied',lambda:render(migration),True)
     unresolved=copy.deepcopy(final);unresolved['modules'][0]['issues']=['关键统计未核对'];test('final-unresolved-fact-denied',lambda:render(unresolved,mode='final'),True)
@@ -93,8 +93,8 @@ def main():
     noalt=copy.deepcopy(asset);noalt['media'][0].pop('alt');test('missing-reader-alt-denied',lambda:render(noalt,asset_body,'final'),True)
     misnamed=out/'actually-svg.jpg';misnamed.write_bytes((skill/'assets/examples/document-demo.svg').read_bytes())
     test('image-MIME-from-encoding',lambda:image_data(misnamed).startswith('data:image/svg+xml;'))
-    fake=out/'fake.png';fake.write_text('<html>not an image</html>');test('non-image-extension-rejected',lambda:image_data(fake),True)
-    evil=out/'active.svg';evil.write_text('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');test('active-SVG-rejected',lambda:image_data(evil),True)
+    fake=out/'fake.png';fake.write_text('<html>not an image</html>',encoding='utf-8');test('non-image-extension-rejected',lambda:image_data(fake),True)
+    evil=out/'active.svg';evil.write_text('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',encoding='utf-8');test('active-SVG-rejected',lambda:image_data(evil),True)
     digest=hashlib.sha256(public.encode()).hexdigest()
     judgment={'html_sha256':digest,'layers':{'content':{'status':'pass','scope':'fixture scope','evidence':{'M01':'Specific fixture claim is supported by the supplied fixture.'}},'visual':{'status':'not-run'}}}
     test('review-pass-bound-to-artifact',lambda:inspect(public,'final',probe,judgment,out)['layers']['content']['status']=='pass')
@@ -171,10 +171,10 @@ def main():
     (out/'showcase-final-record.json').write_text(json.dumps(page,ensure_ascii=False,indent=2),encoding='utf-8')
     reference=record(3,True);reference['task'].update(stage='DELIVERY',density='reference',title='合成资料页 · 材料核对');approve(reference,'draft','modules',reference['modules'])
     refbody='<header class="qt-t-stack" data-module-id="M01"><h1>材料核对：从来源到处理决定</h1><p>供重复查阅，不使用大Banner、人物或销售模块。</p><nav class="qt-t-route"><a href="#M02">查看字段</a><a href="#M03">判断缺项</a></nav></header><section class="qt-section" data-module-id="M02"><h2>同一份记录，逐项核对</h2><div class="qt-t-paper qt-t-rows"><div class="qt-t-row"><h3>实际读取</h3><p><strong>对象：</strong>材料全文</p><p><strong>范围：</strong>只记录实际可见信息</p></div><div class="qt-t-row"><h3>主张核验</h3><p><strong>对象：</strong>具体结论</p><p><strong>范围：</strong>支持证据与条件</p></div></div></section><section class="qt-section" data-module-id="M03"><h2>缺少关键项，就说明尚未完成</h2><div class="qt-t-key"><p>先继续独立可做的部分；必要结论不藏入附注。</p></div><div class="qt-t-fit qt-t-paper" data-qt-fit="prose" data-qt-align="compact"><p>局部短提示。</p></div></section>'
-    (out/'reference-final.html').write_text(render(reference,refbody,'final'),encoding='utf-8');(out/'reference-record.json').write_text(json.dumps(reference,ensure_ascii=False,indent=2))
+    (out/'reference-final.html').write_text(render(reference,refbody,'final'),encoding='utf-8');(out/'reference-record.json').write_text(json.dumps(reference,ensure_ascii=False,indent=2),encoding='utf-8')
     # Keep the editorial before/after decisions inspectable, not a count of shortened sentences.
     decisions=[{'module':'M03','raw':'重复讲三阶段、三收获、作品清单。','decision':'合并到阶段→成果→核对记录；作品不再另起重复价值块。','copy':titles[2],'visual':'journey同一行连接动作与成果；H5相邻。'}, {'module':'M04','raw':'每项工具四五句操作，再在结尾补产出。','decision':'提取动作链，工具为辅，终点成果突出；必要操作保留。','copy':titles[3],'visual':'有序生产链＋工具标签＋终点成果带。'}, {'module':'M06','raw':'前/后/学校/字段等权罗列。','decision':'先呈现变化，再展示证据及贡献边界；不造效果。','copy':titles[5],'visual':'前后变化差异面积＋三图完整证据与共同图注基线。'}]
-    (out/'editorial-decisions.json').write_text(json.dumps(decisions,ensure_ascii=False,indent=2))
+    (out/'editorial-decisions.json').write_text(json.dumps(decisions,ensure_ascii=False,indent=2),encoding='utf-8')
     # Three unrelated briefs exercise publication with new copy, not the college test page.
     topics=[
       {'key':'product','title':'会议记录协作台','raw':['记录会议议题','分配每条待办的负责人','按会议导出待办','没有自动转写或节省时间数据'],
@@ -212,6 +212,6 @@ def main():
         test('topic-'+topic['key']+'-structural-pass-does-not-certify-copy',lambda h=defective,r=rr:inspect(h,'final',r)['status']=='pass' and inspect(h,'final',r)['layers']['content']['status']=='not-run')
         test('topic-'+topic['key']+'-semantic-fail-propagates',lambda h=defective,r=rr,j=defect_review:inspect(h,'final',r,j,out)['status']=='fail')
     result={'status':'fail' if any(c['status']=='fail' for c in checks) else 'pass','checks':checks,'image_generation_calls':0,'stub_requested_ids':stub,'is_business_retest':False,'not_run':['real project reread and fresh business approvals','real image generation','real video decode','independent agent evaluation']}
-    (out/'regression.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+    (out/'regression.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'status':result['status'],'checks':len(checks),'failed':[c for c in checks if c['status']=='fail']},ensure_ascii=False));return result['status']!='pass'
 if __name__=='__main__':sys.exit(main())

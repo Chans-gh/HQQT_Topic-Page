@@ -8,7 +8,7 @@ if(!dirArg||!skillArg)throw Error('Usage: upgrade_browser.mjs OUTPUT_FROM_upgrad
 const dir=path.resolve(dirArg),skill=path.resolve(skillArg);
 const loaded=await import(process.env.QT_PLAYWRIGHT_MODULE?pathToFileURL(process.env.QT_PLAYWRIGHT_MODULE).href:'playwright');
 const {chromium}=loaded.chromium?loaded:loaded.default;
-const browser=await chromium.launch({headless:true});const ctx=await browser.newContext({offline:true,reducedMotion:'reduce'});const page=await ctx.newPage();
+const browser=await chromium.launch({headless:true,...(process.env.QT_CHROMIUM_EXECUTABLE?{executablePath:process.env.QT_CHROMIUM_EXECUTABLE}:{})});const ctx=await browser.newContext({offline:true,reducedMotion:'reduce'});const page=await ctx.newPage();
 const report={status:'not-run',checks:[],geometry:[],header:[],image_generation_calls:0,not_run:['real authenticated session','real devices','real image generation','real business retest']};
 const headerOnly=process.argv.includes('--header-only');
 if(headerOnly){const prior=JSON.parse(await fs.readFile(path.join(dir,'matrix-report.json'),'utf8'));await fs.writeFile(path.join(dir,'matrix-initial.json'),JSON.stringify(prior,null,2));report.geometry=prior.geometry;report.checks=prior.checks.filter(c=>!c.id.startsWith('T09-')&&!c.id.startsWith('header-')&&!c.id.startsWith('search-')&&c.id!=='console');}

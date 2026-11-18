@@ -3,7 +3,7 @@
 import argparse, hashlib, json, re, sys
 from html import escape
 from pathlib import Path
-from html_support import ROOT, Fragment, Node, blocks, image_data, TARGETS
+from html_support import ROOT, Fragment, Node, artifact_meta, blocks, image_data, TARGETS
 from record import validate_record, approved, generation_allowed, generation_plan, source_ready, module_mode, execution_allowed
 
 
@@ -233,7 +233,7 @@ def compose(record, body, mode, task_dir, css_text="", asset_cache=None):
     result=re.sub(r'<!-- QT_PAGE_CONTENT_START -->.*?<!-- QT_PAGE_CONTENT_END -->',lambda _:f'<!-- QT_PAGE_CONTENT_START -->{content}<!-- QT_PAGE_CONTENT_END -->',shell,flags=re.S)
     result=re.sub(r'<title>.*?</title>',lambda _:f'<title>{escape(record["task"]["title"])}</title>',result,count=1,flags=re.S)
     css=(ROOT/'assets/components/topic.css').read_text(encoding="utf-8");js=(ROOT/'assets/components/topic.js').read_text(encoding="utf-8")
-    result=result.replace('</head>',f'<style id="qt-topic-style">{css}</style><style id="qt-subject-style">{custom_css}</style></head>')
+    result=result.replace('</head>',f'{artifact_meta(mode)}<style id="qt-topic-style">{css}</style><style id="qt-subject-style">{custom_css}</style></head>')
     result=result.replace('</body>',f'<script id="qt-topic-script">{js}</script></body>')
     assert blocks(result)==expected
     return result

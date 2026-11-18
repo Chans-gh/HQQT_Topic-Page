@@ -7,6 +7,7 @@ import base64, re, xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SHARED = ('HEADER', 'FOOTER', 'STYLE', 'SCRIPT', 'DIALOG')
+ARTIFACT_META_NAME = 'qingteng-topic-artifact'
 TARGETS = {'home','search','learning','login','course-yijian','course-economist','course-safety',
            'live','books','about','contact','brand-story','consult','after-sales','help'}
 VOID = {'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}
@@ -21,6 +22,26 @@ def blocks(html):
             raise ValueError(f'exactly one shared {name} required')
         result[name] = matches[0]
     return result
+
+
+def expected_artifact(mode):
+    """Return the current composer identity embedded in every generated page."""
+    import hashlib, json
+    if mode not in {'draft', 'refine', 'final'}:
+        raise ValueError('invalid artifact mode')
+    manifest = json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))
+    shell = (ROOT/'assets/templates/public-shell.html').read_text(encoding='utf-8')
+    return {
+        'name': ARTIFACT_META_NAME,
+        'content': f'qingteng-topic-html/{manifest["version"]}',
+        'data-qt-mode': mode,
+        'data-qt-shell-sha256': hashlib.sha256(shell.encode('utf-8')).hexdigest(),
+    }
+
+
+def artifact_meta(mode):
+    attrs = expected_artifact(mode)
+    return '<meta ' + ' '.join(f'{escape(k, quote=True)}="{escape(v, quote=True)}"' for k,v in attrs.items()) + '>'
 
 
 def json_text(value):

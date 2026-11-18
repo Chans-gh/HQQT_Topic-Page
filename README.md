@@ -1,6 +1,6 @@
 # HQQT Topic Page · 环球青藤专题页 Skill
 
-`qingteng-topic-html` V2.3.0：按环球青藤视觉规范制作独立Web/H5专题。文本、飞书、DOCX、PDF、表格、网页、图片与视频统一记录实际读取方法、已读/未读范围与结构损失。目录材料可明确选择内容重构、原稿浏览或摘要+原稿；原稿浏览保留所有已取得页图，可局部翻页或完整展开。材料读取后推荐页面模式，内容清单确认后可比较两个局部方向；长页可加真实锚点目录或 Day/阶段索引。
+`qingteng-topic-html` V2.4.0：按环球青藤视觉规范制作独立Web/H5专题。文本、飞书、DOCX、PDF、表格、网页、图片与视频统一记录实际读取方法、已读/未读范围与结构损失。最终成品必须经过当前版本组合器，携带版本/模式/官方壳指纹，正文运行资源保持单文件自包含；材料读取后推荐页面模式，内容清单确认后可比较两个局部方向，长页可加真实锚点目录或 Day/阶段索引。
 
 ## 1. 获取源码
 
@@ -64,11 +64,11 @@ python3 scripts/smoke_test.py
 ```powershell
 # Windows PowerShell
 Set-Location "$HOME/.agents/skills/qingteng-topic-html"
-py -3 scripts/doctor.py
-py -3 scripts/smoke_test.py
+python scripts/doctor.py --expect-version 2.4.0
+python scripts/smoke_test.py
 ```
 
-`status: pass`表示基础文件、资产指纹和最小运行通过。没有Node时会准确报告可选浏览器能力缺失，Python工具仍可用。
+如果本机只有Python启动器，可将`python`换成`py -3`。`status: pass`且`skill_version: 2.4.0`表示当前进入的安装目录、版本一致性、资产指纹和最小运行通过；报告中的`skill_root`就是本次实际检查的Skill位置。没有Node时会准确报告可选浏览器能力缺失，Python工具仍可用。
 
 如需完整浏览器验收，在同一个Skill目录执行：
 

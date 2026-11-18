@@ -44,6 +44,55 @@ function tagOpenRe(name) {
 }
 const SCRIPT_BLOCK_RE = /(<script\b(?:"[^"]*"|'[^']*'|[^>])*>)([\s\S]*?)(<\/script\s*>)/gi;
 const STYLE_BLOCK_RE = /(<style\b(?:"[^"]*"|'[^']*'|[^>])*>)([\s\S]*?)(<\/style\s*>)/gi;
+const ZOOM_BUTTON_IMAGE_RE = /<button\b(?=[^>]*\bdata-qt-zoom\b)(?:"[^"]*"|'[^']*'|[^>])*>\s*(<img\b(?:"[^"]*"|'[^']*'|[^>])*>)\s*<\/button\s*>/gi;
+const ZOOM_BUTTON_OPEN_RE = /<button\b(?=[^>]*\bdata-qt-zoom\b)(?:"[^"]*"|'[^']*'|[^>])*>/gi;
+
+function protectScripts(html) {
+  const scripts = [];
+  const marked = String(html).replace(SCRIPT_BLOCK_RE, (block) => {
+    scripts.push(block);
+    return `\u0000QSS${scripts.length - 1}\u0000`;
+  });
+  return { html: marked, scripts };
+}
+
+function restoreScripts(html, scripts) {
+  return html.replace(/\u0000QSS(\d+)\u0000/g, (_, i) => scripts[Number(i)] || '');
+}
+
+function outsideScripts(html, transform) {
+  const protectedScripts = protectScripts(html);
+  return restoreScripts(transform(protectedScripts.html), protectedScripts.scripts);
+}
+
+// 青水清洗会删除 <button>，并可能连同其后代图片一起移除。只对专题页的
+// data-qt-zoom 单图按钮做静态降级；普通业务按钮保持不变。
+function unwrapZoomButtons(html) {
+  let count = 0;
+  const output = outsideScripts(html, (segment) => segment.replace(ZOOM_BUTTON_IMAGE_RE, (_, image) => {
+    count += 1;
+    return image;
+  }));
+  return { html: output, count };
+}
+
+function countZoomButtons(html) {
+  let count = 0;
+  outsideScripts(html, (segment) => {
+    count = (segment.match(ZOOM_BUTTON_OPEN_RE) || []).length;
+    return segment;
+  });
+  return count;
+}
+
+function countImageTags(html) {
+  let count = 0;
+  outsideScripts(html, (segment) => {
+    count = (segment.match(tagOpenRe('img')) || []).length;
+    return segment;
+  });
+  return count;
+}
 
 // 支持 async 回调的整体替换（String.replace 的回调不能 await）
 async function replaceAsync(str, regex, asyncFn) {
@@ -143,6 +192,92 @@ function toDataURI(mime, data) {
     throw new Error(`不支持的图片类型（仅 PNG/JPEG/GIF/WebP）: ${mime || '未知'}`);
   }
   return `data:${mime};base64,${data.toString('base64')}`;
+}
+
+function readRasterDimensions(mime, data) {
+  if (!Buffer.isBuffer(data)) return null;
+  if (mime === 'png' && data.length >= 24 && data.subarray(1, 4).toString('ascii') === 'PNG') {
+    return { width: data.readUInt32BE(16), height: data.readUInt32BE(20) };
+  }
+  if (mime === 'gif' && data.length >= 10 && data.subarray(0, 3).toString('ascii') === 'GIF') {
+    return { width: data.readUInt16LE(6), height: data.readUInt16LE(8) };
+  }
+  if ((mime === 'jpeg' || mime === 'jpg') && data.length >= 4 && data[0] === 0xff && data[1] === 0xd8) {
+    let offset = 2;
+    while (offset + 8 < data.length) {
+      if (data[offset] !== 0xff) { offset += 1; continue; }
+      const marker = data[offset + 1];
+      offset += 2;
+      if (marker === 0xd8 || marker === 0xd9 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+      if (offset + 2 > data.length) break;
+      const length = data.readUInt16BE(offset);
+      if (length < 2 || offset + length > data.length) break;
+      const isSof = (marker >= 0xc0 && marker <= 0xc3) ||
+        (marker >= 0xc5 && marker <= 0xc7) ||
+        (marker >= 0xc9 && marker <= 0xcb) ||
+        (marker >= 0xcd && marker <= 0xcf);
+      if (isSof && length >= 7) {
+        return { width: data.readUInt16BE(offset + 5), height: data.readUInt16BE(offset + 3) };
+      }
+      offset += length;
+    }
+  }
+  if (mime === 'webp' && data.length >= 30 &&
+      data.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      data.subarray(8, 12).toString('ascii') === 'WEBP') {
+    const kind = data.subarray(12, 16).toString('ascii');
+    if (kind === 'VP8X') {
+      const width = 1 + data[24] + (data[25] << 8) + (data[26] << 16);
+      const height = 1 + data[27] + (data[28] << 8) + (data[29] << 16);
+      return { width, height };
+    }
+    if (kind === 'VP8 ' && data.length >= 30) {
+      return { width: data.readUInt16LE(26) & 0x3fff, height: data.readUInt16LE(28) & 0x3fff };
+    }
+    if (kind === 'VP8L' && data.length >= 25 && data[20] === 0x2f) {
+      const width = 1 + data[21] + ((data[22] & 0x3f) << 8);
+      const height = 1 + ((data[22] & 0xc0) >> 6) + (data[23] << 2) + ((data[24] & 0x0f) << 10);
+      return { width, height };
+    }
+  }
+  return null;
+}
+
+function inspectRasterDataURIs(html) {
+  const re = /data:image\/(png|jpe?g|gif|webp);base64,([A-Za-z0-9+/=]+)/gi;
+  const formats = {};
+  let count = 0;
+  let withDimensions = 0;
+  let totalPixels = 0;
+  let maxImagePixels = 0;
+  let maxWidth = 0;
+  let maxHeight = 0;
+  let match;
+  while ((match = re.exec(String(html))) !== null) {
+    const format = match[1].toLowerCase().replace('jpg', 'jpeg');
+    formats[format] = (formats[format] || 0) + 1;
+    count += 1;
+    let dimensions = null;
+    try { dimensions = readRasterDimensions(format, Buffer.from(match[2], 'base64')); } catch (e) { /* invalid data */ }
+    if (!dimensions || dimensions.width <= 0 || dimensions.height <= 0) continue;
+    const pixels = dimensions.width * dimensions.height;
+    if (!Number.isSafeInteger(pixels)) continue;
+    withDimensions += 1;
+    totalPixels += pixels;
+    maxImagePixels = Math.max(maxImagePixels, pixels);
+    maxWidth = Math.max(maxWidth, dimensions.width);
+    maxHeight = Math.max(maxHeight, dimensions.height);
+  }
+  return {
+    count,
+    withDimensions,
+    unknownDimensions: count - withDimensions,
+    totalPixels,
+    maxImagePixels,
+    maxWidth,
+    maxHeight,
+    formats,
+  };
 }
 
 // ---------- 远程资源下载（带超时、大小上限与去重缓存） ----------
@@ -361,7 +496,8 @@ async function inlineSrcset(value, ctx) {
 }
 
 async function inlineImages(html, ctx) {
-  html = await replaceAsync(html, tagOpenRe('img'), async (tag) => {
+  const protectedScripts = protectScripts(html);
+  html = await replaceAsync(protectedScripts.html, tagOpenRe('img'), async (tag) => {
     let out = tag;
     const src = getAttr(tag, 'src');
     if (src && !/^data:/i.test(src)) {
@@ -376,7 +512,7 @@ async function inlineImages(html, ctx) {
     const srcset = getAttr(tag, 'srcset');
     return srcset ? setAttr(tag, 'srcset', await inlineSrcset(srcset, ctx)) : tag;
   });
-  return html;
+  return restoreScripts(html, protectedScripts.scripts);
 }
 
 // ---------- 内联 SVG → data URI 图片（方案 B） ----------
@@ -539,6 +675,8 @@ async function bundleHTML(inputPath, options = {}) {
   const { html: marked, comments } = protectComments(html);
   html = marked;
 
+  html = unwrapZoomButtons(html).html;
+
   html = await inlineStylesheetLinks(html, ctx);
   html = await inlineStyleBlocks(html, ctx);
   html = await inlineStyleAttrs(html, ctx);
@@ -582,6 +720,15 @@ async function main() {
   }
 }
 
-module.exports = { bundleHTML, inlineCSS, toDataURI, _resetRemoteCache };
+module.exports = {
+  bundleHTML,
+  inlineCSS,
+  toDataURI,
+  unwrapZoomButtons,
+  countZoomButtons,
+  countImageTags,
+  inspectRasterDataURIs,
+  _resetRemoteCache,
+};
 
 if (require.main === module) main();

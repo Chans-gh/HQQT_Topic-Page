@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "1.9.0",
+  "version": "2.3.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -9,9 +9,30 @@
     {
       "file": "assets/templates/public-shell.html",
       "source_path": "assets/header/* + locked source package/templates/公共页眉页脚模板.html",
-      "sha256": "84750487e82fd89bde33aae6417cbd83a5da07362eab3333b7ebce6626f1991e",
+      "sha256": "bcf122b1369d54d1cde955397103f7473539b61024217af33eb90825f281d0bd",
       "handling": "generated from locked source + official header adaptation",
       "nature": "1.3.0 canonical five-block shell; official header source preserved; mobile footer details retain all 13 target mappings"
+    },
+    {
+      "file": "assets/page-modes.json",
+      "source_path": "original 2.0.0 page mode catalog",
+      "sha256": "aba16636508e7b0b7d9b49a3c62a4eb8c9a51bb9ae357453ea4e7ac5c61da505",
+      "handling": "original structured routing catalog; no external template code",
+      "nature": "closed page-mode criteria and deterministic component/navigation mapping; not a visual skin library"
+    },
+    {
+      "file": "assets/input-sources.json",
+      "source_path": "original 2.2.0 input adapter catalog",
+      "sha256": "c819036f4d7a6b7358995a970ccb65590966c0dd599c62dc3407b6499c3696a4",
+      "handling": "original host-routing and read-scope contract; no parser, connector or user material",
+      "nature": "closed input kinds and deterministic extraction-status vocabulary"
+    },
+    {
+      "file": "assets/document-viewer.json",
+      "source_path": "original 2.3.0 document strategy catalog",
+      "sha256": "bdd996ca0be0844c3f2576396c568e180a4c87ea25298508cb78c27ea8c5e7ad",
+      "handling": "original presentation strategy and progressive-viewer policy; no source pages or external runtime",
+      "nature": "closed content-redesign/source-viewer/hybrid strategy vocabulary"
     },
     {
       "file": "assets/brand/global-qingteng-logo-color.png",
@@ -114,49 +135,49 @@
     {
       "file": "assets/header/header-adapter.css",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "ebddbb8b181be26fda8e21ac560ba5c0cd8471f8b5149ce0d138acb76ee118fa",
+      "sha256": "ad8a1978b6a960bd62acedb4f49d1729f47440f4d31c5cefdccf05d7198de0a6",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/logo-02.svg",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "6b3ae038476dcb1647e5b2998085b54119c9fa35f0ede422aef2d493debb6cd3",
+      "sha256": "d746df2eeb3edc8c0a181fce397887f871ab001d7afef2b2729381e78189fccb",
       "handling": "byte-for-byte",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/official-header.css",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "655c64f92609ebd9c14e2dab6661281046a0412c35ac941f48731b08ec23d3b9",
+      "sha256": "22a0047f0a9c612afa8a775708db9adc9387759686926d036f4292630591502d",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/official-header.html",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "5b62355d8db83c2493d21f67118dd6abcb0bf4cd92406e216e75cd6e4aa3fa0d",
+      "sha256": "5c2910a488ab0d6618c67800418baddd7b196b2bcd5d861ba1fb331c148f8eda",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/official-header.js",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "400d97813ad53354dc4d539570c67d421edd69b46fc846bfeaa5c491e0a3a91c",
+      "sha256": "09f4343746979d94b86b1be85c8b3ec171669c2674dc4c992882cb60974f893b",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "f7b38d891efd9139a904ab2122608eda7e40791c4bc15459416da3dc60196fe2",
+      "sha256": "c54015023cf0d96feac15154beeda325da4c94fe67bd687cbf3b80271366e9c8",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
     {
       "file": "assets/vendor/jquery-1.11.3.min.js",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "ecb916133a9376911f10bc5c659952eb0031e457f5df367cde560edbfba38fb8",
+      "sha256": "20e11ce61890c08c0529911822233c9023ebc367df6c1050dec105e2b9628104",
       "handling": "byte-for-byte",
       "nature": "runtime official header asset"
     },
@@ -219,28 +240,28 @@
     {
       "file": "assets/components/topic.css",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "84015ff46847987333276970ad7dd8b191a83ead76b04e8ff4c8123c9c13fc44",
+      "sha256": "beff4155c1ad6636f6082a133fd9320709412d33deb40db44f4283f311e37896",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/topic.js",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "6665840d715ca3594cf131ee7e27998885c99eb8561248e56203cba75ec6cccc",
+      "sha256": "15c2939e77e5f3c43f72935c9c25da11d012a56f7dd10477e391ad2d25dc940d",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/catalog.json",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "07d278da18409295228a35d67b492cf27ff1a4fc310c7596d474df921510333a",
+      "sha256": "cf7de374f1c8a7109210c9b5ec2756062e6bc6477423d67fa21677311bed4f31",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
     {
       "file": "assets/components/patterns.html",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "2c10ac564371322480051852117d2f2fd3616cb3d329cc422d37bff94087809a",
+      "sha256": "18d9929b426da5365d6f532ffe40452e47d7206927dcdd54a870e7a64f21b89f",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
@@ -296,11 +317,11 @@
       "source_path": "qingshui-skills v1.2.3 @8d187e9 (github.com/myjeffxie/qingshui-skills, MIT) scripts/api.js + scripts/bundle-html.js",
       "source_sha256": "api.js 69ee14af9e57e94b8a2d39aa2617bfee80ff340647704eaf4050af2ac336b4cb; bundle-html.js 3b940caef6b33211614d8f789f244e41dbb6ea38cce8764e8561f383ed000063",
       "destination": "scripts/share/share.js + scripts/share/bundle-html.js",
-      "handling": "仅迁移静态资源分享能力（share/assets/unshare 与打包清洗）；剔除图片/视频/语音生成与任务轮询；bundle-html.js保留来源逻辑，仅移除末尾多余空行；share.js适配：默认BASE_URL为qingshui.hqwx.com、白名单hqwx.com/hqqt.com、.env读取skill根目录"
+      "handling": "仅迁移静态资源分享能力（share/assets/unshare 与打包清洗）；剔除图片/视频/语音生成与任务轮询；share.js适配：默认BASE_URL为qingshui.hqwx.com、白名单hqwx.com/hqqt.com、.env读取skill根目录；1.9.1在来源逻辑上追加青藤放大图静态降级、位图预检与本地回归"
     }
   ],
   "public_blocks_sha256": {
-    "HEADER": "3cd0d4d2d1623e18ed63de1d7ada66598149e8f520a54b784b7f8caa5935e3fc",
+    "HEADER": "cd5425c61bcf895a385b3ffe580a9336a41d1d7a7252374bb53ffe556650dbf1",
     "FOOTER": "d8c57e617644feec549593f6daff385e00087ca0e2c3964d874bd9043575cd1e",
     "STYLE": "9bc34032d5b6b3259608c4278646d527380c028a3f0c71ee717395eadc461ff8",
     "SCRIPT": "a255915ae9396d12d66695e9b9e953f4cefb82399b52078ad8caa2a0bd1874d2",
@@ -368,5 +389,35 @@
     "source_commit": "5a3457703d53ebb8b4910c69a447efbd13435f5d",
     "base_commit": "a853f1bbd56188c4798691824d733aeccdb5a257",
     "scope": "Optional share scripts and public-shell null guards merged with local1.8; no business page shared"
+  },
+  "share_safety_revision": {
+    "version": "1.9.1",
+    "baseline_version": "1.9.0",
+    "scope": "Preserve topic images when the share sanitizer removes zoom buttons; add no-upload size and raster-pixel preflight plus Node regression coverage",
+    "boundary": "Pixel count is a heuristic for server-side PNG transcoding risk and does not claim an upload will succeed"
+  },
+  "page_mode_revision": {
+    "version": "2.0.0",
+    "baseline_version": "1.9.1",
+    "scope": "Structured report/course/catalog/operations/campaign routing, user-selected mode evidence, at-most-two list-approved direction previews and deterministic catalog validation",
+    "boundary": "Mode recommendations do not approve a content list, create facts or assets, prove semantic correctness, or publish a preview"
+  },
+  "navigation_revision": {
+    "version": "2.1.0",
+    "baseline_version": "2.0.0",
+    "scope": "In-flow real-anchor contents and Day/stage indexes with active-location enhancement, horizontal mobile browsing and no hidden sections",
+    "boundary": "Navigation does not infer chapter structure, completion state or user progress; all authored targets still require review"
+  },
+  "input_adapter_revision": {
+    "version": "2.2.0",
+    "baseline_version": "2.1.0",
+    "scope": "Structured text/Feishu/DOCX/PDF/spreadsheet/web/image/video/mixed input inventory, honest extraction states and SHA-bound source snapshots",
+    "boundary": "The catalog and validator do not parse, fetch, authenticate, verify source claims or infer unread content"
+  },
+  "document_viewer_revision": {
+    "version": "2.3.0",
+    "baseline_version": "2.2.0",
+    "scope": "Explicit content-redesign/source-viewer/hybrid strategy, source-page records and an all-pages-in-DOM progressive original-document viewer",
+    "boundary": "The viewer does not render PDF/DOCX files, invent unavailable pages, verify source claims or approve a content list"
   }
 }

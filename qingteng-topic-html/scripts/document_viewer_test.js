@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+'use strict';
+const fs=require('fs');
+const path=require('path');
+const root=path.resolve(__dirname,'..');
+const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+const data=JSON.parse(fs.readFileSync(path.join(root,'assets/document-viewer.json'),'utf8'));
+const patterns=fs.readFileSync(path.join(root,'assets/components/patterns.html'),'utf8');
+const css=fs.readFileSync(path.join(root,'assets/components/topic.css'),'utf8');
+const js=fs.readFileSync(path.join(root,'assets/components/topic.js'),'utf8');
+const validator=fs.readFileSync(path.join(root,'scripts/document_viewer.py'),'utf8');
+const record=fs.readFileSync(path.join(root,'scripts/record.py'),'utf8');
+const fail=message=>{throw new Error(message)};
+if(data.schema!=='qt-document-strategies/1'||data.version!==pkg.version)fail('document strategy schema/version mismatch');
+const ids=data.strategies.map(item=>item.id);
+for(const expected of ['content-redesign','source-viewer','hybrid'])if(!ids.includes(expected))fail(`missing strategy ${expected}`);
+if(!data.viewer_policy.all_pages_in_dom||data.viewer_policy.external_pdf_runtime!==false)fail('viewer policy boundary changed');
+for(const token of ['source-document-viewer','data-qt-document-viewer','href="#DOC-01-P01"','data-doc-page'])if(!patterns.includes(token))fail(`viewer pattern missing ${token}`);
+for(const token of ['.qt-t-document-viewer','overflow-y:auto','data-expanded="true"'])if(!css.includes(token))fail(`viewer CSS missing ${token}`);
+for(const token of ['[data-qt-document-viewer]','data-doc-next','aria-current','data-doc-expand'])if(!js.includes(token))fail(`viewer runtime missing ${token}`);
+for(const token of ['document_viewer_contract','qt-source-document/1','requires_page_images'])if(!validator.includes(token))fail(`validator missing ${token}`);
+if(!record.includes('validate_document_viewer')||!record.includes("'source_documents':[]"))fail('record integration missing');
+console.log('✅ original-document viewer contract tests passed');

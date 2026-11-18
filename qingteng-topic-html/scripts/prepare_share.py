@@ -5,7 +5,9 @@ The service rejects <iframe>/SVG-unlisted content and its CLI image whitelist
 (PNG/JPEG/GIF/WebP) refuses to download remote SVG, so before `qingshui share`:
 1. inline remote images referenced by CSS url()/img src/style attributes as
    data URIs (SVG kept as data:image/svg+xml, sanitized server-side);
-2. remove real <iframe> elements outside scripts (the official search layer).
+2. remove real <iframe> elements outside scripts (the official search layer);
+3. unwrap topic zoom buttons around images, because the service removes button
+   elements and may otherwise remove their descendant image as well.
 
 Python 3.9+ standard library only. Downloads remote images only.
 """
@@ -25,6 +27,11 @@ IMG_RE = re.compile(r"""(<img\b[^>]*?\bsrc=)(['"])(https?://[^'"\s]+)\2""")
 STYLE_ATTR_RE = re.compile(r"""(style=\s*['"][^'"]*?url\(\s*['"]?)(https?://[^)'"\s]+)""")
 IFRAME_RE = re.compile(r'<iframe\b[^>]*>[\s\S]*?</iframe\s*>|<iframe\b[^>]*/?>')
 SCRIPT_SPLIT = re.compile(r'(<script\b[^>]*>[\s\S]*?</script\s*>)')
+ZOOM_BUTTON_RE = re.compile(
+    r"""<button\b(?=[^>]*\bdata-qt-zoom\b)(?:"[^"]*"|'[^']*'|[^>])*>"""
+    r"""\s*(<img\b(?:"[^"]*"|'[^']*'|[^>])*>)\s*</button\s*>""",
+    re.IGNORECASE,
+)
 
 
 def fetch(url, cache):
@@ -60,6 +67,7 @@ def main():
         raise SystemExit('ERROR: refusing to write into the Skill directory')
     html = src.read_text(encoding='utf-8')
     stats = {'input': str(src), 'output': str(dst), 'inlined': 0, 'iframes_removed': 0,
+             'zoom_buttons_unwrapped': 0,
              'downloads_failed': [], 'left_remote': [], 'blockers': []}
     cache = {}
 
@@ -76,6 +84,11 @@ def main():
         return m.group(0).replace(url, payload, 1)
 
     def clean(segment):
+        def unwrap_zoom(match):
+            stats['zoom_buttons_unwrapped'] += 1
+            return match.group(1)
+
+        segment = ZOOM_BUTTON_RE.sub(unwrap_zoom, segment)
         before = len(IFRAME_RE.findall(segment))
         stats['iframes_removed'] += before
         segment = IFRAME_RE.sub('', segment)

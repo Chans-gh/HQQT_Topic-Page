@@ -4,6 +4,49 @@ Python 3.9+标准库，无API/密钥。浏览器脚本需要Node.js20+、随包�
 
 首次环境准备与doctor/smoke见 [setup.md](setup.md)；缺浏览器依赖时准确记录未执行，不自动下载。
 
+## 多格式输入记录与只读校验
+
+`record.py init`为新任务创建`task.input_contract=1`。宿主实际读取文本、飞书、DOCX、PDF、表格、网页、图片或视频后，按 [input-sources](input-sources.md) 写入方法、已读/未读范围、结构损失、媒体/附件状态与错误。以下脚本不解析文件、不调连接器、不改写记录：
+
+```sh
+python3 "$SKILL/scripts/input_sources.py" route --kind pdf
+python3 "$SKILL/scripts/input_sources.py" validate --record "$TASK/record.json" --allow-not-run
+python3 "$SKILL/scripts/input_sources.py" validate --record "$TASK/record.json"
+python3 "$SKILL/scripts/input_sources.py" inventory --record "$TASK/record.json"
+```
+
+`--allow-not-run`只用于材料接收阶段；新任务组合HTML前至少有一条输入，且不能保留`not-run`。绑定`local_path+sha256`的原文件会随snapshot复制到`inputs/`；恢复时校验自包含路径和文件指纹。`partial/blocked`允许对已读且独立成立的范围继续制作，未读范围不得被猜测补齐。
+
+## 目录/原稿策略与浏览器
+
+目录或多页资料按 [document-viewer](document-viewer.md) 选择内容重构、原稿浏览或摘要+原稿。脚本只校验策略、原输入、承载模块、页码和媒体对应，不生成页图或审批清单：
+
+```sh
+python3 "$SKILL/scripts/document_viewer.py" route --strategy hybrid
+python3 "$SKILL/scripts/document_viewer.py" validate --record "$TASK/record.json" --allow-pending
+python3 "$SKILL/scripts/document_viewer.py" validate --record "$TASK/record.json"
+```
+
+新任务组合前必须将`document_strategy`设为selected或带理由的not-applicable；`catalog`页面模式必须selected。原稿/混合策略需至少一份已绑定已取得页图的source document。从patterns复制`source-document-viewer`，页码锚点与`DOC-xx-Pxx`对应；无脚本和分享清洗后所有页图仍按DOM顺序可读。
+
+## 页面模式记录与只读校验
+
+新任务init创建`task.page_mode_contract=1`、pending的`task.page_mode`和空`direction_previews`。执行者读取材料后按[页面模式](page-modes.md)填写结构化state、主/备选、依据/风险和真实用户selection；脚本不调用AI、不替用户选择、不修改记录。
+
+```sh
+python3 "$SKILL/scripts/page_modes.py" validate --record "$TASK/record.json" --allow-pending
+python3 "$SKILL/scripts/page_modes.py" validate --record "$TASK/record.json"
+python3 "$SKILL/scripts/page_modes.py" brief --record "$TASK/record.json"
+```
+
+`--allow-pending`只用于材料/清单阶段检查字段形状；组合新任务HTML前必须selected。brief仅返回已选模式在`assets/page-modes.json`中的密度、组件优先级、导航和预览焦点，不生成页面。使用TypeSafe时由宿主按官方Choice/State接口取得推荐并保存概率/confidence；本工具不读取密钥或联网。组件映射是起点，仍按真实信息关系选择C01–C12。
+
+方向预览在清单确认后由执行者用相同已确认内容制作，最多两份，artifact使用任务相对路径并记录SHA。snapshot会复制已渲染预览并相对化；预览选择不是draft审批，不进入final DOM，也不自动分享。
+
+## 长页导航
+
+从 `assets/components/patterns.html` 复制 `page-navigation` 或 `stage-navigation` 的 template 内容，替换示意文案和 `href`。每个导航目标必须是主体中已存在的唯一 ID；不使用脚本隐藏 Day 或章节。组合后在启用 JavaScript 与禁用 JavaScript 的情况下各检查一次：前者应更新 `aria-current`，后者仍能通过普通锚点连续阅读。完整约定见 [navigation](navigation.md)。
+
 ## 制作主体
 
 执行者阅读与编排，手工写 `body.html`；从 `assets/components/patterns.html`复制实际需要的template内部片段并替换示意文案。每个顶层section/article/header必须有`data-module-id`，所有正文均归属模块。一个H1放在开场模块中；其他模块H2、内部H3。不要把原材料HTML/脚本拼进可执行片段；文案用HTML转义或安全文本节点，URL限明确用途的http(s)/锚点。片段不允许script/style/iframe/内联事件/内联style；样式和交互由Skill自有topic.css/js提供，特殊主体布局通过下述--subject-css接口输入并重新检查，不能改公共块。
@@ -180,9 +223,17 @@ user状态为accepted/rejected/not-reviewed/unknown。accepted或rejected须有s
 python3 "$SKILL/scripts/prepare_share.py" --input "$TASK/final.html" --out "$TASK/final-share-ready.html" --report "$TASK/share-prep-report.json"
 ```
 
-分享服务与CLI不接受组合页的部分内容，必须先清洗：CLI图片白名单仅收PNG/JPEG/GIF/WebP，拒绝下载远程SVG（官方页头品牌图标即远程SVG）；服务端拒绝iframe/object/embed/video/audio/math等标签（页头官方搜索层是iframe）以及含外部引用的CSS。prepare_share.py在副本中把远程图片内联为data URI（SVG保留为data:image/svg+xml，交服务端白名单清洗）、移除script块之外的真实iframe，脚本内容不动；输出JSON报告（内联数、iframe数、下载失败与遗留引用），报告存在遗留时如实说明再继续。服务端接受内联SVG数据（含模板Logo）与位图data URI，无需替换品牌资产。
+分享服务与CLI不接受组合页的部分内容，必须先清洗：CLI图片白名单仅收PNG/JPEG/GIF/WebP，拒绝下载远程SVG（官方页头品牌图标即远程SVG）；服务端拒绝iframe/object/embed/video/audio/math等标签（页头官方搜索层是iframe）以及含外部引用的CSS。服务端还会移除button；专题页放大图原本位于`button[data-qt-zoom]`内，直接清洗可能把后代图片一并移除。prepare_share.py只在副本中把该单图按钮解包为静态`img`，同时把远程图片内联为data URI（SVG保留为data:image/svg+xml，交服务端白名单清洗）、移除script块之外的真实iframe，脚本内容不动；原交付页仍保留放大能力。JSON报告增加`zoom_buttons_unwrapped`，并继续报告内联数、iframe数、下载失败与遗留引用；存在遗留时如实说明再继续。服务端接受内联SVG数据（含模板Logo）与位图data URI，无需替换品牌资产。
 
-**第二步：上传适配副本**：
+**第二步：本地预检适配副本**（不上传、不需要API Key）：
+
+```sh
+node "$SKILL/scripts/share/share.js" preflight "$TASK/final-share-ready.html"
+```
+
+`preflight`执行与正式分享相同的打包，检查10MB硬上限、遗留的`data-qt-zoom`按钮、内联位图数量和像素规模。位图累计超过约800万像素时给出风险警告：青水可能把WebP/JPEG重编码为PNG，导致本地文件小于10MB但“清洗后的HTML”超过上限。该判断是保守提示，不是服务端结果的替代；有风险时用接近页面展示尺寸的派生图，原图另行保留。阻断项修复后再上传。
+
+**第三步：上传适配副本**：
 
 ```sh
 node "$SKILL/scripts/share/share.js" share "$TASK/final-share-ready.html" --name "页面名称"
@@ -190,7 +241,7 @@ node "$SKILL/scripts/share/share.js" assets
 node "$SKILL/scripts/share/share.js" unshare <hash>
 ```
 
-`share`默认打包内联、剥离@font-face并注入沙箱存储垫片；`--keep-svg`把自包含内联SVG保留原样交服务端清洗；`--no-bundle`用于已是单文件且无外部引用的页面；`--no-scripts`禁脚本（**成品专题页禁止使用，见下条**）；`--no-fetch`不下载远程资源（有远程引用时报错）。服务地址默认 `https://qingshui.hqwx.com`，白名单 qingshui.hqwx.com / qingshui.hqqt.com（含子域名），非白名单域名直接拒绝。成功输出分享URL、32位hash与MIME类型，URL形如`https://<平台域名>/{project}/{user}/{hash}.html`——这是沙箱包装页，原始内容在同URL加`?raw=1`（仅iframe请求头返回）。输出中的⚠️清洗警告（如移除button/input/form标签）逐条如实转述用户；把URL与hash回传，并按[记录约定](content-record.md)可记入`task.share`，该记录不替代用户授权证据。
+`share`默认打包内联、对放大图按钮做同样的静态降级、剥离@font-face并注入沙箱存储垫片；即使漏跑prepare_share.py，也不会把单图放大按钮原样交给服务端。`--keep-svg`把自包含内联SVG保留原样交服务端清洗；`--no-bundle`用于已是单文件且无外部引用的页面；`--no-scripts`禁脚本（**成品专题页禁止使用，见下条**）；`--no-fetch`不下载远程资源（有远程引用时报错）。服务地址默认 `https://qingshui.hqwx.com`，白名单 qingshui.hqwx.com / qingshui.hqqt.com（含子域名），非白名单域名直接拒绝。成功输出分享URL、32位hash与MIME类型，URL形如`https://<平台域名>/{project}/{user}/{hash}.html`——这是沙箱包装页，原始内容在同URL加`?raw=1`（仅iframe请求头返回）。输出中的⚠️清洗警告（如移除button/input/form标签）逐条如实转述用户；把URL与hash回传，并按[记录约定](content-record.md)可记入`task.share`，该记录不替代用户授权证据。
 
 **硬约束：成品专题页禁止 `--no-scripts`。** 卡片列宽（`--qt-cols`）与媒体槽位（`--qt-media-slot`）由 `assets/components/topic.js` 在运行时按视口计算并写入自定义属性；禁用脚本后这两个变量停在默认值 1，`.qt-t-group` 退化为单列、图文组宽度塌陷成窄条，文字逐字竖排贴至右侧——页面看起来像样式全坏了，但本地交付文件完全正常，极易误判为模板缺陷。若分享页出现脚本报错，应修正报错来源（页头 `form`/`input`/`button` 被服务端清洗时的空值防护已在公共外壳脚本中处理），不得改用 `--no-scripts` 规避。分享后必须实测：JS 报错数、每模块网格列数、section 实际宽度。
 

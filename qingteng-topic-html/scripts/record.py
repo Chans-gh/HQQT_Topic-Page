@@ -128,7 +128,25 @@ def validate_record(record, mode, module_ids, task_dir=None):
     mixed_refine = mode == 'refine' and task.get('mixed_scope') and task.get('stage') in {'DRAFT','DRAFT_REVIEW'}
     if task.get('stage') not in allowed[mode] and not mixed_refine:
         raise ValueError(f'phase does not allow {mode}: {task.get("stage")}')
+    from input_sources import validate_inputs
+    validate_inputs(record, require_read=True, task_dir=task_dir)
     data = objects(record)
+    from page_modes import validate_page_mode
+    validate_page_mode(
+        record,
+        data['modules'],
+        lambda item: approved(record, 'list', 'modules', item),
+        require_selected=True,
+        task_dir=task_dir,
+    )
+    from document_viewer import validate_document_viewer
+    validate_document_viewer(
+        record,
+        data['media'],
+        data['modules'],
+        lambda item: approved(record, 'list', 'modules', item),
+        require_decided=True,
+    )
     if not module_ids or len(module_ids) != len(set(module_ids)):
         raise ValueError('nonempty unique module scope required')
     from requirements import validate_requirements
@@ -247,15 +265,44 @@ def task_bundle(source, out, paths):
         if not brief.is_file():
             raise ValueError('independent requirements.json is missing')
         selected['requirements.json'] = brief.read_bytes()
+    for item in record.get('inputs', []):
+        local = item.get('local_path')
+        if not local:
+            continue
+        asset = Path(local)
+        asset = asset if asset.is_absolute() else source / asset
+        asset = asset.resolve()
+        if not asset.is_file():
+            raise ValueError('missing task input file: ' + str(local))
+        raw = asset.read_bytes(); sha = hashlib.sha256(raw).hexdigest()
+        if item.get('sha256') != sha:
+            raise ValueError('task input SHA mismatch: ' + item.get('id', ''))
+        dest = 'inputs/' + sha + asset.suffix.lower()
+        selected[dest] = raw; item['local_path'] = dest
     from production import asset_paths
     for item in record.get('media',[]):
         for field,media in asset_paths(item,source).items():
             raw=media.read_bytes();sha=hashlib.sha256(raw).hexdigest()
             dest='media/'+sha+media.suffix.lower()
             selected[dest]=raw;item[field]=dest
+    for preview in record.get('direction_previews', []):
+        if preview.get('status') not in {'rendered', 'selected', 'rejected'}:
+            continue
+        name = preview.get('artifact', '')
+        if (not isinstance(name, str) or not name or Path(name).is_absolute()
+                or '..' in Path(name).parts or Path(name).suffix.lower() not in {'.html', '.htm'}):
+            raise ValueError('unsafe direction preview path')
+        artifact = source / name
+        if not artifact.is_file() or not artifact.resolve().is_relative_to(source):
+            raise ValueError('missing direction preview artifact: '+name)
+        raw = artifact.read_bytes(); sha = hashlib.sha256(raw).hexdigest()
+        if preview.get('html_sha256') != sha:
+            raise ValueError('direction preview SHA mismatch: '+preview.get('id', ''))
+        dest = 'previews/' + sha + artifact.suffix.lower()
+        selected[dest] = raw; preview['artifact'] = dest
     selected['record.json']=(json.dumps(record,ensure_ascii=False,indent=2)+'\n').encode()
     manifest={'schema':'qt-task-snapshot/1','files':{k:hashlib.sha256(v).hexdigest() for k,v in selected.items()},
-              'notice':'Exact task inputs/media; approvals retained, not created. Does not freeze the Skill runtime.'}
+              'notice':'Exact task files/source inputs/media/previews; approvals retained, not created. Does not freeze the Skill runtime.'}
     out.mkdir(parents=True)
     for name,raw in selected.items():
         f=out/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_bytes(raw)
@@ -278,7 +325,7 @@ def main():
     try:
         if a.command=='init':
             out.mkdir(parents=True)
-            record={'task':{'id':a.id,'title':a.title,'stage':'INTAKE','density':'explain','editorial_contract':1,'production_contract':2,'delivery_contract':1,'requirements_contract':1,'asset_review':{'decision':'pending','rationale':'','gaps':[]},'list_version':'C01','draft_version':'D01'},'inputs':[],'modules':[],'sources':[],'media':[],'resources':[],'approvals':[],'execution_authorizations':[],'feedback':[]}
+            record={'task':{'id':a.id,'title':a.title,'stage':'INTAKE','density':'explain','editorial_contract':1,'production_contract':2,'delivery_contract':1,'requirements_contract':1,'input_contract':1,'page_mode_contract':1,'document_viewer_contract':1,'document_strategy':{'schema':'qt-document-strategy/1','status':'pending','mode':'','rationale':'','documents':[]},'page_mode':{'schema':'qt-page-mode/1','status':'pending','method':'pending','state':{'purpose':'','audience':'','next_action':'','material_types':[],'evidence_shapes':[],'content_scale':'','constraints':[]},'recommendation':{'primary':'','alternative':'','reasons':[],'risks':[],'confidence':None,'probabilities':{}},'selection':{'status':'pending','mode':'','evidence':{}}},'inputs':[],'modules':[],'sources':[],'media':[],'resources':[],'source_documents':[],'direction_previews':[],'approvals':[],'execution_authorizations':[],'feedback':[]}}
             brief={'schema':'qt-requirements/1','review':{'status':'pending','context':[],'note':''},'assets':[]}
             raw=(json.dumps(brief,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
             (out/'requirements.json').write_bytes(raw)
@@ -296,10 +343,18 @@ def main():
                 f=folder/name
                 if not f.resolve().is_relative_to(folder) or not f.is_file() or hashlib.sha256(f.read_bytes()).hexdigest()!=sha:raise ValueError('snapshot path/SHA mismatch: '+name)
             saved=json.loads((folder/'record.json').read_text(encoding='utf-8'))
+            for item in saved.get('inputs', []):
+                asset = item.get('local_path')
+                if asset and (Path(asset).is_absolute() or asset not in manifest['files']):
+                    raise ValueError('snapshot source input is not self-contained')
             for item in saved.get('media',[]):
                 for field in ('local_path','original_path'):
                     asset=item.get(field)
                     if asset and (Path(asset).is_absolute() or asset not in manifest['files']):raise ValueError('snapshot media is not self-contained')
+            for preview in saved.get('direction_previews', []):
+                artifact = preview.get('artifact')
+                if artifact and (Path(artifact).is_absolute() or artifact not in manifest['files']):
+                    raise ValueError('snapshot direction preview is not self-contained')
             result=task_bundle(folder,out,list(manifest['files']))
         print(json.dumps({'output':str(out),**result},ensure_ascii=False,indent=2))
     except (ValueError,KeyError,TypeError,OSError) as e:p.exit(1,'ERROR: '+str(e)+'\n')

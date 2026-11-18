@@ -22,9 +22,21 @@ def run_case(out, browser=False):
                   content_layers={'primary':'首次运行检查','support':'模板和依赖','evidence':'合成本地自检结果','conditions':'不代表业务验收'},
                   deduplication='仅一个自检模块，无重复',relationship='核对与完成条件',
                   visual_intent={'focus':'完成条件','order':'说明→核对','web':'紧凑资料','h5':'正文先读'})
+    page_mode={'schema':'qt-page-mode/1','status':'selected','method':'user',
+               'state':{'purpose':'验证安装后的独立组合与权限拒绝','audience':'Skill维护者','next_action':'核对自检结果',
+                        'material_types':['合成文本'],'evidence_shapes':['核对项'],'content_scale':'单模块合成自检','constraints':['不代表业务验收']},
+               'recommendation':{'primary':'report','alternative':'operations','reasons':['以核对结果和边界为主'],
+                                 'risks':['合成材料不能代表真实专题语义质量'],'confidence':None,'probabilities':{}},
+               'selection':{'status':'selected','mode':'report','evidence':{'actor':'user','locator':'synthetic fixture','text':'仅本地无副作用安装测试使用报告阅读模式'}}}
     record = {'task':{'id':'synthetic-install-check','title':'安装验收 · 合成示例','stage':'DRAFT',
-                      'density':'reference','editorial_contract':1,'list_version':'C01','draft_version':'D01'},
-              'inputs':[],'modules':[module],'sources':[],'media':[],
+                      'density':'reference','editorial_contract':1,'input_contract':1,'page_mode_contract':1,'page_mode':page_mode,
+                      'document_viewer_contract':1,'document_strategy':{'schema':'qt-document-strategy/1','status':'not-applicable','mode':'','rationale':'合成安装检查没有原稿材料','documents':[]},
+                      'list_version':'C01','draft_version':'D01'},
+              'inputs':[{'id':'A01','schema':'qt-input-source/1','revision':1,'kind':'text','locator':'synthetic fixture','original_name':'',
+                         'extraction':{'status':'complete','method':'direct','read_scope':['合成测试主题全文'],'unread_scope':[],
+                                       'structure_loss':[],'media_status':'not-applicable','attachments':[],'errors':[]}}],
+              'modules':[module],'sources':[],'media':[],'source_documents':[],
+              'direction_previews':[],
               'approvals':[{'stage':'list','version':'C01','scope':{'modules':{'M01':1}},
                             'evidence':{'actor':'user','locator':'synthetic fixture, not real business consent','text':'仅授权本地无副作用安装测试'}}]}
     body = '<header data-module-id="M01" class="qt-t-paper qt-t-stack"><h1>安装验收 · 合成示例</h1><p>中文、路径空格与公共模板检查；没有真实业务或图片生成。</p><h2>完成条件</h2><p>页面可独立打开，拒绝越过清单确认。</p></header>'
@@ -44,6 +56,31 @@ def run_case(out, browser=False):
         return passed
     command = [sys.executable, str(ROOT/'scripts/compose_html.py'), '--record', str(record_path), '--body', str(body_path)]
     execute('draft-compose', command+['--mode','draft','--out',str(out/'draft.html')])
+    pending_mode = copy.deepcopy(record)
+    pending_mode['task']['page_mode'] = {'schema':'qt-page-mode/1','status':'pending','method':'pending',
+        'state':{'purpose':'','audience':'','next_action':'','material_types':[],'evidence_shapes':[],'content_scale':'','constraints':[]},
+        'recommendation':{'primary':'','alternative':'','reasons':[],'risks':[],'confidence':None,'probabilities':{}},
+        'selection':{'status':'pending','mode':'','evidence':{}}}
+    pending_path = out/'pending-mode.json'; pending_path.write_text(json.dumps(pending_mode, ensure_ascii=False), encoding='utf-8')
+    execute('pending-page-mode-denied', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(pending_path),
+                                         '--body',str(body_path),'--out',str(out/'must-not-route.html')], expected=1)
+    checks.append({'id':'pending-mode-output-absent','status':'pass' if not (out/'must-not-route.html').exists() else 'fail'})
+    pending_input = copy.deepcopy(record); pending_input['inputs'][0]['extraction']={'status':'not-run','method':'pending','read_scope':[],
+        'unread_scope':['尚未读取合成输入'],'structure_loss':[],'media_status':'unread','attachments':[],'errors':[]}
+    pending_input_path = out/'pending-input.json'; pending_input_path.write_text(json.dumps(pending_input, ensure_ascii=False), encoding='utf-8')
+    execute('pending-input-denied', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(pending_input_path),
+                                     '--body',str(body_path),'--out',str(out/'must-not-read.html')], expected=1)
+    checks.append({'id':'pending-input-output-absent','status':'pass' if not (out/'must-not-read.html').exists() else 'fail'})
+    pending_document = copy.deepcopy(record); pending_document['task']['document_strategy']={'schema':'qt-document-strategy/1','status':'pending','mode':'','rationale':'','documents':[]}
+    pending_document_path = out/'pending-document.json'; pending_document_path.write_text(json.dumps(pending_document, ensure_ascii=False), encoding='utf-8')
+    execute('pending-document-strategy-denied', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(pending_document_path),
+                                               '--body',str(body_path),'--out',str(out/'must-not-view.html')], expected=1)
+    checks.append({'id':'pending-document-output-absent','status':'pass' if not (out/'must-not-view.html').exists() else 'fail'})
+    legacy = copy.deepcopy(record); legacy['task'].pop('page_mode_contract'); legacy['task'].pop('page_mode'); legacy['task'].pop('input_contract'); legacy['task'].pop('document_viewer_contract'); legacy['task'].pop('document_strategy')
+    legacy['inputs']=[{'id':'A01','kind':'text','locator':'synthetic fixture','read_scope':'合成全文','unread_scope':'无'}]
+    legacy_path = out/'legacy-record.json'; legacy_path.write_text(json.dumps(legacy, ensure_ascii=False), encoding='utf-8')
+    execute('legacy-record-compatible', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(legacy_path),
+                                         '--body',str(body_path),'--out',str(out/'legacy-draft.html')])
     denied = copy.deepcopy(record); denied['approvals'] = []
     denied_path = out/'unapproved.json'; denied_path.write_text(json.dumps(denied, ensure_ascii=False), encoding='utf-8')
     execute('unapproved-scope-denied', [sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(denied_path),

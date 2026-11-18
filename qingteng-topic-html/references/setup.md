@@ -7,15 +7,18 @@
 ```sh
 python3 scripts/doctor.py
 python3 scripts/smoke_test.py
+npm test
 ```
 
-Python3.9+只用标准库；Windows可用`py -3`替代`python3`。基础doctor为只读；smoke仅在临时目录生成合成记录/页面并自动清理，或用`--out`保存到Skill外的新/空目录。两者不会安装依赖、生成图片或伪造真实授权；smoke --browser会按官方页头依赖联网，普通smoke与doctor不访问业务服务。
+Python3.9+只用标准库；Windows可用`py -3`替代`python3`。基础doctor为只读；smoke仅在临时目录生成合成记录/页面并自动清理，或用`--out`保存到Skill外的新/空目录。两者不会安装依赖、生成图片或伪造真实授权；smoke --browser会按官方页头依赖联网，普通smoke与doctor不访问业务服务。`npm test`运行不联网的多格式输入、页面模式、长页导航、原稿浏览器与分享打包回归，不启动浏览器、不上传页面。
 
 浏览器验收使用Node20+。首次由用户明确选择配置后执行：
 
 ```sh
 npm ci --ignore-scripts --no-audit --no-fund
 npx --no-install playwright install chromium
+npm run test:navigation-browser
+npm run test:document-viewer-browser
 python3 scripts/doctor.py --browser
 python3 scripts/smoke_test.py --browser
 ```

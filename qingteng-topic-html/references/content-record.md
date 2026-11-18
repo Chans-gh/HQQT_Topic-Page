@@ -4,9 +4,10 @@
 
 ## 数据契约
 
-JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。stage 为 INTAKE、LIST_REVIEW、DRAFT、DRAFT_REVIEW、REFINE、DELIVERY；三个组合模式分别接受 DRAFT/DRAFT_REVIEW、REFINE、DELIVERY。脚本不改变阶段。清单阶段只写对话清单/记录，不调用组合脚本。
+JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。新任务另有`input_contract=1`、`page_mode_contract=1`和`document_viewer_contract=1`；格式分别见[多格式输入](input-sources.md)、[页面模式](page-modes.md)与[原稿浏览](document-viewer.md)。stage 为 INTAKE、LIST_REVIEW、DRAFT、DRAFT_REVIEW、REFINE、DELIVERY；三个组合模式分别接受 DRAFT/DRAFT_REVIEW、REFINE、DELIVERY。脚本不改变阶段。清单阶段只写对话清单/记录，不调用组合脚本。
 
-- `inputs[]`：id、kind、locator、read_scope、unread_scope、original_name；重复来源可共用提取结果，但保留输入定位。读取失败是未读，不猜内容。
+- `task.page_mode`：`schema=qt-page-mode/1`，分开保存结构化state、recommendation与selection。推荐可来自executor/typesafe/user；selection必须有真实user evidence。新任务组合HTML前必须selected；旧任务缺contract按legacy恢复，不追认历史推荐。
+- `inputs[]`：新任务使用`qt-input-source/1`，含 id/revision/kind/locator/original_name 与 extraction。extraction 显式记录 status/method/read_scope/unread_scope/structure_loss/media_status/attachments/errors；本地原文件另记 local_path 与 sha256。`complete`不能留未读范围，`partial`必须同时写已读/未读，`blocked`保留错误与未读，`not-run`不得组合 HTML。旧任务缺 contract 仍可恢复，不追认其已读。
 - `modules[]`：id（M01起）、order、revision、list_version、draft_revision、draft_version、title、purpose、points[]、sources[]、media[]、required、issues[]、removed（可选）。revision 跟踪实质范围/事实变化；draft_revision 跟踪需重审的实际写法。排版修复不抹掉已确认范围。
 - `sources[]`：id（S-INPUT-01/S-WEB-01等）、revision、list_version、draft_version、kind（input/web）、title、locator或url、publisher、accessed、supports、verification（unverified/verified/unverifiable）、adoption（pending/adopted/rejected）。查证与采用必须分开；网页补充须具体支持页及主体/访问日期/支持内容。未确认采用的已查证补充可在初稿明确标为待确认；最终只能保留符合下述引用语义且已确认采用的内容。
 - `media[]`：id（IMG-01起）、module、revision、list_version、draft_version、purpose、role（screenshot/illustration/photo/person/cover）、plan（input/generate/select）、composition（含文字安全区）、responsive（Web/H5顺序）、status（pending/available/complete/omitted）、local_path（已有文件时）、alt、caption。omitted表示用户同意省略，保留omit审批依据并从body移除对应槽；不得省略未解决关键图来冒充完成。
@@ -14,12 +15,17 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。s
 - 输入引用可设`citation_mode=attributed-input`、`reading=checked`、`read_scope`、`claim_scope=attributed`及`internal_note`，并保持实际verification。note写核验范围与主张边界，仅作内部依据；兼容旧记录public_note作为内部note读取，不自动输出。收口表示输入读取与采用状态满足条件，不能证明材料中的效果；实际正文仍须符合证据支持范围。外部事实主张仍需verified，不能改为输入引用绕过核验。
 - 非图片资源`resources[]`：RES-01等，module/revision/list_version/draft_version/kind/title/status/public_note。当前单文件组合器支持诚实的pending/unavailable通知和omitted；省略需omit批准，正式保留不可播放通知需status=unavailable、resolution=retain-notice及retain批准（scope.resources）。不默认接受视频占位；真实视频包需另验资源格式/路径/解码，不由本图像检查器认证。模块resources列相应编号，正文只放空data-resource-id槽。
 - `approvals[]`：stage（list/draft/reuse/generate/omit/retain）、version、scope（modules/sources/media/resources各自ID→修订号字典）、evidence（actor=user、locator、text；实际已知的time或sequence可另记）。scope中只列用户明确获准的对象。`list` 核对对象的list_version/revision；`draft` 核对draft_version，模块比较draft_revision、素材/来源比较revision；`reuse/generate/omit`核对素材draft_version/revision。生成需同时有draft方案确认和generate明确授权，不因写了拟生成就获准。
+- `direction_previews[]`：可选，最多两项。id使用PV-01起，含mode、modules、status（planned/rendered/selected/rejected）；渲染后保存任务相对artifact与html_sha256，selected/rejected需真实user evidence。预览仅能使用list已确认模块；选择不产生draft审批。
+- `task.document_strategy`：`qt-document-strategy/1`，status为pending/selected/not-applicable。selected保存content-redesign/source-viewer/hybrid、真实rationale与documents范围；not-applicable保存理由且mode/scope为空。它是呈现策略，不产生清单批准。
+- `source_documents[]`：DOC-01起，使用`qt-source-document/1`，含revision/title/module/input_ids/unread_scope/pages。页使用DOC-01-P01稳定ID，保存number/label/status/source_locator；available页绑定同模块media，unavailable页不伪造素材。原稿/混合策略中每份已选文档至少有一页available。
 
 记录中保留输入/绝对路径/用户反馈原文；组合器只渲染执行者编写的正文及明确的素材文案；draft/refine另有可关闭的内部审阅区，final不输出该区或来源记录，不将整个JSON内嵌。supports说明每项材料为何适用，不能用关键词相同或已查证替代关联判断。caption为可选的对外图注；alt需显式编写，截图不能为空，纯装饰可空字符串。两者都不从purpose/核验记录生成；未写caption时省略figcaption。
 
 ## 版本与局部恢复
 
 新清单用C02、新初稿用D02；M、S、IMG不因调序变号。每对象保留它实际被确认的版本；仅改变M02时更新M02的revision/list_version、draft_revision/draft_version及关联改变的S/IMG，其余M01可继续指向C01/D01。新增模块用新ID；删除标removed并保留原记录。顺序是实际内容清单的一部分，执行者核对用户已确认的新顺序，脚本不理解时序语义。
+
+页面模式推荐改变时更新recommendation；用户实际选择只写selection，不覆写原主/备选依据。方向预览保持PV编号，选择后保留未选预览及证据；完整初稿仍使用D版本并单独确认。任务快照会携带已渲染预览并核对SHA，planned预览没有文件时不伪造artifact。
 
 确认C01/M01–M03只允许这三个模块进入初稿；模块中的具体新图仍不能生成。确认D01但只有框架时，不为实际文案或素材写完整draft审批。记录不到依据时，仅确认受影响对象，继续独立可做的工作。
 
@@ -35,10 +41,10 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。s
 
 ```json
 {
-  "task": {"id":"demo","title":"材料整理方法","stage":"DRAFT","density":"explain","list_version":"C01","draft_version":"D01"},
-  "inputs": [{"id":"A01","kind":"text","locator":"用户消息","read_scope":"已提供全文","unread_scope":"无"}],
+  "task": {"id":"demo","title":"材料整理方法","stage":"DRAFT","density":"explain","input_contract":1,"document_viewer_contract":1,"document_strategy":{"schema":"qt-document-strategy/1","status":"not-applicable","mode":"","rationale":"没有原稿材料","documents":[]},"list_version":"C01","draft_version":"D01"},
+  "inputs": [{"id":"A01","schema":"qt-input-source/1","revision":1,"kind":"text","locator":"用户消息","original_name":"","extraction":{"status":"complete","method":"direct","read_scope":["已提供全文"],"unread_scope":[],"structure_loss":[],"media_status":"not-applicable","attachments":[],"errors":[]}}],
   "modules": [{"id":"M01","order":1,"revision":1,"list_version":"C01","draft_revision":1,"draft_version":"D01","title":"核对材料","purpose":"让读者知道如何开始","points":["列出实际能取得的材料及未读范围"],"sources":[],"media":[],"required":true,"issues":[]}],
-  "sources": [], "media": [],
+  "sources": [], "media": [], "source_documents": [],
   "approvals": [{"stage":"list","version":"C01","scope":{"modules":{"M01":1}},"evidence":{"actor":"user","locator":"实际消息定位（示例不可作为业务授权）","text":"确认C01的M01，制作初稿"}}]
 }
 ```
@@ -48,7 +54,7 @@ JSON UTF-8。`task` 包含 id/title/stage/density/list_version/draft_version。s
 
 编辑取舍和精修延用reader_question/key_message/content_layers/deduplication/relationship/visual_intent与issues/evidence：删除无依据承诺时记其信息作用和具体承接文案；材料稀薄时只保留可支持主题，缺项不编造。精修记录问题来源、动作、同模块成品变化、必要信息去向及截图定位。样例见workflow第11节，不增加机械评分或审批字段。
 
-任务快照使用record.py snapshot/restore；媒体会复制并相对化，批准与修订保持原记录，详见tools。人工评审是任务证据，不进入公开正文；目标视觉target与五层汇总格式见tools。
+任务快照使用record.py snapshot/restore；绑定SHA的本地原输入、媒体与已渲染方向预览会复制并相对化，批准与修订保持原记录，详见tools。人工评审是任务证据，不进入公开正文；目标视觉target与五层汇总格式见tools。
 
 
 ## 执行授权、素材决策与否定反馈

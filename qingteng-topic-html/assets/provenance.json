@@ -1,6 +1,6 @@
 {
   "skill": "qingteng-topic-html",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "relation_type": "VARIANT",
   "source_branch": "package/huanqiu-qingteng-html-visual-v1-2026-10-24",
   "base_commit": "f61f43d4efe2eb36ccf75ac417936a4ea6aea812",
@@ -16,21 +16,21 @@
     {
       "file": "assets/page-modes.json",
       "source_path": "original 2.0.0 page mode catalog",
-      "sha256": "aba16636508e7b0b7d9b49a3c62a4eb8c9a51bb9ae357453ea4e7ac5c61da505",
+      "sha256": "7a71e97922ab8638449274eeb1e16faaaf48a668fdc2faec19d0804dd25565fb",
       "handling": "original structured routing catalog; no external template code",
       "nature": "closed page-mode criteria and deterministic component/navigation mapping; not a visual skin library"
     },
     {
       "file": "assets/input-sources.json",
       "source_path": "original 2.2.0 input adapter catalog",
-      "sha256": "c819036f4d7a6b7358995a970ccb65590966c0dd599c62dc3407b6499c3696a4",
+      "sha256": "6407343a5d9997114a560b60ac7f6d3ea9203cbfc4feba8ae9403adc82f9894a",
       "handling": "original host-routing and read-scope contract; no parser, connector or user material",
       "nature": "closed input kinds and deterministic extraction-status vocabulary"
     },
     {
       "file": "assets/document-viewer.json",
       "source_path": "original 2.3.0 document strategy catalog",
-      "sha256": "bdd996ca0be0844c3f2576396c568e180a4c87ea25298508cb78c27ea8c5e7ad",
+      "sha256": "e7f639a58107fe4279d0e6f49a772513e5cfc1c832e1fac6c7752495124aea71",
       "handling": "original presentation strategy and progressive-viewer policy; no source pages or external runtime",
       "nature": "closed content-redesign/source-viewer/hybrid strategy vocabulary"
     },
@@ -170,7 +170,7 @@
     {
       "file": "assets/header/sources.json",
       "source_path": "assets/header/sources.json (URLs and original SHA256)",
-      "sha256": "c54015023cf0d96feac15154beeda325da4c94fe67bd687cbf3b80271366e9c8",
+      "sha256": "e25423d96412dce52492dfe4fa9425c987090b98966792d6f2656f350ce4202f",
       "handling": "official hqqt branch adapted; project 1200px/60px rules",
       "nature": "runtime official header asset"
     },
@@ -254,7 +254,7 @@
     {
       "file": "assets/components/catalog.json",
       "source_path": "maintained native component source in this Skill",
-      "sha256": "cf7de374f1c8a7109210c9b5ec2756062e6bc6477423d67fa21677311bed4f31",
+      "sha256": "dee16bd18a702d1a3e39b6fed46152ca03c47d5d084965f2e30ce32b84d71921",
       "handling": "original editable recipes, maintained with visual specification",
       "nature": "native component runtime source; no user business or reference image"
     },
@@ -419,5 +419,11 @@
     "baseline_version": "2.2.0",
     "scope": "Explicit content-redesign/source-viewer/hybrid strategy, source-page records and an all-pages-in-DOM progressive original-document viewer",
     "boundary": "The viewer does not render PDF/DOCX files, invent unavailable pages, verify source claims or approve a content list"
+  },
+  "delivery_quality_revision": {
+    "version": "2.4.0",
+    "baseline_version": "2.3.0",
+    "scope": "Current-composer artifact identity, exact installed-version diagnosis, final single-file runtime-resource rejection and completion-required CLI gate",
+    "boundary": "The identity proves which local runtime composed and checked the artifact; it does not by itself prove editorial quality, factual truth or user acceptance"
   }
 }

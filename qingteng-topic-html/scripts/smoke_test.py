@@ -2,6 +2,7 @@
 """Synthetic first-run test outside the Skill; browser mode checks official online services."""
 import argparse
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -91,16 +92,42 @@ def run_case(out, browser=False):
                                'evidence':{'actor':'user','locator':'synthetic fixture','text':'仅本地最终组合测试'}})
     record_path.write_text(json.dumps(record, ensure_ascii=False), encoding='utf-8')
     execute('final-compose', command+['--mode','final','--out',str(out/'final.html')])
+    final_static_report = out/'final-static-report.json'
     execute('final-static', [sys.executable,str(ROOT/'scripts/check_html.py'),str(out/'final.html'),
-                             '--record',str(record_path),'--mode','final'])
+                             '--record',str(record_path),'--mode','final','--report',str(final_static_report)])
+    final_static = json.loads(final_static_report.read_text(encoding='utf-8')) if final_static_report.is_file() else {}
+    exact_sha = hashlib.sha256((out/'final.html').read_bytes()).hexdigest() if (out/'final.html').is_file() else ''
+    checks.append({'id':'exact-file-byte-identity','status':'pass' if final_static.get('html_sha256')==exact_sha else 'fail'})
+    execute('incomplete-candidate-not-deliverable', [sys.executable,str(ROOT/'scripts/check_html.py'),str(out/'final.html'),
+                                                     '--record',str(record_path),'--mode','final','--require-complete'], expected=1)
+    version=json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))['version']
+    final_html=(out/'final.html').read_text(encoding='utf-8') if (out/'final.html').is_file() else ''
+    checks.append({'id':'current-composer-identity','status':'pass' if f'content="qingteng-topic-html/{version}"' in final_html and 'data-qt-mode="final"' in final_html else 'fail'})
+    stale=out/'stale-artifact.html'
+    stale.write_text(final_html.replace(f'qingteng-topic-html/{version}','qingteng-topic-html/0.0.0',1),encoding='utf-8')
+    execute('stale-composer-identity-denied',[sys.executable,str(ROOT/'scripts/check_html.py'),str(stale),
+                                             '--record',str(record_path),'--mode','final'],expected=1)
+    missing=out/'missing-local-asset.html'
+    missing.write_text(final_html.replace('</main>','<img src="assets/missing.png" alt="缺失素材"></main>',1),encoding='utf-8')
+    execute('relative-final-asset-denied',[sys.executable,str(ROOT/'scripts/check_html.py'),str(missing),
+                                          '--record',str(record_path),'--mode','final'],expected=1)
     custom=out/'custom-video.html'
     custom.write_text(body.replace('</header>','<aside class="custom-video-notice">视频待提供，当前不可播放。</aside></header>'),encoding='utf-8')
     execute('custom-resource-final-denied',[sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(record_path),
                                            '--body',str(custom),'--mode','final','--out',str(out/'must-not-final.html')],expected=1)
     checks.append({'id':'resource-denied-output-absent','status':'pass' if not (out/'must-not-final.html').exists() else 'fail'})
+    share_source = out/'share-source.html'
+    share_ready = out/'share-ready.html'
+    share_source.write_text("<html><style>.x{scroll-behavior:smooth;color:red}</style><script>const x={behavior:'instant'};</script></html>", encoding='utf-8')
+    execute('share-css-sanitizer-compatibility', [sys.executable,str(ROOT/'scripts/prepare_share.py'),'--input',str(share_source),
+                                                  '--out',str(share_ready)])
+    share_text = share_ready.read_text(encoding='utf-8') if share_ready.is_file() else ''
+    checks.append({'id':'share-scroll-behavior-removed','status':'pass' if 'scroll-behavior:' not in share_text and "behavior:'instant'" in share_text else 'fail'})
     # Only the independent HTML is copied into this otherwise empty folder.
     standalone = out/'empty folder'; standalone.mkdir()
     if (out/'final.html').exists(): shutil.copy2(out/'final.html', standalone/'专题页.html')
+    execute('standalone-final-static',[sys.executable,str(ROOT/'scripts/check_html.py'),str(standalone/'专题页.html'),
+                                      '--record',str(record_path),'--mode','final'])
     if browser:
         node = shutil.which('node')
         if not node:

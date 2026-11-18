@@ -1,6 +1,6 @@
 {
   "schema": "qt-document-strategies/1",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "notice": "A strategy controls how already-read source material is presented. It does not read documents, create page images, or approve content.",
   "strategies": [
     {

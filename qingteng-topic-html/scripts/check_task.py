@@ -96,6 +96,7 @@ def check_task(record_path, body_path, out, mode='final', css_path=None, browser
         'html_bytes': (out/'page.html').stat().st_size if (out/'page.html').is_file() else 0,
         'cache': {'png_hits': cache.hits, 'png_misses': cache.misses} if 'cache' in locals() else None,
         'scope': 'Byte inspection cache only; current HTML/browser and human decisions are never reused.'}
+    report['delivery_ready'] = report.get('completion_status') == 'pass'
     (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     manifest = {'schema': 'qt-check-round/1', 'mode': mode, 'inputs': 'inputs/snapshot.json',
                 'html_sha256': report.get('html_sha256'), 'input_files': len(bundle['files']),
@@ -115,6 +116,7 @@ def main():
     p.add_argument('--profile', choices=['preview','full'], default='full')
     p.add_argument('--widths', type=int, nargs='+'); p.add_argument('--modules', nargs='+')
     p.add_argument('--asset-cache', type=Path); p.add_argument('--export-media', action='store_true')
+    p.add_argument('--require-complete', action='store_true', help='Exit nonzero unless this exact page is fully reviewed and user-accepted')
     a = p.parse_args()
     if a.offline and not a.browser:
         p.error('--offline requires --browser')
@@ -123,8 +125,8 @@ def main():
                             a.profile, a.widths, a.modules, a.asset_cache, a.export_media)
     except (ValueError, OSError) as exc:
         p.exit(1, 'ERROR: ' + str(exc) + '\n')
-    print(json.dumps({k: result.get(k) for k in ('status', 'production_status', 'asset_fulfillment', 'business_information', 'user_acceptance', 'completion_status', 'html_sha256', 'errors')}, ensure_ascii=False))
-    return int(result['status'] != 'pass')
+    print(json.dumps({k: result.get(k) for k in ('status', 'production_status', 'asset_fulfillment', 'business_information', 'user_acceptance', 'completion_status', 'delivery_ready', 'html_sha256', 'errors')}, ensure_ascii=False))
+    return int(result['status'] != 'pass' or (a.require_complete and result.get('completion_status') != 'pass'))
 
 
 if __name__ == '__main__':

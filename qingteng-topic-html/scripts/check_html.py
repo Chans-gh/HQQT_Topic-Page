@@ -5,7 +5,7 @@ from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote
-from html_support import ROOT, blocks, TARGETS
+from html_support import ROOT, ARTIFACT_META_NAME, blocks, expected_artifact, TARGETS
 from record import validate_record
 
 
@@ -27,9 +27,17 @@ class Page(HTMLParser):
 def inspect(html,mode='draft',record=None,review=None,review_dir=None,task_dir=None):
     errors=[];warnings=[]
     try:
-        if blocks(html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")):errors.append('shared blocks differ from locked shell')
+        structural_html=html.replace('\r\n','\n').replace('\r','\n')
+        if blocks(structural_html)!=blocks((ROOT/'assets/templates/public-shell.html').read_text(encoding="utf-8")):errors.append('shared blocks differ from locked shell')
     except ValueError as exc:errors.append(str(exc))
     page=Page(html);ids=[a['id'] for _,a in page.nodes if a.get('id')]
+    expected_identity=expected_artifact(mode)
+    artifact_nodes=[a for t,a in page.nodes if t=='meta' and a.get('name')==ARTIFACT_META_NAME]
+    artifact_valid=(len(artifact_nodes)==1 and all(artifact_nodes[0].get(k)==v for k,v in expected_identity.items()))
+    if len(artifact_nodes)!=1:
+        errors.append('exactly one current composer artifact marker required')
+    elif not artifact_valid:
+        errors.append('artifact marker does not match this Skill version, mode, or official shell')
     duplicates=[i for i,n in Counter(ids).items() if n>1]
     if duplicates:errors.append('duplicate IDs: '+','.join(duplicates))
     modules=[a['data-module-id'] for _,a in page.nodes if 'data-module-id' in a]
@@ -109,6 +117,8 @@ def inspect(html,mode='draft',record=None,review=None,review_dir=None,task_dir=N
         if any(t=='script' and a.get('type','').lower()=='application/json' for t,a in page.nodes):warnings.append('check embedded JSON contains no private records')
     warnings.append('Consent authenticity, factual support, content relationships and visual composition need executor review.')
     report={'status':'fail' if errors else 'pass','scope':'static invariants only','html_sha256':hashlib.sha256(html.encode()).hexdigest(),
+            'artifact_identity':{'status':'pass' if artifact_valid else 'fail','expected':expected_identity,
+                                 'actual':artifact_nodes[0] if len(artifact_nodes)==1 else None},
             'delivery_contract':(record or {}).get('task',{}).get('delivery_contract',0),
             'layers':{k:{'status':'not-run','reason':'requires actual rendered/semantic or independent delivery review'} for k in ('content','visual','layout','function','delivery')},'mode':mode,'modules':modules,'errors':list(dict.fromkeys(errors)),
             'warnings':warnings,'not_run':['browser rendering','real device','automated semantic/user-evidence verification']}
@@ -293,13 +303,16 @@ def main():
     p.add_argument('--mode',choices=['draft','refine','final'],default='draft');p.add_argument('--record',type=Path);p.add_argument('--report',type=Path)
     p.add_argument('--review',type=Path,help='Executor content/visual/delivery JSON bound to HTML and screenshot SHA')
     p.add_argument('--browser-report',type=Path,help='Same-HTML browser report.json; verifies screenshot SHA and propagates failures')
+    p.add_argument('--require-complete',action='store_true',help='Exit nonzero unless production, business information and exact-artifact user acceptance all pass')
     a=p.parse_args()
     if a.report and (a.report.resolve().is_relative_to(ROOT) or a.report.resolve() in {p.resolve() for p in (a.html,a.record,a.review,a.browser_report) if p}):p.error('report must be outside skill and must not overwrite inputs')
-    report=inspect(a.html.read_text(encoding="utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None,
+    # Decode the original bytes directly so Windows CRLF is not normalized before
+    # hashing. Browser evidence is bound to the exact artifact bytes on disk.
+    report=inspect(a.html.read_bytes().decode("utf-8"),a.mode,json.loads(a.record.read_text(encoding="utf-8")) if a.record else None,
                    json.loads(a.review.read_text(encoding='utf-8')) if a.review else None,a.review.parent if a.review else None,a.record.parent if a.record else None)
     if a.browser_report:merge_browser(report,json.loads(a.browser_report.read_text(encoding='utf-8')),a.browser_report.parent)
     finish_report(report)
     text=json.dumps(report,ensure_ascii=False,indent=2)
     if a.report:a.report.write_text(text+'\n', encoding="utf-8")
-    print(text);return report['status']!='pass'
+    print(text);return report['status']!='pass' or (a.require_complete and report.get('completion_status')!='pass')
 if __name__=='__main__':sys.exit(main())

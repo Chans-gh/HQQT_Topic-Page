@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -22,7 +23,7 @@ def asset_hashes(path):
     return values
 
 
-def diagnose(browser=False):
+def diagnose(browser=False, expect_version=None):
     checks = []; skill_version = None
     def add(name, passed, detail, required=True):
         checks.append({'id': name, 'status': 'pass' if passed else ('fail' if required else 'optional-missing'), 'detail': detail})
@@ -36,17 +37,23 @@ def diagnose(browser=False):
                 'assets/header/official-header.js','assets/header/logo-02.svg','assets/header/sources.json',
                 'assets/vendor/jquery-1.11.3.min.js','scripts/build_shell.py','scripts/browser_reading.mjs','scripts/export_media.py','scripts/browser_header.mjs','scripts/browser_layout.mjs',
                 'scripts/production.py','scripts/check_task.py','scripts/requirements.py','scripts/input_sources.py','scripts/input_sources_test.js','scripts/document_viewer.py','scripts/document_viewer_test.js','scripts/document_viewer_browser.mjs','scripts/page_modes.py','scripts/page_modes_test.js','scripts/navigation_test.js','scripts/navigation_browser.mjs',
+                'scripts/html_support.py','scripts/compose_html.py','scripts/check_html.py','scripts/smoke_test.py',
                 'scripts/prepare_share.py','scripts/share/share.js','scripts/share/bundle-html.js',
                 'scripts/share/share_regression_test.js']
     missing = [name for name in required if not (ROOT / name).is_file()]
     add('files', not missing, {'missing': missing})
     try:
         text = (ROOT/'SKILL.md').read_text(encoding='utf-8')
-        add('entry', text.startswith('---\nname: qingteng-topic-html\n') and 'description:' in text, 'Skill metadata')
+        entry_version = None
+        matched = re.search(r'^# 环球青藤专题页 · ([0-9]+\.[0-9]+\.[0-9]+)$', text, re.M)
+        if matched: entry_version = matched.group(1)
+        add('entry', text.startswith('---\nname: qingteng-topic-html\n') and 'description:' in text and bool(entry_version), {'metadata':'qingteng-topic-html','version':entry_version})
         manifest = json.loads((ROOT/'assets/provenance.json').read_text(encoding='utf-8'))
         skill_version=manifest['version']
         versions=[json.loads((ROOT/name).read_text(encoding='utf-8'))['version'] for name in ('package.json','package-lock.json','assets/components/catalog.json','assets/header/sources.json','assets/page-modes.json','assets/input-sources.json','assets/document-viewer.json')]
-        add('version-consistency',all(v==skill_version for v in versions),{'skill':skill_version,'runtime_versions':versions})
+        add('version-consistency',entry_version==skill_version and all(v==skill_version for v in versions),{'skill':skill_version,'entry':entry_version,'runtime_versions':versions})
+        if expect_version is not None:
+            add('expected-version', skill_version==expect_version, {'expected':expect_version,'installed':skill_version})
         invalid = [a['file'] for a in manifest['assets'] if a['sha256'] not in asset_hashes(ROOT/a['file'])]
         for svg in (ROOT/'assets').rglob('*.svg'):
             ET.parse(svg)
@@ -91,7 +98,8 @@ finally { if(engine)await engine.close(); }
             except (ValueError, IndexError):
                 result = {'error': p.stderr[-1000:] or 'Probe did not return JSON'}
             add('chromium-launch', p.returncode == 0, result)
-    return {'skill_version':skill_version,'status': 'fail' if any(c['status']=='fail' for c in checks) else 'pass',
+    return {'skill_version':skill_version,'skill_root':str(ROOT),'entry_sha256':hashlib.sha256((ROOT/'SKILL.md').read_bytes()).hexdigest() if (ROOT/'SKILL.md').is_file() else None,
+            'status': 'fail' if any(c['status']=='fail' for c in checks) else 'pass',
             'mode': 'browser' if browser else 'core', 'checks': checks,
             'note': 'Core checks do not require Node. Browser mode actually launches Chromium. No installation or image generation.'}
 
@@ -99,9 +107,10 @@ finally { if(engine)await engine.close(); }
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--browser', action='store_true', help='Require and launch the browser verification runtime')
+    parser.add_argument('--expect-version', help='Fail when the installed Skill is not this exact version')
     args = parser.parse_args()
     try:
-        report = diagnose(args.browser)
+        report = diagnose(args.browser, args.expect_version)
     except (OSError, subprocess.TimeoutExpired) as exc:
         report = {'status':'fail','error':str(exc)}
     print(json.dumps(report, ensure_ascii=False, indent=2))

@@ -49,7 +49,7 @@ python3 "$SKILL/scripts/page_modes.py" brief --record "$TASK/record.json"
 
 ## 制作主体
 
-执行者阅读与编排，手工写 `body.html`；从 `assets/components/patterns.html`复制实际需要的template内部片段并替换示意文案。每个顶层section/article/header必须有`data-module-id`，所有正文均归属模块。一个H1放在开场模块中；其他模块H2、内部H3。不要把原材料HTML/脚本拼进可执行片段；文案用HTML转义或安全文本节点，URL限明确用途的http(s)/锚点。片段不允许script/style/iframe/内联事件/内联style；样式和交互由Skill自有topic.css/js提供，特殊主体布局通过下述--subject-css接口输入并重新检查，不能改公共块。
+执行者阅读与编排，手工写 `body.html`；不得手写完整HTML或从旧页面复制公共页头页脚。从 `assets/components/patterns.html`复制实际需要的template内部片段并替换示意文案。每个顶层section/article/header必须有`data-module-id`，所有正文均归属模块。一个H1放在开场模块中；其他模块H2、内部H3。不要把原材料HTML/脚本拼进可执行片段；文案用HTML转义或安全文本节点，URL限明确用途的http(s)/锚点。片段不允许script/style/iframe/内联事件/内联style；样式和交互由Skill自有topic.css/js提供，特殊主体布局通过下述--subject-css接口输入并重新检查，不能改公共块。
 
 长标题需要控制语义断行时，可将自然短语分别放入`<span class="qt-t-title-phrase">`，例如“扫描文件，”与“按日期和主题命名”。短语在足够宽时同排，窄屏按实际容量换行，超窄时允许短语内部换行；不全局nowrap、不为每个字插入br，也不假定均衡换行算法能理解中文词义。短标题无需分组，仍须目视实际标题。
 
@@ -70,7 +70,7 @@ python3 "$SKILL/scripts/compose_html.py" --record "$TASK/record.json" --body "$T
 python3 "$SKILL/scripts/check_html.py" "$TASK/draft.html" --mode draft --record "$TASK/record.json" --report "$TASK/static-report.json"
 ```
 
-mode=refine 输出仍可审阅的精修中页面；mode=final 要求DELIVERY阶段、准确的实际审阅或直接执行授权、全部相关事实/素材到位。最终不附加策划/索引/确认状态；作者片段有审阅UI或未解决关键项则拒绝。默认正文与固定代码内嵌单文件，不生成外部资源包；锁定官方页头允许联网。用户明确要求视频/素材包时由执行者按真实资源制作相对路径交付，重新核对依赖及大小；检查器仅在逐字一致的公共块内豁免官方依赖，正文仍拒绝非内嵌运行资源，不能把这类报告当作素材包通过证据。
+mode=refine 输出仍可审阅的精修中页面；mode=final 要求DELIVERY阶段、准确的实际审阅或直接执行授权、全部相关事实/素材到位。组合器在每页写入当前Skill版本、mode和官方壳SHA；检查器要求三者与本次运行环境一致。缺少标记的手写整页、旧版成品、把draft当final、公共壳错版以及正文相对图片/运行资源都会失败。最终不附加策划/索引/确认状态；作者片段有审阅UI或未解决关键项则拒绝。默认正文与固定代码内嵌单文件，不生成外部资源包；锁定官方页头允许联网。用户明确要求视频/素材包时由执行者按真实资源制作相对路径交付，重新核对依赖及大小；检查器仅在逐字一致的公共块内豁免官方依赖，正文仍拒绝非内嵌运行资源，不能把这类报告当作素材包通过证据。
 
 脚本拒绝写入Skill目录或覆盖body/record；失败先返回错误，不输出半成品，不自动修改记录。原始输入只读。脚本不证明语义、商业数据真实性或授权真实性，不自动转阶段。
 
@@ -126,7 +126,7 @@ python3 "$SKILL/scripts/record.py" restore "$VERSIONS/D01" --out "$RESTORED"
 python3 "$SKILL/scripts/check_html.py" "$TASK/draft.html" --record "$TASK/record.json" --review "$TASK/manual.json" --browser-report "$TASK/browser-report/report.json" --report "$TASK/summary.json"
 ```
 
-content/visual继续按逐模块evidence与screenshots绑定。visual中新增target：status、reference和dimensions（atmosphere/palette/icons/surfaces/rhythm/focus六项实际观察）；没有目标评审时target not-run，旧基本可读pass不等于目标达标。delivery可由执行者填写status、scope和evidence，说明实际参与条件/资源是否齐全；不能从draft或技术pass推定。summary.status是已提供检查结果；production_status要求五层和目标视觉都pass，completion_status另须用途信息完备和当前用户接受；缺报告保留not-run，HTML/截图过期或任何fail均阻断。工具只核对报告关联，不证明人工判断真实。
+content/visual继续按逐模块evidence与screenshots绑定。visual中新增target：status、reference和dimensions（atmosphere/palette/icons/surfaces/rhythm/focus六项实际观察）；没有目标评审时target not-run，旧基本可读pass不等于目标达标。delivery可由执行者填写status、scope和evidence，说明实际参与条件/资源是否齐全；不能从draft或技术pass推定。summary.status是已提供检查结果；production_status要求五层和目标视觉都pass，completion_status另须用途信息完备和当前用户接受；缺报告保留not-run，HTML/截图过期或任何fail均阻断。正式声明完成时在同一命令追加`--require-complete`；它会在`completion_status`不是pass时返回失败，避免把技术可打开的候选误报为已验收成品。工具只核对报告关联，不证明人工判断真实。
 
 公共页脚的唯一源也在public-shell.html；修改后同样运行build_shell和--check，更新指纹。官方页头来源文件保持独立生成，不能用业务CSS覆盖。手机端原生details折叠，桌面全部展开；目标集合不变。
 
@@ -157,7 +157,7 @@ python3 "$SKILL/scripts/check_task.py" --record "$TASK/record.json" --body "$TAS
 
 无自定义CSS时省略--subject-css。输出目录必须是全新目录，位于任务源与Skill之外，不重用R01；修改后用R02。每轮保存page.html、inputs/自包含快照（正文、CSS、record及原图/展示图）、record-original.json、assets.json、report.json和round.json逐文件SHA；浏览器附browser/artifact.html、报告和截图。结构失败保留可取得的输入，用户否定但结构有效的失败轮仍保留HTML。工具不写回源记录，不生成图片，不安装依赖。
 
---review可合并已完成的同SHA人工报告，工具将其截图复制到轮次目录；--browser调用现有Chromium检查，--offline仅与--browser合用且只代表降级。只有提供实际制作人工报告与全部验证证据，production_status才可能pass；completion_status另需用途信息与当前用户接受；静态pass不代表内容完成。检查器仅对真实application/json脚本节点提示私有数据检查，公共脚本里的类型字符串不再误报。
+--review可合并已完成的同SHA人工报告，工具将其截图复制到轮次目录；--browser调用现有Chromium检查，--offline仅与--browser合用且只代表降级。只有提供实际制作人工报告与全部验证证据，production_status才可能pass；completion_status另需用途信息与当前用户接受；静态pass不代表内容完成。对外声明最终完成的轮次追加`--require-complete`，否则候选仍会写出但命令以未完成返回。检查器仅对真实application/json脚本节点提示私有数据检查，公共脚本里的类型字符串不再误报。
 
 素材生成由执行者使用已获准工具完成。组合器输出composer_generation_calls=0与task_generated_assets（记录中已到位生成素材数），后者不认证供应方实际调用次数。PNG透明、生成记录、衍生图和原图SHA由production.py在组合与check_task中统一核验；原图与展示图分别以实际MIME内嵌，放大显示原图，原尺寸与焦点恢复不变。
 

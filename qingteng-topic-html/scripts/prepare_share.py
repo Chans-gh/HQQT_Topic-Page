@@ -27,6 +27,8 @@ IMG_RE = re.compile(r"""(<img\b[^>]*?\bsrc=)(['"])(https?://[^'"\s]+)\2""")
 STYLE_ATTR_RE = re.compile(r"""(style=\s*['"][^'"]*?url\(\s*['"]?)(https?://[^)'"\s]+)""")
 IFRAME_RE = re.compile(r'<iframe\b[^>]*>[\s\S]*?</iframe\s*>|<iframe\b[^>]*/?>')
 SCRIPT_SPLIT = re.compile(r'(<script\b[^>]*>[\s\S]*?</script\s*>)')
+STYLE_BLOCK_RE = re.compile(r'(<style\b[^>]*>)([\s\S]*?)(</style\s*>)', re.IGNORECASE)
+SCROLL_BEHAVIOR_RE = re.compile(r'(?<![-\w])scroll-behavior\s*:\s*[^;}]+;?', re.IGNORECASE)
 ZOOM_BUTTON_RE = re.compile(
     r"""<button\b(?=[^>]*\bdata-qt-zoom\b)(?:"[^"]*"|'[^']*'|[^>])*>"""
     r"""\s*(<img\b(?:"[^"]*"|'[^']*'|[^>])*>)\s*</button\s*>""",
@@ -68,6 +70,7 @@ def main():
     html = src.read_text(encoding='utf-8')
     stats = {'input': str(src), 'output': str(dst), 'inlined': 0, 'iframes_removed': 0,
              'zoom_buttons_unwrapped': 0,
+             'css_declarations_removed': [],
              'downloads_failed': [], 'left_remote': [], 'blockers': []}
     cache = {}
 
@@ -95,6 +98,19 @@ def main():
         segment = URL_RE.sub(swap, segment)
         segment = IMG_RE.sub(swap, segment)
         segment = STYLE_ATTR_RE.sub(swap, segment)
+
+        def clean_style(match):
+            css = match.group(2)
+            count = len(SCROLL_BEHAVIOR_RE.findall(css))
+            if count:
+                stats['css_declarations_removed'].extend(['scroll-behavior'] * count)
+                css = SCROLL_BEHAVIOR_RE.sub('', css)
+            return match.group(1) + css + match.group(3)
+
+        # Qingshui's CSS sanitizer treats the standards-based property name as
+        # the legacy IE `behavior:` property. Scrolling still works without the
+        # optional smooth-scroll hint, so remove it only from the share copy.
+        segment = STYLE_BLOCK_RE.sub(clean_style, segment)
         return segment
 
     parts = SCRIPT_SPLIT.split(html)

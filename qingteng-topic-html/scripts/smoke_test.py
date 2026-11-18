@@ -116,6 +116,13 @@ def run_case(out, browser=False):
     execute('custom-resource-final-denied',[sys.executable,str(ROOT/'scripts/compose_html.py'),'--record',str(record_path),
                                            '--body',str(custom),'--mode','final','--out',str(out/'must-not-final.html')],expected=1)
     checks.append({'id':'resource-denied-output-absent','status':'pass' if not (out/'must-not-final.html').exists() else 'fail'})
+    share_source = out/'share-source.html'
+    share_ready = out/'share-ready.html'
+    share_source.write_text("<html><style>.x{scroll-behavior:smooth;color:red}</style><script>const x={behavior:'instant'};</script></html>", encoding='utf-8')
+    execute('share-css-sanitizer-compatibility', [sys.executable,str(ROOT/'scripts/prepare_share.py'),'--input',str(share_source),
+                                                  '--out',str(share_ready)])
+    share_text = share_ready.read_text(encoding='utf-8') if share_ready.is_file() else ''
+    checks.append({'id':'share-scroll-behavior-removed','status':'pass' if 'scroll-behavior:' not in share_text and "behavior:'instant'" in share_text else 'fail'})
     # Only the independent HTML is copied into this otherwise empty folder.
     standalone = out/'empty folder'; standalone.mkdir()
     if (out/'final.html').exists(): shutil.copy2(out/'final.html', standalone/'专题页.html')
